@@ -1,0 +1,17 @@
+{
+  "_comment": "Formato alvo do Mission Editor (Fase 6). Cada objetivo terá tipo GO_TO | COLLECT | PAINT | ESCAPE | RETURN | INTERACT | SURVIVE | AVOID_DETECTION. Vazio por enquanto — a Fase 1 não implementa missões ainda.",
+  "missions": [
+    {
+      "id": "mission_01",
+      "name": "Pinte o depósito",
+      "introVideo": "mission_01_intro.mp4",
+      "completeVideo": "mission_01_complete.mp4",
+      "objectives": [
+        { "id": "obj_1", "type": "GO_TO", "description": "Entrar na área", "position": [0, 0, 0] },
+        { "id": "obj_2", "type": "PAINT", "description": "Pintar o muro", "targetId": "graffiti_spot_1" },
+        { "id": "obj_3", "type": "ESCAPE", "description": "Escapar da área" },
+        { "id": "obj_4", "type": "RETURN", "description": "Voltar para a base" }
+      ]
+    }
+  ]
+}
