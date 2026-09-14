@@ -1,0 +1,43 @@
+{
+  "artworks": [
+    {
+      "id": "quadro-01",
+      "title": "Maré Alta",
+      "type": "Quadro",
+      "artist": "Sem artista definido",
+      "price": 1850.00,
+      "description": "Óleo sobre tela, tons de azul profundo com reflexos dourados. Edição única.",
+      "glb": "assets/models/quadro-01.glb",
+      "placeholder": "painting",
+      "position": { "x": -3, "y": 1.5, "z": -4.8 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "scale": 1
+    },
+    {
+      "id": "escultura-01",
+      "title": "Fragmento Contínuo",
+      "type": "Escultura",
+      "artist": "Sem artista definido",
+      "price": 4200.00,
+      "description": "Bronze polido, base em madeira de demolição. 45cm de altura.",
+      "glb": "assets/models/escultura-01.glb",
+      "placeholder": "sculpture",
+      "position": { "x": 0, "y": 0, "z": -3 },
+      "rotation": { "x": 0, "y": 0.4, "z": 0 },
+      "scale": 1
+    },
+    {
+      "id": "quadro-02",
+      "title": "Silêncio de Outono",
+      "type": "Quadro",
+      "artist": "Sem artista definido",
+      "price": 2350.00,
+      "description": "Acrílico sobre tela, paleta terrosa. Moldura em carvalho.",
+      "glb": "assets/models/quadro-02.glb",
+      "placeholder": "painting",
+      "position": { "x": 3, "y": 1.5, "z": -4.8 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "scale": 1
+    }
+  ]
+}

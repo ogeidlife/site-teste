@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Peça — Ateliê</title>
+<link rel="stylesheet" href="css/style.css" />
+<!-- EmailJS: envia o formulário direto para o seu email, sem backend -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+</head>
+<body class="scroll">
+  <div class="product-page">
+    <div class="product-nav"><a href="index.html">&larr; Voltar para a galeria</a></div>
+
+    <div class="product-layout">
+      <div class="product-viewer" id="viewer"></div>
+
+      <div class="product-info">
+        <span class="kind" id="p-kind">—</span>
+        <h1 id="p-title">Carregando…</h1>
+        <p class="artist" id="p-artist"></p>
+        <p class="description" id="p-description"></p>
+        <div class="price" id="p-price"></div>
+
+        <form class="order-form" id="order-form">
+          <h2>Finalizar pedido</h2>
+          <div class="field">
+            <label for="name">Nome completo</label>
+            <input id="name" name="name" required />
+          </div>
+          <div class="field">
+            <label for="email">Seu email</label>
+            <input id="email" name="email" type="email" required />
+          </div>
+          <div class="field">
+            <label for="address">Endereço de entrega</label>
+            <input id="address" name="address" required />
+          </div>
+          <div class="field">
+            <label for="message">Observações (opcional)</label>
+            <textarea id="message" name="message"></textarea>
+          </div>
+          <div class="submit-row">
+            <button type="submit" class="buy-btn">Enviar pedido</button>
+          </div>
+          <div class="form-status" id="form-status"></div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module" src="js/product.js"></script>
+</body>
+</html>

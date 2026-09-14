@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ateliê — percorra a galeria</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <canvas id="scene-canvas"></canvas>
+
+  <div class="hud">
+    <div class="hud-title">Ateliê</div>
+    <div class="hud-hint" id="hint">
+      Use as setas ou W A S D para andar. Aproxime-se de uma construção para entrar.
+    </div>
+    <div class="hud-badge hidden" id="gallery-badge">Dentro da Galeria — ESC para sair</div>
+  </div>
+
+  <div id="tooltip-layer"></div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
