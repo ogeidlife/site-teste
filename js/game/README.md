@@ -1,0 +1,1 @@
+Vazio na Fase 1. Fase 2 adiciona aqui: PlayerController.js, CameraController.js. Fase 3: GuardAI.js. Fase 4: SecurityCamera.js. Fase 5: GraffitiSystem.js. Fase 6: MissionSystem.js. Fase 7: InventorySystem.js. Fase 8+: VideoManager.js, TriggerSystem.js, EventSystem.js, WorldStateManager.js, NarrativeSystem.js, CinematicCamera.js, TimelineSystem.js.
