@@ -1,32 +1,120 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Ateliê — percorra a galeria</title>
-<link rel="stylesheet" href="css/style.css" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OGEID GAME CONFIGURATOR</title>
+<link rel="stylesheet" href="css/configurador.css">
 </head>
 <body>
-  <canvas id="scene-canvas"></canvas>
-
-  <div class="hud">
-    <div class="hud-title">Ateliê</div>
-    <div class="hud-hint" id="hint">
-      Use as setas ou W A S D para andar. Aproxime-se de uma construção para entrar.
+<div id="app">
+  <header class="topbar">
+    <div class="brand"><span class="mark">OG</span><div><strong>OGEID</strong><small>GAME CONFIGURATOR</small></div></div>
+    <div class="modes">
+      <button class="mode active" data-mode="build">BUILD</button>
+      <button class="mode" data-mode="story">STORY</button>
+      <button class="mode" data-mode="play">PLAY</button>
     </div>
-    <div class="hud-badge hidden" id="gallery-badge">Dentro da Galeria — ESC para sair</div>
+    <div class="top-actions">
+      <button id="newProject">NEW</button>
+      <button id="saveProject">SAVE</button>
+      <button id="exportProject">EXPORT JSON</button>
+      <label class="file-btn">IMPORT JSON<input id="importProject" type="file" accept=".json"></label>
+      <button id="debugBtn">DEBUG</button>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <aside class="left-panel">
+      <section class="panel-head"><span id="modeTitle">BUILD / ASSETS</span><span class="status-dot"></span></section>
+
+      <div id="buildTools" class="mode-panel">
+        <div class="section-title">ASSET LIBRARY</div>
+        <label class="file-btn wide">+ IMPORT GLB<input id="glbInput" type="file" accept=".glb,.gltf,.bin,.png,.jpg,.jpeg,.webp,.mp4,.webm" multiple></label>
+        <div id="assetList" class="asset-list"></div>
+
+        <div class="section-title">CREATE</div>
+        <div class="create-grid">
+          <button data-create="building">BUILDING</button>
+          <button data-create="wall">WALL</button>
+          <button data-create="guard">GUARD</button>
+          <button data-create="camera">CAMERA</button>
+          <button data-create="graffiti">GRAFFITI SPOT</button>
+          <button data-create="item">ITEM</button>
+          <button data-create="trigger">TRIGGER</button>
+          <button data-create="light">LIGHT</button>
+        </div>
+
+        <div class="section-title">SCENE</div>
+        <div class="tree" id="sceneTree"></div>
+      </div>
+
+      <div id="storyTools" class="mode-panel hidden">
+        <div class="section-title">MISSIONS</div>
+        <div id="missionList"></div>
+        <button id="addMission" class="wide accent">+ NEW MISSION</button>
+        <div class="section-title">VIDEO LIBRARY</div>
+        <label class="file-btn wide">+ IMPORT VIDEO<input id="videoInput" type="file" accept=".mp4,.webm" multiple></label>
+        <div id="videoList" class="asset-list"></div>
+        <div class="section-title">STORY TOOLS</div>
+        <button id="storyPreview" class="wide">▶ PREVIEW STORY</button>
+      </div>
+
+      <div id="playTools" class="mode-panel hidden">
+        <div class="section-title">PLAY MODE</div>
+        <p class="muted">Teste o projeto atual usando os estados e eventos configurados.</p>
+        <button id="playFromStart" class="wide accent">▶ PLAY FROM START</button>
+        <button id="exitPlay" class="wide">ESC / EXIT PLAY</button>
+        <div class="section-title">CONTROLS</div>
+        <div class="controls-card">WASD / ARROWS — mover<br>SHIFT — correr<br>E — interagir<br>SPACE — ação<br>ESC — sair do PLAY</div>
+      </div>
+    </aside>
+
+    <section class="viewport-wrap">
+      <div id="viewport"></div>
+      <div class="viewport-hud">
+        <div class="hud-left">
+          <span class="badge">SCENE: <b id="sceneNameHud">DEMO_TERMINAL</b></span>
+          <span class="badge">OBJECTS: <b id="objectCountHud">0</b></span>
+          <span class="badge">FPS: <b id="fpsHud">--</b></span>
+        </div>
+        <div class="viewport-actions">
+          <button id="toggleGrid">GRID</button>
+          <button id="toggleCollisions">COLLISIONS</button>
+          <button id="frameSelected">FRAME</button>
+        </div>
+      </div>
+      <div id="debugOverlay" class="debug-overlay hidden"></div>
+      <div id="gameHud" class="game-hud hidden">
+        <div class="player-card">
+          <div class="avatar">OG</div>
+          <div><b>OGEID</b><small>LVL 03</small></div>
+          <div class="bars"><span class="hp"><i></i></span><span class="energy"><i></i></span></div>
+        </div>
+        <div class="mission-card"><b id="gameMissionTitle">MISSÃO</b><span id="gameObjective">Encontre o local.</span></div>
+        <div class="minimap"><span class="north">N</span><div id="miniPlayer"></div><div id="miniGuard"></div></div>
+        <div class="camera-feed hidden" id="cameraFeed"><header>● CÂMERA 03</header><div class="feed-noise">LIVE FEED</div></div>
+        <div class="inventory"><span>SPRAY <b id="sprayCount">3/3</b></span><span>KEY</span><span>MAP</span></div>
+        <div class="mobile-controls"><div class="joystick">◀ ● ▶</div><div class="actions">SPRAY<br>RUN<br>USE</div></div>
+      </div>
+    </section>
+
+    <aside class="right-panel">
+      <section class="panel-head">INSPECTOR</section>
+      <div id="inspector" class="inspector">
+        <div class="empty-inspector">Selecione um objeto no cenário.</div>
+      </div>
+    </aside>
+  </main>
+
+  <div id="videoOverlay" class="video-overlay hidden">
+    <video id="storyVideo" playsinline></video>
+    <div class="video-caption"><span id="videoLabel">NARRATIVE</span><button id="skipVideo">SKIP</button></div>
   </div>
 
-  <div id="tooltip-layer"></div>
-
-  <script type="importmap">
-  {
-    "imports": {
-      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-    }
-  }
-  </script>
-  <script type="module" src="js/main.js"></script>
+  <input id="hiddenImport" type="file" hidden>
+  <footer>OGEID GAME SYSTEM <span>•</span> BUILD / STORY / PLAY <span>•</span> local project</footer>
+</div>
+<script type="module" src="js/main.js"></script>
 </body>
 </html>

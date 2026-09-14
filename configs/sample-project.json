@@ -1,0 +1,39 @@
+{
+  "meta": {
+    "name": "OGEID_DEMO",
+    "version": "0.1.0"
+  },
+  "assets": [],
+  "scene": {
+    "objects": []
+  },
+  "player": {
+    "asset": null,
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "speed": 3.5,
+    "runSpeed": 6,
+    "animations": {
+      "idle": "Idle",
+      "walk": "Walk",
+      "run": "Run",
+      "spray": "Spray"
+    }
+  },
+  "videos": [],
+  "missions": [],
+  "narrative": {
+    "sequences": []
+  },
+  "ui": {
+    "showHP": true,
+    "showEnergy": true,
+    "showMissionPanel": true,
+    "showMinimap": true,
+    "showInventory": true,
+    "showCameraFeed": true
+  }
+}
