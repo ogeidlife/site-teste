@@ -1,6 +1,0 @@
-{
-  "_comment": "Template de referencia pro UIEditor.js (Fase 8). Consumido por UIManager.js.",
-  "hp": true, "energy": true, "xp": true,
-  "missionPanel": true, "minimap": true, "inventory": true, "cameraFeed": true,
-  "layout": {}
-}

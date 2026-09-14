@@ -1,0 +1,1577 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OGEID — Configurador (uso interno)</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* Mesmos tokens visuais do jogo, para consistência — ver ogeid-game.html */
+:root{
+  --asphalt:#0b0c10; --concrete:#1a1c24; --concrete-2:#232631; --wall:#15161c;
+  --line: rgba(255,255,255,0.08); --ink:#f2f1ec; --ink-dim:#a9adba;
+  --magenta:#ff2f92; --cyan:#17d6e8; --yellow:#ffe14d; --green:#7CFF3C; --danger:#ff4d4d;
+  --font-display:'Bungee','Space Grotesk',sans-serif;
+  --font-body:'Space Grotesk',sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;}
+html,body{ margin:0; padding:0; background:var(--asphalt); color:var(--ink); font-family:var(--font-body); min-height:100%; }
+.top-warning{
+  background:rgba(255,77,77,0.12); border-bottom:1px solid var(--danger); color:var(--danger);
+  font-family:var(--font-mono); font-size:12px; letter-spacing:1px; text-align:center; padding:10px 16px;
+}
+.page-header{ padding:22px 20px 6px; text-align:center; }
+.brand-tag{ font-family:var(--font-display); font-size:clamp(24px,6vw,40px); letter-spacing:2px; color:var(--ink);
+  text-shadow:3px 3px 0 var(--magenta), 6px 6px 0 rgba(0,0,0,0.4); transform:rotate(-1deg); display:inline-block; }
+.brand-sub{ font-family:var(--font-mono); font-size:11px; letter-spacing:3px; color:var(--ink-dim); text-transform:uppercase; margin-top:6px; }
+
+.ogeid-btn{ font-family:var(--font-mono); letter-spacing:1.5px; font-size:13px; text-transform:uppercase; background:var(--concrete-2); color:var(--ink);
+  border:1px solid var(--line); padding:14px 26px; border-radius:8px; cursor:pointer; transition:all .15s ease; }
+.ogeid-btn:hover{ transform:translateY(-2px); border-color:var(--green); color:var(--green); }
+.ogeid-btn.primary{ background:var(--green); color:#0b0c10; border-color:var(--green); font-weight:700; }
+.ogeid-btn.primary:hover{ background:#8dff56; color:#0b0c10; }
+.ogeid-btn.danger:hover{ border-color:var(--danger); color:var(--danger); }
+.ogeid-btn.small{ padding:8px 14px; font-size:11px; }
+.btn-row{ display:flex; gap:12px; flex-wrap:wrap; }
+
+/* ---------- Configurador ---------- */
+.cfg-wrap{ width:100%; max-width:1100px; margin:18px auto 60px; background:var(--concrete); border:1px solid var(--line); border-radius:14px; overflow:hidden; text-align:left; }
+.cfg-header{ padding:18px 22px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.cfg-header h2{ font-family:var(--font-display); font-size:20px; letter-spacing:1px; margin:0; }
+.cfg-tabs{ display:flex; gap:6px; padding:10px 22px; border-bottom:1px solid var(--line); overflow-x:auto; background:var(--concrete-2); }
+.cfg-tab-btn{ font-family:var(--font-mono); font-size:11px; letter-spacing:1px; text-transform:uppercase; color:var(--ink-dim);
+  background:transparent; border:1px solid var(--line); padding:8px 12px; border-radius:20px; cursor:pointer; white-space:nowrap; }
+.cfg-tab-btn.active{ color:#0b0c10; background:var(--green); border-color:var(--green); font-weight:700; }
+.cfg-body{ padding:20px 22px; }
+.cfg-panel{ display:none; }
+.cfg-panel.active{ display:block; }
+.cfg-row{ display:flex; gap:14px; flex-wrap:wrap; margin-bottom:16px; align-items:flex-end; }
+.cfg-field{ display:flex; flex-direction:column; gap:4px; min-width:120px; flex:1; }
+.cfg-field label{ font-family:var(--font-mono); font-size:10px; letter-spacing:1px; color:var(--ink-dim); text-transform:uppercase; }
+.cfg-field input[type=text], .cfg-field input[type=number], .cfg-field select{ background:var(--wall); border:1px solid var(--line); color:var(--ink); padding:9px 10px; border-radius:6px; font-family:var(--font-body); font-size:13px; }
+.cfg-field input[type=file]{ font-family:var(--font-mono); font-size:11px; color:var(--ink-dim); }
+.cfg-field input[type=checkbox]{ width:16px; height:16px; }
+.cfg-check{ flex-direction:row; align-items:center; gap:8px; }
+.cfg-help{ font-family:var(--font-mono); font-size:11px; color:var(--ink-dim); line-height:1.6; margin:0 0 14px; }
+.cfg-section-title{ font-family:var(--font-mono); font-size:12px; letter-spacing:1.5px; color:var(--green); text-transform:uppercase; margin:22px 0 10px; border-top:1px solid var(--line); padding-top:16px; }
+.cfg-subtitle{ font-family:var(--font-mono); font-size:10px; letter-spacing:1px; color:var(--cyan); text-transform:uppercase; margin:14px 0 8px; }
+.cfg-list{ display:flex; flex-direction:column; gap:8px; margin-top:10px; }
+.cfg-item{ background:var(--concrete-2); border:1px solid var(--line); border-radius:8px; padding:10px 12px; display:flex; align-items:center; justify-content:space-between; gap:10px; font-family:var(--font-mono); font-size:12px; }
+.cfg-item .meta{ color:var(--ink-dim); }
+.cfg-item .name{ color:var(--ink); font-weight:700; }
+.cfg-item-actions{ display:flex; gap:6px; }
+.cfg-icon-btn{ background:transparent; border:1px solid var(--line); color:var(--ink-dim); width:26px; height:26px; border-radius:6px; cursor:pointer; font-size:12px; }
+.cfg-icon-btn:hover{ color:var(--danger); border-color:var(--danger); }
+#cfg-preview-wrap{ background:var(--wall); border:1px solid var(--line); border-radius:10px; padding:10px; margin-bottom:16px; }
+#cfg-preview-canvas{ width:100%; max-width:560px; display:block; margin:0 auto; cursor:crosshair; background:#101119; border-radius:6px; }
+.cfg-preview-hint{ font-family:var(--font-mono); font-size:10px; color:var(--ink-dim); text-align:center; margin-top:8px; }
+.req-row{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+.req-chip{ display:flex; align-items:center; gap:6px; background:var(--wall); border:1px solid var(--line); border-radius:16px; padding:6px 6px 6px 12px; font-family:var(--font-mono); font-size:12px; }
+.req-chip input{ width:44px; background:transparent; border:none; color:var(--ink); font-family:var(--font-mono); font-size:12px; }
+.inv-swatch{ width:12px; height:12px; border-radius:3px; display:inline-block; vertical-align:middle; }
+.cfg-footer{ padding:16px 22px; border-top:1px solid var(--line); display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; background:var(--concrete-2); }
+
+.hud-zone-grid{ display:grid; grid-template-columns:1fr 1fr 1fr; grid-template-rows:1fr 1fr; gap:8px; background:var(--wall); border:1px solid var(--line); border-radius:10px; padding:10px; min-height:130px; margin-bottom:16px; }
+.hud-zone-cell{ border:1px dashed var(--line); border-radius:6px; padding:6px; display:flex; flex-direction:column; gap:4px; align-items:flex-start; }
+.hud-zone-cell.align-c{ align-items:center; }
+.hud-zone-cell.align-e{ align-items:flex-end; }
+.hud-chip{ background:var(--concrete-2); border:1px solid var(--line); color:var(--ink); border-radius:10px; padding:2px 8px; font-family:var(--font-mono); font-size:9px; letter-spacing:0.5px; white-space:nowrap; }
+.dir-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:8px; }
+.dir-card{ background:var(--wall); border:1px solid var(--line); border-radius:8px; padding:10px; }
+.dir-card label{ display:block; font-family:var(--font-mono); font-size:10px; letter-spacing:1px; color:var(--ink-dim); text-transform:uppercase; margin-bottom:6px; }
+.dir-card input[type=file]{ width:100%; font-family:var(--font-mono); font-size:10px; color:var(--ink-dim); }
+.pick-btn{ margin-bottom:4px; }
+
+#toast-stack{ position:fixed; bottom:24px; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:8px; z-index:999; pointer-events:none; }
+.toast{ font-family:var(--font-mono); font-size:12px; letter-spacing:1px; background:rgba(15,16,20,0.92); border:1px solid var(--line); color:var(--ink);
+  padding:8px 16px; border-radius:20px; opacity:0; transform:translateY(10px); animation:toastIn .3s ease forwards, toastOut .3s ease forwards 2.4s; white-space:nowrap; }
+.toast b{ color:var(--yellow); }
+@keyframes toastIn{ to{ opacity:1; transform:translateY(0);} }
+@keyframes toastOut{ to{ opacity:0; transform:translateY(-8px);} }
+
+.palette-row{ display:flex; gap:26px; flex-wrap:wrap; align-items:flex-start; background:var(--wall); border:1px solid var(--line); border-radius:10px; padding:16px; margin-bottom:8px; }
+.palette-fields{ display:flex; flex-wrap:wrap; gap:16px; flex:1; min-width:220px; }
+.palette-field{ display:flex; flex-direction:column; gap:6px; align-items:flex-start; }
+.palette-field label{ font-family:var(--font-mono); font-size:10px; letter-spacing:1px; color:var(--ink-dim); text-transform:uppercase; max-width:90px; }
+.palette-field input[type=color]{ width:52px; height:38px; border:1px solid var(--line); border-radius:8px; background:var(--concrete-2); padding:2px; cursor:pointer; }
+.palette-preview{ flex-shrink:0; background:var(--concrete-2); border:1px solid var(--line); border-radius:8px; padding:10px; display:flex; align-items:center; justify-content:center; }
+.key-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+.key-row-left{ display:flex; align-items:center; gap:10px; }
+.key-row-right{ display:flex; align-items:center; gap:8px; }
+.key-badge{ font-family:var(--font-mono); background:var(--wall); border:1px solid var(--line); border-radius:6px; padding:5px 10px; font-size:12px; color:var(--yellow); min-width:64px; text-align:center; }
+.key-capture-btn.listening{ border-color:var(--yellow); color:var(--yellow); animation:toastIn .2s ease; }
+.key-row-right select{ background:var(--wall); border:1px solid var(--line); color:var(--ink); padding:8px 10px; border-radius:6px; font-family:var(--font-body); font-size:12px; }
+
+@media (max-width:640px){ .cfg-wrap{ margin:0 0 40px; border-radius:0; } }
+</style>
+</head>
+<body>
+
+<div class="top-warning">⚠ PÁGINA DE USO INTERNO — não linke isso no site público. Veja o LEIA-ME para como restringir o acesso.</div>
+<div class="page-header">
+  <div class="brand-tag">OGEID</div>
+  <div class="brand-sub">CONFIGURADOR DO JOGO — TAG THE CITY</div>
+</div>
+
+<div class="cfg-wrap">
+  <div class="cfg-header">
+    <h2>⚙ CONFIGURAR ASSETS DO JOGO</h2>
+    <span style="font-family:var(--font-mono);font-size:11px;color:var(--ink-dim);">as alterações valem para quem abrir o jogo neste mesmo navegador/domínio</span>
+  </div>
+  <div class="cfg-tabs">
+    <button class="cfg-tab-btn active" data-tab="cenario">CENÁRIO</button>
+    <button class="cfg-tab-btn" data-tab="movimento">MOVIMENTAÇÃO</button>
+    <button class="cfg-tab-btn" data-tab="controles">CONTROLES</button>
+    <button class="cfg-tab-btn" data-tab="sprays">SPRAYS</button>
+    <button class="cfg-tab-btn" data-tab="pintaveis">OBJETOS PINTÁVEIS</button>
+    <button class="cfg-tab-btn" data-tab="guardas-extras">GUARDAS EXTRAS</button>
+    <button class="cfg-tab-btn" data-tab="bots">BOTS</button>
+    <button class="cfg-tab-btn" data-tab="videos">VÍDEOS</button>
+    <button class="cfg-tab-btn" data-tab="guarda">EVENTO DO GUARDA</button>
+    <button class="cfg-tab-btn" data-tab="interface">TELAS (MENU/DERROTA/VITÓRIA)</button>
+    <button class="cfg-tab-btn" data-tab="hud">HUD DO JOGO</button>
+    <button class="cfg-tab-btn" data-tab="checklist">✓ CHECKLIST</button>
+  </div>
+
+  <div class="cfg-body">
+    <div id="cfg-preview-wrap">
+      <canvas id="cfg-preview-canvas" width="1120" height="748"></canvas>
+      <div class="cfg-preview-hint">Clique no mapa para definir a posição usada pela aba/campo ativo agora.</div>
+    </div>
+
+    <!-- CENÁRIO -->
+    <div class="cfg-panel active" data-panel="cenario">
+      <p class="cfg-help">Envie uma imagem de fundo para a cidade (opcional — cobre todo o mapa) e adicione/edite os prédios/paredes/obstáculos do cenário. A arte de cada objeto — inclusive a "parede pintada" — aceita <b>GIF animado</b>, <b>imagem estática</b>, ou uma <b>sequência de PNGs</b> colocada direto na pasta do jogo (sem precisar enviar nada por aqui — ver LEIA-ME). Cada prédio também aceita, opcionalmente, um <b>modelo 3D (.glb)</b> — usado na versão 3D do jogo (ver <a href="ogeid-3d-prototype.html" style="color:var(--cyan);">protótipo 3D</a>), com a arte 2D acima servindo de fallback/miniatura.</p>
+      <div class="cfg-row">
+        <div class="cfg-field"><label>Imagem de fundo do mapa</label><input type="file" id="cfg-bg-file" accept="image/*"></div>
+        <button class="ogeid-btn small" id="cfg-bg-remove">Remover fundo</button>
+      </div>
+
+      <div class="cfg-section-title">Adicionar objeto do cenário (prédio / parede / obstáculo)</div>
+      <div class="cfg-row">
+        <div class="cfg-field"><label>Nome</label><input type="text" id="obj-name" placeholder="Ex: Muro da esquina"></div>
+        <div class="cfg-field"><label>X</label><input type="number" id="obj-x" value="500"></div>
+        <div class="cfg-field"><label>Y</label><input type="number" id="obj-y" value="500"></div>
+        <div class="cfg-field"><label>Largura</label><input type="number" id="obj-w" value="200"></div>
+        <div class="cfg-field"><label>Altura</label><input type="number" id="obj-h" value="150"></div>
+        <div class="cfg-field cfg-check"><input type="checkbox" id="obj-collision" checked><label style="margin:0;">Tem colisão (bloqueia passagem)</label></div>
+      </div>
+      <div class="cfg-subtitle">Parede lisa (aparência normal, antes de qualquer pintura)</div>
+      <div class="cfg-row">
+        <div class="cfg-field"><label>Imagem/GIF da parede lisa</label><input type="file" id="obj-file" accept="image/*"></div>
+        <div class="cfg-field"><label>FPS (só se usar sequência de PNGs na pasta)</label><input type="number" id="obj-fps" value="8" min="1" max="30"></div>
+      </div>
+      <div class="cfg-subtitle">Parede pintada (opcional — visual que substitui a parede lisa quando um objeto pintável vinculado a este for concluído)</div>
+      <div class="cfg-row">
+        <div class="cfg-field cfg-check"><input type="checkbox" id="obj-paintable"><label style="margin:0;">Este objeto é pintável (tem uma versão "depois")</label></div>
+        <div class="cfg-field"><label>Imagem/GIF da parede pintada</label><input type="file" id="obj-painted-file" accept="image/*"></div>
+        <div class="cfg-field"><label>FPS (só se usar sequência de PNGs na pasta)</label><input type="number" id="obj-painted-fps" value="8" min="1" max="30"></div>
+      </div>
+      <p class="cfg-help" style="margin-top:-4px;">Depois de marcar "pintável", vá na aba <b>OBJETOS PINTÁVEIS</b> e vincule um spot a este objeto — é o spot que o jogador realmente vai até e pinta; este objeto do cenário é quem troca de aparência quando ele terminar.</p>
+
+      <div class="cfg-subtitle">Modelo 3D (opcional — para a versão 3D do jogo)</div>
+      <div class="cfg-row">
+        <div class="cfg-field"><label>Arquivo .glb do prédio (antes de pintar)</label><input type="file" id="obj-glb-file" accept=".glb,.gltf"></div>
+        <div class="cfg-field cfg-check"><input type="checkbox" id="obj-glb-use-bounds" checked><label style="margin:0;">Usar X/Y/Largura/Altura acima como área de colisão do modelo</label></div>
+      </div>
+      <p class="cfg-help" id="obj-glb-hint" style="margin-top:-4px;">Envie um <b>.glb</b> (glTF binário) pra este prédio aparecer em 3D real no jogo, no lugar do volume genérico. Se não enviar nada, o objeto continua só com a arte 2D (lisa/pintada) acima — tanto de miniatura quanto como fallback no 3D. Guarde o arquivo original leve (poucos MB); modelos muito pesados deixam o carregamento do jogo lento.</p>
+      <div class="cfg-row">
+        <div class="cfg-field"><label>Arquivo .glb do prédio pintado (opcional — só se for pintável)</label><input type="file" id="obj-glb-painted-file" accept=".glb,.gltf"></div>
+      </div>
+      <p class="cfg-help" style="margin-top:-4px;">O <b>3D que fica depois de pintado</b>: quando o spot vinculado a este objeto (aba OBJETOS PINTÁVEIS) for concluído, o jogo troca o prédio por este modelo em tempo real, na cena 3D. Se não enviar, ele usa a imagem/GIF "parede pintada" (acima) sobre o mesmo volume; se não tiver nenhum dos dois, o prédio simplesmente continua igual.</p>
+      <button class="ogeid-btn primary small" id="obj-add">+ ADICIONAR OBJETO</button>
+      <div class="cfg-list" id="obj-list"></div>
+    </div>
+
+    <!-- MOVIMENTAÇÃO -->
+    <div class="cfg-panel" data-panel="movimento">
+      <p class="cfg-help">
+        O jogador e o guarda são personagens <b>100% 3D construídos por código</b> (sem sprites, sem gifs, sem imagens) — a "arte" de cada um é só uma <b>paleta de 5 cores</b> aplicada às partes do corpo: corpo (torso), detalhe/listra, pernas, braços e pele (rosto). Andar, correr, pintar e ser capturado são poses geradas automaticamente girando braços/pernas — não precisa enviar nada disso. Escolha as cores abaixo; a pré-visualização ao lado mostra onde cada uma aparece no personagem.
+      </p>
+      <div class="cfg-section-title">Jogador</div>
+      <div class="palette-row" id="player-palette-row"></div>
+      <div id="player-model-row"></div>
+
+      <div class="cfg-section-title">Guarda (principal — o que ativa com o Evento do Guarda, se estiver ligado; guardas extras usam o mesmo modelo)</div>
+      <div class="palette-row" id="guard-palette-row"></div>
+      <div id="guard-model-row"></div>
+    </div>
+
+    <!-- CONTROLES -->
+    <div class="cfg-panel" data-panel="controles">
+      <p class="cfg-help">
+        Escolha qual tecla do teclado dispara cada ação do jogador. Clique em <b>DEFINIR TECLA</b> e, em seguida, pressione a tecla desejada no teclado — ela é capturada na hora, sem precisar digitar o nome dela. Os emotes também têm uma animação escolhível (aceno, dança ou apontar). <b>Shift</b> (correr) e <b>Esc</b> (pausar) sempre funcionam como atalho extra, além do que estiver configurado aqui, pra não travar quem já está acostumado com os atalhos padrão do jogo.
+      </p>
+      <div class="cfg-list" id="controls-list"></div>
+      <div class="btn-row" style="margin-top:14px;">
+        <button class="ogeid-btn small" id="controls-reset" type="button">RESTAURAR TECLAS PADRÃO</button>
+        <button class="ogeid-btn primary small" id="controls-save" type="button">SALVAR CONTROLES</button>
+      </div>
+    </div>
+
+    <!-- SPRAYS -->
+    <div class="cfg-panel" data-panel="sprays">
+      <p class="cfg-help">Defina o gif/png de animação de cada <b>tipo</b> de spray (vale para todos os sprays daquele tipo no mapa) e adicione/remova os sprays coletáveis espalhados pela cidade.</p>
+      <div class="cfg-section-title">Ícone animado por tipo de spray</div>
+      <div class="dir-grid" id="spray-icon-fields"></div>
+
+      <div class="cfg-section-title">Adicionar spray no mapa</div>
+      <div class="cfg-row">
+        <div class="cfg-field"><label>Tipo</label><select id="spray-type"></select></div>
+        <div class="cfg-field"><label>X</label><input type="number" id="spray-x" value="500"></div>
+        <div class="cfg-field"><label>Y</label><input type="number" id="spray-y" value="500"></div>
+      </div>
+      <button class="ogeid-btn primary small" id="spray-add">+ ADICIONAR SPRAY</button>
+      <div class="cfg-list" id="spray-list"></div>
+    </div>
+
+    <!-- OBJETOS PINTÁVEIS -->
+    <div class="cfg-panel" data-panel="pintaveis">
+      <p class="cfg-help">Um objeto pintável é só a <b>indicação de onde o jogador deve ir pintar</b>: uma posição no mapa, os sprays exigidos e o que acontece quando ele pinta ali — um <b>vídeo</b> (.mp4) em tela cheia, ou uma <b>animação dentro do próprio jogo</b> (sem vídeo, ver abaixo). Quem muda de aparência no cenário é o <b>objeto do cenário vinculado</b> (aba CENÁRIO, com "pintável" marcado) — configure a parede lisa/pintada/modelo 3D dele por lá. O jogador chega perto, aparece o botão <b>PINTAR</b>, e — se tiver os sprays exigidos — a conclusão roda e, ao terminar, o objeto vinculado troca para a versão "pintada".</p>
+      <div class="cfg-row">
+        <div class="cfg-field"><label>Nome do spot</label><input type="text" id="spot-name" placeholder="Ex: Muro do Beco"></div>
+        <div class="cfg-field"><label>X</label><input type="number" id="spot-x" value="800"></div>
+        <div class="cfg-field"><label>Y</label><input type="number" id="spot-y" value="800"></div>
+      </div>
+      <div class="cfg-row">
+        <div class="cfg-field"><label>Objeto do cenário vinculado (o que muda de parede)</label><select id="spot-linked-object"></select></div>
+      </div>
+      <div class="cfg-subtitle">Ao concluir</div>
+      <div class="cfg-row">
+        <div class="cfg-field"><label>Modo de conclusão</label>
+          <select id="spot-completion-mode">
+            <option value="video">Vídeo em tela cheia (.mp4)</option>
+            <option value="anim">Animação dentro do jogo (sem vídeo — só neste local)</option>
+          </select>
+        </div>
+      </div>
+      <div class="cfg-row" id="spot-video-fields">
+        <div class="cfg-field"><label>Vídeo de pintura (.mp4)</label><input type="file" id="spot-video-file" accept="video/*"></div>
+      </div>
+      <div class="cfg-row" id="spot-anim-fields" style="display:none;">
+        <div class="cfg-field"><label>Animação (GIF ideal, ou PNG/sequência de PNGs)</label><input type="file" id="spot-anim-file" accept="image/*"></div>
+        <div class="cfg-field"><label>FPS (só se usar sequência de PNGs na pasta)</label><input type="number" id="spot-anim-fps" value="8" min="1" max="30"></div>
+        <div class="cfg-field"><label>Duração (segundos)</label><input type="number" id="spot-anim-duration" value="3" min="0.5" max="20" step="0.5"></div>
+      </div>
+      <p class="cfg-help" style="margin-top:-4px;">No modo "animação dentro do jogo", em vez de um vídeo cobrindo a tela, essa arte aparece <b>flutuando bem em cima do local pintado</b>, dentro da cena 3D — cresce, balança e sobe sozinha por conta própria (sem precisar animar isso na arte) antes de sumir. Cada spot pode ter sua própria arte e duração, então lugares diferentes podem ter movimentações diferentes entre si.</p>
+      <label style="font-family:var(--font-mono);font-size:10px;letter-spacing:1px;color:var(--ink-dim);text-transform:uppercase;">Requisitos de spray</label>
+      <div class="req-row" id="spot-req-row"></div>
+      <button class="ogeid-btn primary small" id="spot-add">+ ADICIONAR OBJETO PINTÁVEL</button>
+      <div class="cfg-list" id="spot-list"></div>
+    </div>
+
+    <!-- GUARDAS EXTRAS -->
+    <div class="cfg-panel" data-panel="guardas-extras">
+      <p class="cfg-help">Adicione quantos guardas extras quiser. Cada um usa o mesmo modelo 3D por código do guarda principal — sem enviar nenhum arquivo — só muda a <b>paleta de cores</b>. Cada guarda extra patrulha em vai-e-vem entre dois pontos no mapa e persegue/captura o jogador com o mesmo alcance de visão do guarda principal.</p>
+      <div class="cfg-row">
+        <div class="cfg-field"><label>Nome do guarda</label><input type="text" id="ge2-name" placeholder="Ex: Guarda do Beco"></div>
+      </div>
+      <div class="cfg-row">
+        <button class="ogeid-btn small pick-btn" id="ge2-pick-a" type="button">📍 PONTO A (origem)</button>
+        <div class="cfg-field"><label>A · X</label><input type="number" id="ge2-ax" value="300"></div>
+        <div class="cfg-field"><label>A · Y</label><input type="number" id="ge2-ay" value="300"></div>
+        <button class="ogeid-btn small pick-btn" id="ge2-pick-b" type="button">📍 PONTO B (patrulha)</button>
+        <div class="cfg-field"><label>B · X</label><input type="number" id="ge2-bx" value="600"></div>
+        <div class="cfg-field"><label>B · Y</label><input type="number" id="ge2-by" value="300"></div>
+      </div>
+      <div class="cfg-subtitle">Paleta de cores</div>
+      <div class="palette-row" id="ge2-palette-row"></div>
+      <button class="ogeid-btn primary small" id="ge2-add">+ ADICIONAR GUARDA EXTRA</button>
+      <div class="cfg-list" id="ge2-list"></div>
+    </div>
+
+    <!-- BOTS -->
+    <div class="cfg-panel" data-panel="bots">
+      <p class="cfg-help">Bots são NPCs que andam pela cidade com o <b>mesmo sistema de artes do personagem/guarda</b> (gif, PNG estático, ou sequência de PNGs numerados, com até 5 ângulos por estado — parado/caminhando/correndo). A diferença é o <b>comportamento</b>, escolhido individualmente para cada bot: <b>hostil</b> persegue e captura o jogador exatamente como um guarda extra; <b>neutro</b> só anda de vai-e-vem entre os dois pontos e ignora completamente o jogador (nunca detecta, persegue ou captura).</p>
+      <div class="cfg-row">
+        <div class="cfg-field"><label>Nome do bot</label><input type="text" id="bot-name" placeholder="Ex: Pipoqueiro"></div>
+        <div class="cfg-field"><label>Comportamento</label>
+          <select id="bot-behavior">
+            <option value="hostile">Hostil — persegue e captura (como um guarda)</option>
+            <option value="neutral">Neutro — só anda, ignora o jogador</option>
+          </select>
+        </div>
+      </div>
+      <div class="cfg-row">
+        <button class="ogeid-btn small pick-btn" id="bot-pick-a" type="button">📍 PONTO A (origem)</button>
+        <div class="cfg-field"><label>A · X</label><input type="number" id="bot-ax" value="300"></div>
+        <div class="cfg-field"><label>A · Y</label><input type="number" id="bot-ay" value="300"></div>
+        <button class="ogeid-btn small pick-btn" id="bot-pick-b" type="button">📍 PONTO B (patrulha)</button>
+        <div class="cfg-field"><label>B · X</label><input type="number" id="bot-bx" value="600"></div>
+        <div class="cfg-field"><label>B · Y</label><input type="number" id="bot-by" value="300"></div>
+      </div>
+      <div class="cfg-subtitle">Animações direcionais</div>
+      <div id="bot-anim-fields"></div>
+      <div class="cfg-subtitle" id="bot-captured-subtitle">Estado sem direção (só se hostil)</div>
+      <div class="cfg-row" id="bot-captured-row">
+        <div class="cfg-field"><label>Capturou o jogador</label><input type="file" id="bot-captured-file" accept="image/*"></div>
+      </div>
+      <button class="ogeid-btn primary small" id="bot-add">+ ADICIONAR BOT</button>
+      <div class="cfg-list" id="bot-list"></div>
+    </div>
+
+    <!-- VIDEOS -->
+    <div class="cfg-panel" data-panel="videos">
+      <p class="cfg-help">Vídeos gerais do fluxo do jogo. Enquanto não enviar, o jogo mostra uma cutscene placeholder no lugar, sem travar o fluxo.</p>
+      <div class="cfg-row">
+        <div class="cfg-field"><label>Introdução (abertura do jogo)</label><input type="file" id="video-intro" accept="video/*"></div>
+        <div class="cfg-field"><label>Derrota (guarda captura o jogador)</label><input type="file" id="video-lose" accept="video/*"></div>
+        <div class="cfg-field"><label>Vitória (todos os spots concluídos)</label><input type="file" id="video-win" accept="video/*"></div>
+      </div>
+      <div class="cfg-list" id="video-list"></div>
+    </div>
+
+    <!-- EVENTO DO GUARDA -->
+    <div class="cfg-panel" data-panel="guarda">
+      <p class="cfg-help">Configure uma área do mapa que, quando o jogador entrar pela primeira vez, dispara um vídeo/animação e, ao terminar, o guarda principal aparece na posição indicada já perseguindo o jogador.</p>
+      <div class="cfg-row">
+        <div class="cfg-field cfg-check"><input type="checkbox" id="ge-enabled"><label style="margin:0;">Ativar evento do guarda</label></div>
+      </div>
+      <div class="cfg-section-title">Zona de gatilho (clique no mapa para o canto superior-esquerdo, depois ajuste largura/altura)</div>
+      <div class="cfg-row">
+        <div class="cfg-field"><label>X</label><input type="number" id="ge-x" value="1000"></div>
+        <div class="cfg-field"><label>Y</label><input type="number" id="ge-y" value="1000"></div>
+        <div class="cfg-field"><label>Largura</label><input type="number" id="ge-w" value="300"></div>
+        <div class="cfg-field"><label>Altura</label><input type="number" id="ge-h" value="250"></div>
+      </div>
+      <div class="cfg-section-title">O que acontece</div>
+      <div class="cfg-row">
+        <div class="cfg-field"><label>Título da cena</label><input type="text" id="ge-title" value="O GUARDA APARECE"></div>
+        <div class="cfg-field"><label>Vídeo/animação do evento (.mp4)</label><input type="file" id="ge-video" accept="video/*"></div>
+      </div>
+      <div class="cfg-section-title">Onde o guarda aparece (use o botão abaixo e clique no mapa)</div>
+      <div class="cfg-row">
+        <button class="ogeid-btn small" id="ge-pick-spawn" type="button">📍 DEFINIR PONTO NO MAPA</button>
+        <div class="cfg-field"><label>Spawn X</label><input type="number" id="ge-spawn-x" value="1050"></div>
+        <div class="cfg-field"><label>Spawn Y</label><input type="number" id="ge-spawn-y" value="1050"></div>
+      </div>
+      <button class="ogeid-btn primary small" id="ge-save">SALVAR EVENTO DO GUARDA</button>
+    </div>
+
+    <!-- INTERFACE: MENU / DERROTA / VITÓRIA -->
+    <div class="cfg-panel" data-panel="interface">
+      <p class="cfg-help">Personalize as 3 telas de interface do jogo: o <b>menu inicial</b>, a tela de <b>"você foi pego"</b> (com os botões tentar novamente / voltar ao menu) e a tela de <b>missão concluída</b> (quando o jogador termina todos os spots). Em cada uma dá pra trocar a imagem de fundo, o título, o subtítulo e o texto dos botões. Deixe um campo de texto em branco para manter o padrão do jogo.</p>
+
+      <div class="cfg-section-title">Menu inicial</div>
+      <div class="cfg-row">
+        <div class="cfg-field"><label>Imagem de fundo do menu</label><input type="file" id="ui-menu-bg-file" accept="image/*"></div>
+        <button class="ogeid-btn small" id="ui-menu-bg-remove" type="button">Remover fundo</button>
+      </div>
+      <div class="cfg-row">
+        <div class="cfg-field"><label>Título</label><input type="text" id="ui-menu-title" placeholder="OGEID"></div>
+        <div class="cfg-field"><label>Subtítulo</label><input type="text" id="ui-menu-subtitle" placeholder="TAG THE CITY — um jogo urbano de exploração"></div>
+      </div>
+      <div class="cfg-row">
+        <div class="cfg-field"><label>Botão "Novo jogo"</label><input type="text" id="ui-menu-btn-newgame" placeholder="NOVO JOGO"></div>
+        <div class="cfg-field"><label>Botão "Continuar"</label><input type="text" id="ui-menu-btn-continue" placeholder="CONTINUAR"></div>
+        <div class="cfg-field"><label>Botão "Resetar progresso"</label><input type="text" id="ui-menu-btn-reset" placeholder="RESETAR PROGRESSO"></div>
+      </div>
+
+      <div class="cfg-section-title">Tela "Você foi pego" (derrota)</div>
+      <div class="cfg-row">
+        <div class="cfg-field"><label>Imagem de fundo</label><input type="file" id="ui-lose-bg-file" accept="image/*"></div>
+        <button class="ogeid-btn small" id="ui-lose-bg-remove" type="button">Remover fundo</button>
+      </div>
+      <div class="cfg-row">
+        <div class="cfg-field"><label>Título</label><input type="text" id="ui-lose-title" placeholder="VOCÊ FOI PEGO!"></div>
+        <div class="cfg-field"><label>Subtítulo</label><input type="text" id="ui-lose-subtitle" placeholder="O guarda encerrou sua produção artística."></div>
+      </div>
+      <div class="cfg-row">
+        <div class="cfg-field"><label>Botão "Tentar novamente"</label><input type="text" id="ui-lose-btn-retry" placeholder="TENTAR NOVAMENTE"></div>
+        <div class="cfg-field"><label>Botão "Voltar ao menu"</label><input type="text" id="ui-lose-btn-menu" placeholder="VOLTAR AO MENU"></div>
+      </div>
+
+      <div class="cfg-section-title">Tela de vitória (missão concluída)</div>
+      <div class="cfg-row">
+        <div class="cfg-field"><label>Imagem de fundo</label><input type="file" id="ui-win-bg-file" accept="image/*"></div>
+        <button class="ogeid-btn small" id="ui-win-bg-remove" type="button">Remover fundo</button>
+      </div>
+      <div class="cfg-row">
+        <div class="cfg-field"><label>Título</label><input type="text" id="ui-win-title" placeholder="MISSÃO CONCLUÍDA"></div>
+        <div class="cfg-field"><label>Subtítulo</label><input type="text" id="ui-win-subtitle" placeholder="A CIDADE AGORA É OGEID."></div>
+      </div>
+      <div class="cfg-row">
+        <div class="cfg-field"><label>Botão "Jogar novamente"</label><input type="text" id="ui-win-btn-playagain" placeholder="JOGAR NOVAMENTE"></div>
+        <div class="cfg-field"><label>Botão "Voltar ao menu"</label><input type="text" id="ui-win-btn-menu" placeholder="VOLTAR AO MENU"></div>
+      </div>
+
+      <div class="cfg-list" id="ui-screens-status"></div>
+    </div>
+
+    <!-- HUD DO JOGO -->
+    <div class="cfg-panel" data-panel="hud">
+      <p class="cfg-help">Escolha <b>onde cada elemento da interface aparece na tela</b> durante o jogo (mapa/minimapa, contador de recursos, lista de spots livres e a barra de objetivo/botões de ação) e o <b>visual</b> dos painéis do HUD. Elementos colocados no mesmo canto se empilham automaticamente, sem se sobrepor.</p>
+
+      <div class="cfg-section-title">Posição dos elementos</div>
+      <div class="cfg-row">
+        <div class="cfg-field"><label>Minimapa</label>
+          <select id="hud-pos-minimap"></select>
+        </div>
+        <div class="cfg-field"><label>Contador de recursos (sprays)</label>
+          <select id="hud-pos-inventory"></select>
+        </div>
+        <div class="cfg-field"><label>Spots livres (progresso)</label>
+          <select id="hud-pos-spots"></select>
+        </div>
+        <div class="cfg-field"><label>Barra de objetivo / botões de ação</label>
+          <select id="hud-pos-objective"></select>
+        </div>
+      </div>
+
+      <div class="cfg-subtitle">Pré-visualização das zonas</div>
+      <div class="hud-zone-grid" id="hud-zone-preview"></div>
+
+      <div class="cfg-section-title">Design dos painéis</div>
+      <div class="cfg-row">
+        <div class="cfg-field"><label>Cor de destaque (progresso, minimapa, contador)</label><input type="color" id="hud-accent" value="#7CFF3C"></div>
+        <div class="cfg-field"><label>Opacidade do fundo dos painéis</label><input type="range" id="hud-opacity" min="0.3" max="0.95" step="0.05" value="0.72"></div>
+        <div class="cfg-field"><label>Arredondamento das bordas</label><input type="range" id="hud-radius" min="0" max="24" step="1" value="10"></div>
+      </div>
+      <button class="ogeid-btn primary small" id="hud-save">SALVAR INTERFACE</button>
+      <div class="cfg-list" id="hud-status"></div>
+    </div>
+
+    <!-- CHECKLIST -->
+    <div class="cfg-panel" data-panel="checklist">
+      <p class="cfg-help">Lista automática de todo arquivo que o jogo pode usar, calculada a partir do que você já configurou nas outras abas (objetos, sprays, spots, guardas). Atualiza sozinha sempre que você abre esta aba. <b>OBRIGATÓRIO</b> = sem isso o personagem/guarda não funciona direito (o jogo usa placeholder vetorial genérico até você enviar). <b>RECOMENDADO</b> = melhora bastante a experiência mas o jogo já tem um substituto razoável. <b>OPCIONAL</b> = polimento extra (ângulos diagonais, modelos 3D, telas customizadas, vídeos — tudo isso já tem um fallback automático caprichado).</p>
+      <div id="checklist-summary"></div>
+      <div id="checklist-sections"></div>
+    </div>
+  </div>
+
+  <div class="cfg-footer">
+    <div class="btn-row">
+      <button class="ogeid-btn small" id="cfg-export">EXPORTAR CONFIGURAÇÃO (.json)</button>
+      <label class="ogeid-btn small" style="cursor:pointer;">IMPORTAR (.json)<input type="file" id="cfg-import" accept="application/json" style="display:none;"></label>
+    </div>
+    <div class="btn-row">
+      <button class="ogeid-btn danger small" id="cfg-reset-all">RESTAURAR PADRÃO (apaga uploads)</button>
+      <button class="ogeid-btn primary" id="cfg-apply">SALVAR CONFIGURAÇÃO</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-stack"></div>
+
+<script>
+/* =====================================================================================
+   OGEID · CONFIGURADOR (página administrativa, separada do jogo)
+   Lê/escreve os MESMOS dados que o jogo usa: localStorage (chave ogeid_userconfig_v1)
+   e IndexedDB (arquivos enviados). Precisa estar no MESMO domínio do ogeid-game.html
+   para que as alterações apareçam para os jogadores.
+   ===================================================================================== */
+(function(){
+"use strict";
+
+/* ---- Valores padrão apenas para referência/pré-visualização (o jogo tem a cópia completa) ---- */
+const CONFIG = {
+  map:{
+    width: 2400, height: 1600,
+    objects: [
+      {id:"building_01", x:250,  y:150, width:300, height:220, label:"BLOCO A"},
+      {id:"building_02", x:700,  y:120, width:260, height:260, label:"BLOCO B"},
+      {id:"building_03", x:1150, y:180, width:320, height:200, label:"BLOCO C"},
+      {id:"building_04", x:1650, y:150, width:280, height:240, label:"BLOCO D"},
+      {id:"building_05", x:2000, y:220, width:250, height:220, label:"BLOCO E"},
+      {id:"building_06", x:200,  y:600, width:280, height:240, label:"BLOCO F"},
+      {id:"building_07", x:650,  y:650, width:300, height:220, label:"BLOCO G"},
+      {id:"building_08", x:1100, y:620, width:260, height:260, label:"BLOCO H"},
+      {id:"building_09", x:1600, y:600, width:300, height:240, label:"BLOCO I"},
+      {id:"building_10", x:2000, y:650, width:260, height:220, label:"BLOCO J"},
+      {id:"building_11", x:300,  y:1050,width:300, height:230, label:"BLOCO K"},
+      {id:"building_12", x:750,  y:1080,width:280, height:220, label:"BLOCO L"},
+      {id:"building_13", x:1200, y:1050,width:300, height:240, label:"BLOCO M"},
+      {id:"building_14", x:1650, y:1080,width:280, height:220, label:"BLOCO N"},
+      {id:"building_15", x:2050, y:1050,width:250, height:230, label:"BLOCO O"}
+    ]
+  },
+  sprayTypes:{
+    red:     {label:"Vermelho", color:"#ff2f92", swatch:"#ff2f92"},
+    blue:    {label:"Azul",     color:"#17d6e8", swatch:"#17d6e8"},
+    yellow:  {label:"Amarelo",  color:"#ffe14d", swatch:"#ffe14d"},
+    black:   {label:"Preto",    color:"#e7e7ea", swatch:"#2b2d36"},
+    special: {label:"Especial", color:"#7CFF3C", swatch:"#7CFF3C"}
+  },
+  spots:[
+    {id:"spot01", name:"SPOT 01", x:560,  y:380,  requirements:{red:2}},
+    {id:"spot02", name:"SPOT 02", x:1350, y:420,  requirements:{red:3, blue:1}},
+    {id:"spot03", name:"SPOT 03", x:980,  y:900,  requirements:{black:2, yellow:2}},
+    {id:"spot04", name:"SPOT 04", x:1930, y:870,  requirements:{blue:3, red:2}},
+    {id:"spot05", name:"SPOT 05", x:1500, y:1300, requirements:{special:5}}
+  ],
+  sprays:[
+    {id:"spray_01",x:480, y:430, type:"red"}, {id:"spray_02",x:820, y:380, type:"red"},
+    {id:"spray_03",x:1300,y:420, type:"red"}, {id:"spray_04",x:1780,y:400, type:"blue"},
+    {id:"spray_05",x:2150,y:460, type:"red"}, {id:"spray_06",x:380, y:820, type:"black"},
+    {id:"spray_07",x:900, y:900, type:"black"},{id:"spray_08",x:1420,y:860, type:"yellow"},
+    {id:"spray_09",x:1850,y:900, type:"blue"}, {id:"spray_10",x:2200,y:840, type:"blue"},
+    {id:"spray_11",x:520, y:1280,type:"special"},{id:"spray_12",x:900, y:1320,type:"special"},
+    {id:"spray_13",x:1280,y:1300,type:"special"},{id:"spray_14",x:1680,y:1330,type:"special"},
+    {id:"spray_15",x:2100,y:1300,type:"special"},{id:"spray_16",x:1900,y:1300,type:"special"},
+    {id:"spray_17",x:150, y:1150,type:"yellow"}, {id:"spray_18",x:620, y:560, type:"red"},
+    {id:"spray_19",x:1980,y:1030,type:"yellow"}, {id:"spray_20",x:1080,y:520, type:"blue"}
+  ]
+};
+const USERCONFIG_KEY = "ogeid_userconfig_v1";
+const DIRS = ["down","frontDiag","side","backDiag","up"];
+const DIR_LABELS = {
+  down:"Frente (câmera na frente do personagem)",
+  frontDiag:"Diagonal frente (câmera ~45° — espelha sozinho pro outro lado)",
+  side:"Lado (câmera de perfil, 90° — espelha sozinho pro outro lado)",
+  backDiag:"Diagonal costas (câmera ~135° — espelha sozinho pro outro lado)",
+  up:"Costas (câmera atrás do personagem)"
+};
+/* Só "down" e "up" são obrigatórios pra o personagem já funcionar em 3D — "side" é MUITO recomendado
+   (sem ele o jogo usa "down" espelhado, o que fica estranho de perfil). "frontDiag" e "backDiag" são
+   opcionais: sem eles, o jogo reaproveita a arte de "side" nesses ângulos — funciona, só fica menos suave
+   a "rotação" do personagem quando a câmera orbita. Quanto mais direções você enviar, mais o personagem
+   parece de verdade 3D/360° ao redor da câmera. */
+const MOVE_STATES = ["idle","walk","run"];
+const STATE_LABELS = {idle:"Parado", walk:"Caminhando", run:"Correndo"};
+
+/* ---- Paleta de cores do jogador/guarda/guardas extras — mesmos campos/padrões usados
+   pelo jogo (Humanoid3D), que renderiza os personagens como modelo 3D feito por código,
+   sem sprites/imagens. Ver CONFIG.player.palette / CONFIG.guard.palette no ogeid-game.html. ---- */
+const PALETTE_PARTS = [
+  {key:"body",   label:"Corpo (torso)"},
+  {key:"accent", label:"Detalhe / listra"},
+  {key:"legs",   label:"Pernas"},
+  {key:"arms",   label:"Braços"},
+  {key:"skin",   label:"Pele (rosto)"}
+];
+const DEFAULT_PLAYER_PALETTE      = {body:"#1c1c22", accent:"#ff2f92", legs:"#111114", arms:"#1c1c22", skin:"#e8b48a"};
+const DEFAULT_GUARD_PALETTE       = {body:"#1e2b4d", accent:"#ffe14d", legs:"#12131a", arms:"#1e2b4d", skin:"#d9a878"};
+/* Modelo 3D animado (opcional, substitui o boneco de cores no jogo) — "base" é o .glb com a
+   malha+esqueleto; os demais campos são cada um um .glb SEPARADO contendo só a animação daquele
+   estado, exportado pro MESMO esqueleto do "base" (ex.: Mixamo/Blender, uma animação por arquivo).
+   *FileName guarda o nome original só pra mostrar na lista — não é usado pelo jogo. */
+const CHAR_MODEL_SLOTS = [
+  {key:"base",     label:"Modelo base (malha + esqueleto)", help:"Obrigatório pra ativar o personagem 3D animado. É o .glb com o corpo completo e os ossos — pode já vir com uma pose/animação padrão embutida (usada como \"parado\" se nenhum arquivo de \"Parado\" for enviado abaixo)."},
+  {key:"idle",     label:"Parado (idle)"},
+  {key:"walk",     label:"Andando"},
+  {key:"run",      label:"Correndo"},
+  {key:"painting", label:"Pintando"},
+  {key:"captured", label:"Capturado"},
+  {key:"jump",     label:"Pulo"},
+  {key:"wave",     label:"Emote: aceno"},
+  {key:"dance",    label:"Emote: dança"},
+  {key:"point",    label:"Emote: apontar"}
+];
+function defaultCharModel(){
+  const m = {};
+  CHAR_MODEL_SLOTS.forEach(s=>{ m[s.key]=null; m[s.key+"FileName"]=null; });
+  return m;
+}
+const DEFAULT_GUARD_EXTRA_PALETTE = {body:"#1e2b4d", accent:"#17d6e8", legs:"#12131a", arms:"#1e2b4d", skin:"#d9a878"};
+
+/* ---- Controles (teclas) do jogador — mesmos campos/padrões usados pelo jogo (CONFIG.controls) ---- */
+const DEFAULT_CONTROLS = {
+  forward:"KeyW", backward:"KeyS", left:"KeyA", right:"KeyD",
+  run:"ShiftLeft", interact:"KeyE", jump:"Space",
+  emote1:"Digit1", emote1Type:"wave",
+  emote2:"Digit2", emote2Type:"dance",
+  emote3:"Digit3", emote3Type:"point"
+};
+const CONTROL_ACTIONS = [
+  {key:"forward",  label:"Mover para frente"},
+  {key:"backward", label:"Mover para trás"},
+  {key:"left",     label:"Mover para esquerda"},
+  {key:"right",    label:"Mover para direita"},
+  {key:"run",      label:"Correr (segurar)"},
+  {key:"interact", label:"Interagir / Pintar"},
+  {key:"jump",     label:"Pular"},
+  {key:"emote1",   label:"Emote 1", typeKey:"emote1Type"},
+  {key:"emote2",   label:"Emote 2", typeKey:"emote2Type"},
+  {key:"emote3",   label:"Emote 3", typeKey:"emote3Type"}
+];
+const EMOTE_TYPES = [
+  {v:"wave",  label:"Aceno"},
+  {v:"dance", label:"Dança"},
+  {v:"point", label:"Apontar"}
+];
+const KEY_CODE_LABELS = {
+  Space:"ESPAÇO", ShiftLeft:"SHIFT ESQ.", ShiftRight:"SHIFT DIR.",
+  ControlLeft:"CTRL ESQ.", ControlRight:"CTRL DIR.", AltLeft:"ALT ESQ.", AltRight:"ALT DIR.",
+  ArrowUp:"↑", ArrowDown:"↓", ArrowLeft:"←", ArrowRight:"→",
+  Enter:"ENTER", Escape:"ESC", Tab:"TAB", CapsLock:"CAPS LOCK", Backquote:"`"
+};
+function formatKeyCode(code){
+  if(!code) return "—";
+  if(KEY_CODE_LABELS[code]) return KEY_CODE_LABELS[code];
+  if(/^Key[A-Z]$/.test(code)) return code.slice(3);
+  if(/^Digit[0-9]$/.test(code)) return code.slice(5);
+  if(/^Numpad[0-9]$/.test(code)) return "NUM "+code.slice(6);
+  return code;
+}
+
+const $ = (sel)=>document.querySelector(sel);
+const $$ = (sel)=>Array.from(document.querySelectorAll(sel));
+const uid = (p)=> p+"_"+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+
+function toast(html){
+  const stack=$("#toast-stack"); const el=document.createElement("div");
+  el.className="toast"; el.innerHTML=html; stack.appendChild(el);
+  setTimeout(()=>el.remove(),2800);
+}
+
+/* ---- IndexedDB — mesmo esquema usado pelo jogo ---- */
+const IDB = (function(){
+  const DB_NAME="ogeid_assets_db", STORE="files";
+  function open(){
+    return new Promise((res,rej)=>{
+      const req = indexedDB.open(DB_NAME,1);
+      req.onupgradeneeded = ()=>{ req.result.createObjectStore(STORE); };
+      req.onsuccess = ()=>res(req.result);
+      req.onerror = ()=>rej(req.error);
+    });
+  }
+  async function set(key, blob){
+    const db = await open();
+    return new Promise((res,rej)=>{
+      const tx = db.transaction(STORE,"readwrite");
+      tx.objectStore(STORE).put(blob,key);
+      tx.oncomplete=()=>res(true); tx.onerror=()=>rej(tx.error);
+    });
+  }
+  async function clear(){
+    const db = await open();
+    return new Promise((res,rej)=>{
+      const tx = db.transaction(STORE,"readwrite");
+      tx.objectStore(STORE).clear();
+      tx.oncomplete=()=>res(true); tx.onerror=()=>rej(tx.error);
+    });
+  }
+  return { set, clear };
+})();
+
+/* ---- UserConfig — mesmo formato usado pelo jogo ---- */
+function loadUserConfig(){
+  try{ const raw = localStorage.getItem(USERCONFIG_KEY); return raw ? JSON.parse(raw) : null; }catch(e){ return null; }
+}
+function saveUserConfig(uc){ try{ localStorage.setItem(USERCONFIG_KEY, JSON.stringify(uc)); }catch(e){ console.warn(e); } }
+function defaultUserConfig(){
+  return {
+    backgroundAssetKey:null, objects:[], spots:[], sprays:[],
+    sprayIcons:{ red:null, blue:null, yellow:null, black:null, special:null },
+    /* aparência 3D (paleta de cores) do jogador/guarda — o jogo os renderiza como modelo 3D
+       feito por código (Humanoid3D), sem sprites/imagens; ver PALETTE_PARTS acima. */
+    playerPalette: Object.assign({}, DEFAULT_PLAYER_PALETTE),
+    guardPalette: Object.assign({}, DEFAULT_GUARD_PALETTE),
+    /* modelo 3D animado — null enquanto ninguém enviar nada (o jogo cai pro boneco de cores acima);
+       guardModel vale pro guarda principal E pra todos os guardas extras */
+    playerModel: defaultCharModel(),
+    guardModel: defaultCharModel(),
+    /* teclas do jogador — cada valor é um "code" de teclado (ver CONTROL_ACTIONS acima) */
+    controls: Object.assign({}, DEFAULT_CONTROLS),
+    guards:[],
+    bots:[],
+    videos:{ intro:null, lose:null, win:null },
+    guardEvent:{ enabled:false, x:1000,y:1000,width:300,height:250, title:"O GUARDA APARECE", cutsceneAssetKey:null, spawnX:1050, spawnY:1050 },
+    ui:{
+      menu:{ backgroundAssetKey:null, title:null, subtitle:null, buttons:{ newGame:null, continueGame:null, reset:null } },
+      lose:{ backgroundAssetKey:null, title:null, subtitle:null, buttons:{ retry:null, menu:null } },
+      win:{ backgroundAssetKey:null, title:null, subtitle:null, buttons:{ playAgain:null, menu:null } }
+    },
+    hud:{
+      layout:{ objective:"top-center", spots:"top-left", inventory:"bottom-left", minimap:"top-right" },
+      theme:{ accent:"#7CFF3C", panelOpacity:0.72, radius:10 }
+    }
+  };
+}
+let UserConfig = loadUserConfig() || defaultUserConfig();
+/* garante que configurações salvas antes desta versão não quebrem a tela (preenche campos que faltarem) */
+UserConfig = Object.assign(defaultUserConfig(), UserConfig, {
+  sprayIcons: Object.assign({red:null,blue:null,yellow:null,black:null,special:null}, UserConfig.sprayIcons||{}),
+  playerPalette: Object.assign({}, DEFAULT_PLAYER_PALETTE, UserConfig.playerPalette||{}),
+  guardPalette: Object.assign({}, DEFAULT_GUARD_PALETTE, UserConfig.guardPalette||{}),
+  playerModel: Object.assign(defaultCharModel(), UserConfig.playerModel||{}),
+  guardModel: Object.assign(defaultCharModel(), UserConfig.guardModel||{}),
+  controls: Object.assign({}, DEFAULT_CONTROLS, UserConfig.controls||{}),
+  ui: Object.assign(defaultUserConfig().ui, UserConfig.ui||{}, {
+    menu: Object.assign(defaultUserConfig().ui.menu, (UserConfig.ui||{}).menu||{}, { buttons: Object.assign({newGame:null,continueGame:null,reset:null}, ((UserConfig.ui||{}).menu||{}).buttons||{}) }),
+    lose: Object.assign(defaultUserConfig().ui.lose, (UserConfig.ui||{}).lose||{}, { buttons: Object.assign({retry:null,menu:null}, ((UserConfig.ui||{}).lose||{}).buttons||{}) }),
+    win:  Object.assign(defaultUserConfig().ui.win,  (UserConfig.ui||{}).win||{},  { buttons: Object.assign({playAgain:null,menu:null}, ((UserConfig.ui||{}).win||{}).buttons||{}) })
+  }),
+  /* guardas extras salvos numa versão anterior (com "anim" de sprites) ganham uma paleta
+     padrão aqui — o jogo já ignora "anim" e só lê "palette". */
+  guards: (UserConfig.guards||[]).map(g=> Object.assign({}, g, { palette: Object.assign({}, DEFAULT_GUARD_EXTRA_PALETTE, g.palette||{}) })),
+  bots: UserConfig.bots||[],
+  hud: {
+    layout: Object.assign({}, defaultUserConfig().hud.layout, (UserConfig.hud||{}).layout||{}),
+    theme: Object.assign({}, defaultUserConfig().hud.theme, (UserConfig.hud||{}).theme||{})
+  }
+});
+
+/* ================= CONFIGURADOR — UI ================= */
+const cfgCanvas = $("#cfg-preview-canvas");
+const cfgCtx = cfgCanvas.getContext("2d");
+let cfgActiveTab = "cenario";
+let cfgPickTarget = null; // {x,y} — ids dos inputs que o próximo clique no mapa vai preencher
+
+function cfgDrawPreview(){
+  const W=cfgCanvas.width, H=cfgCanvas.height;
+  cfgCtx.clearRect(0,0,W,H); cfgCtx.fillStyle="#101119"; cfgCtx.fillRect(0,0,W,H);
+  const sx=W/CONFIG.map.width, sy=H/CONFIG.map.height;
+  const objs = UserConfig.objects.length ? UserConfig.objects : CONFIG.map.objects;
+  objs.forEach(o=>{
+    cfgCtx.fillStyle = o.paintable ? "#3a1f38" : "#20222c";
+    cfgCtx.fillRect(o.x*sx,o.y*sy,o.width*sx,o.height*sy);
+    if(o.paintable){ cfgCtx.strokeStyle="#ff2f92"; cfgCtx.lineWidth=1.5; cfgCtx.strokeRect(o.x*sx,o.y*sy,o.width*sx,o.height*sy); }
+    if(o.model3dAssetKey){
+      cfgCtx.strokeStyle="#17d6e8"; cfgCtx.lineWidth=1.5; cfgCtx.setLineDash([3,3]);
+      cfgCtx.strokeRect(o.x*sx+2,o.y*sy+2,o.width*sx-4,o.height*sy-4);
+      cfgCtx.setLineDash([]);
+      cfgCtx.fillStyle="#17d6e8"; cfgCtx.font="9px monospace"; cfgCtx.fillText("3D",o.x*sx+4,o.y*sy+12);
+      cfgCtx.fillStyle = o.paintable ? "#3a1f38" : "#20222c";
+    }
+  });
+  const spots = UserConfig.spots.length ? UserConfig.spots : CONFIG.spots;
+  // linha pontilhada do spot até o objeto do cenário vinculado (se houver)
+  cfgCtx.strokeStyle="rgba(255,47,146,0.55)"; cfgCtx.lineWidth=1.5; cfgCtx.setLineDash([4,4]);
+  spots.forEach(s=>{
+    if(!s.linkedObjectId) return;
+    const o = objs.find(x=>x.id===s.linkedObjectId); if(!o) return;
+    const ocx=(o.x+o.width/2)*sx, ocy=(o.y+o.height/2)*sy;
+    cfgCtx.beginPath(); cfgCtx.moveTo(s.x*sx,s.y*sy); cfgCtx.lineTo(ocx,ocy); cfgCtx.stroke();
+  });
+  cfgCtx.setLineDash([]);
+  cfgCtx.fillStyle="#ff2f92";
+  spots.forEach(s=>{ cfgCtx.beginPath(); cfgCtx.arc(s.x*sx,s.y*sy,6,0,Math.PI*2); cfgCtx.fill(); });
+  cfgCtx.fillStyle="#7CFF3C";
+  (UserConfig.sprays.length ? UserConfig.sprays : CONFIG.sprays).forEach(s=>{ cfgCtx.beginPath(); cfgCtx.arc(s.x*sx,s.y*sy,3.5,0,Math.PI*2); cfgCtx.fill(); });
+  cfgCtx.fillStyle="#17d6e8";
+  (UserConfig.guards||[]).forEach(g=>{
+    cfgCtx.beginPath(); cfgCtx.arc(g.spawnX*sx,g.spawnY*sy,5,0,Math.PI*2); cfgCtx.fill();
+    if(g.patrolToX!==undefined){
+      cfgCtx.strokeStyle="rgba(23,214,232,0.5)"; cfgCtx.lineWidth=1.5;
+      cfgCtx.beginPath(); cfgCtx.moveTo(g.spawnX*sx,g.spawnY*sy); cfgCtx.lineTo(g.patrolToX*sx,g.patrolToY*sy); cfgCtx.stroke();
+      cfgCtx.beginPath(); cfgCtx.arc(g.patrolToX*sx,g.patrolToY*sy,4,0,Math.PI*2); cfgCtx.stroke();
+    }
+  });
+  (UserConfig.bots||[]).forEach(b=>{
+    const hostile = b.hostile!==false;
+    cfgCtx.fillStyle = hostile ? "#ff2f92" : "#7CFF3C";
+    cfgCtx.beginPath(); cfgCtx.arc(b.spawnX*sx,b.spawnY*sy,5,0,Math.PI*2); cfgCtx.fill();
+    if(b.patrolToX!==undefined){
+      cfgCtx.strokeStyle = hostile ? "rgba(255,47,146,0.5)" : "rgba(124,255,60,0.5)"; cfgCtx.lineWidth=1.5;
+      cfgCtx.beginPath(); cfgCtx.moveTo(b.spawnX*sx,b.spawnY*sy); cfgCtx.lineTo(b.patrolToX*sx,b.patrolToY*sy); cfgCtx.stroke();
+      cfgCtx.beginPath(); cfgCtx.arc(b.patrolToX*sx,b.patrolToY*sy,4,0,Math.PI*2); cfgCtx.stroke();
+    }
+  });
+  if(UserConfig.guardEvent && UserConfig.guardEvent.enabled){
+    const ge=UserConfig.guardEvent;
+    cfgCtx.strokeStyle="#ff4d4d"; cfgCtx.lineWidth=2; cfgCtx.setLineDash([6,4]);
+    cfgCtx.strokeRect(ge.x*sx, ge.y*sy, ge.width*sx, ge.height*sy);
+    cfgCtx.setLineDash([]);
+    cfgCtx.fillStyle="#ffe14d";
+    cfgCtx.beginPath(); cfgCtx.arc(ge.spawnX*sx, ge.spawnY*sy, 6,0,Math.PI*2); cfgCtx.fill();
+  }
+}
+cfgCanvas.addEventListener("click",(e)=>{
+  const rect = cfgCanvas.getBoundingClientRect();
+  const relX = (e.clientX-rect.left)/rect.width, relY=(e.clientY-rect.top)/rect.height;
+  const wx = Math.round(relX*CONFIG.map.width), wy = Math.round(relY*CONFIG.map.height);
+  if(cfgPickTarget){ $(cfgPickTarget.x).value=wx; $(cfgPickTarget.y).value=wy; cfgPickTarget=null; toast("Ponto definido."); return; }
+  if(cfgActiveTab==="cenario"){ $("#obj-x").value=wx; $("#obj-y").value=wy; }
+  else if(cfgActiveTab==="pintaveis"){ $("#spot-x").value=wx; $("#spot-y").value=wy; }
+  else if(cfgActiveTab==="sprays"){ $("#spray-x").value=wx; $("#spray-y").value=wy; }
+  else if(cfgActiveTab==="guarda"){ $("#ge-x").value=wx; $("#ge-y").value=wy; }
+});
+
+function cfgSwitchTab(tab){
+  cfgActiveTab = tab;
+  $$(".cfg-tab-btn").forEach(b=> b.classList.toggle("active", b.dataset.tab===tab));
+  $$(".cfg-panel").forEach(p=> p.classList.toggle("active", p.dataset.panel===tab));
+  if(tab==="checklist") cfgRenderChecklist();
+}
+$$(".cfg-tab-btn").forEach(btn=> btn.addEventListener("click", ()=> cfgSwitchTab(btn.dataset.tab)));
+
+/* ---- Jogador / guarda principal / guardas extras: paleta de cores (personagem 3D por código,
+   sem sprites/imagens — ver Humanoid3D no ogeid-game.html). Desenha uma pré-visualização em SVG
+   com as mesmas partes do corpo do modelo 3D real, pra facilitar visualizar a combinação de cores. ---- */
+function paletteBonecoSVG(p){
+  return `<svg viewBox="0 0 100 150" width="92" height="138" xmlns="http://www.w3.org/2000/svg">
+    <rect x="30" y="95" width="16" height="50" rx="2" fill="${p.legs}"/>
+    <rect x="54" y="95" width="16" height="50" rx="2" fill="${p.legs}"/>
+    <rect x="8"  y="58" width="16" height="42" rx="2" fill="${p.arms}"/>
+    <rect x="76" y="58" width="16" height="42" rx="2" fill="${p.arms}"/>
+    <rect x="26" y="55" width="48" height="42" rx="2" fill="${p.body}"/>
+    <rect x="24" y="66" width="52" height="8" fill="${p.accent}"/>
+    <rect x="30" y="15" width="40" height="40" rx="2" fill="${p.skin}"/>
+    <rect x="28" y="9"  width="44" height="10" rx="2" fill="${p.accent}"/>
+    <rect x="38" y="30" width="24" height="7" fill="${p.accent}"/>
+  </svg>`;
+}
+/* wrap = elemento onde a paleta é montada · palette = objeto {body,accent,legs,arms,skin} (mutado
+   diretamente) · onCommit = chamado quando o usuário solta o seletor de cor (evento "change") */
+function buildPaletteRow(palette, onCommit){
+  const wrap = document.createElement("div"); wrap.className="palette-row";
+  const fields = document.createElement("div"); fields.className="palette-fields";
+  const preview = document.createElement("div"); preview.className="palette-preview";
+  function redraw(){ preview.innerHTML = paletteBonecoSVG(palette); }
+  PALETTE_PARTS.forEach(part=>{
+    const field = document.createElement("div"); field.className="palette-field";
+    const label = document.createElement("label"); label.textContent = part.label;
+    const input = document.createElement("input"); input.type="color"; input.value = palette[part.key] || "#000000";
+    input.addEventListener("input", ()=>{ palette[part.key] = input.value; redraw(); });
+    input.addEventListener("change", ()=>{ palette[part.key] = input.value; redraw(); if(onCommit) onCommit(part.key, input.value); });
+    field.appendChild(label); field.appendChild(input);
+    fields.appendChild(field);
+  });
+  redraw();
+  wrap.appendChild(fields); wrap.appendChild(preview);
+  return wrap;
+}
+function renderPlayerPaletteFields(){
+  const host = $("#player-palette-row"); host.innerHTML="";
+  host.appendChild(buildPaletteRow(UserConfig.playerPalette, ()=> toast("Paleta do <b>jogador</b> atualizada. Clique em SALVAR CONFIGURAÇÃO para publicar.")));
+}
+function renderGuardPaletteFields(){
+  const host = $("#guard-palette-row"); host.innerHTML="";
+  host.appendChild(buildPaletteRow(UserConfig.guardPalette, ()=> toast("Paleta do <b>guarda</b> atualizada. Clique em SALVAR CONFIGURAÇÃO para publicar.")));
+}
+
+/* ---- Modelo 3D animado (jogador/guarda) — upload de um .glb por "slot" (malha base +
+   uma animação por estado). Guarda cada arquivo no IndexedDB e a chave em UserConfig.
+   configKey = "playerModel" ou "guardModel" · roleLabel = texto pro toast ("jogador"/"guarda") ---- */
+function buildAnimatedModelUploadBlock(configKey, roleLabel){
+  const modelObj = UserConfig[configKey];
+  const wrap = document.createElement("div"); wrap.style.marginTop="14px"; wrap.style.borderTop="1px solid var(--line)"; wrap.style.paddingTop="14px";
+  const title = document.createElement("p"); title.className="cfg-help";
+  title.innerHTML = `<b>Modelo 3D animado (opcional)</b> — se enviar pelo menos o "Modelo base" abaixo, o jogo usa esse modelo real (com as animações enviadas) no lugar do boneco de cores pro <b>${roleLabel}</b>. Cada campo é um arquivo <b>.glb</b> (ou .gltf) separado — o "base" traz a malha e o esqueleto; os demais trazem só a animação daquele estado, exportada pro mesmo esqueleto (ex.: um pacote Mixamo/Blender com um arquivo por animação). Estados sem arquivo caem de volta pro "Parado".`;
+  wrap.appendChild(title);
+
+  const list = document.createElement("div"); list.className="cfg-list";
+  CHAR_MODEL_SLOTS.forEach(slot=>{
+    const row = document.createElement("div"); row.className="cfg-field";
+    const label = document.createElement("label");
+    label.textContent = slot.label + (modelObj[slot.key] ? ` — enviado ✓${modelObj[slot.key+"FileName"]?" ("+modelObj[slot.key+"FileName"]+")":""}` : "");
+    const input = document.createElement("input"); input.type="file"; input.accept=".glb,.gltf";
+    input.addEventListener("change", async (e)=>{
+      const file = e.target.files[0]; if(!file) return;
+      if(!/\.(glb|gltf)$/i.test(file.name)){ toast("O arquivo precisa ser <b>.glb</b> ou <b>.gltf</b>."); e.target.value=""; return; }
+      const key = `${configKey}_${slot.key}_glb`;
+      await IDB.set(key, file);
+      modelObj[slot.key] = key; modelObj[slot.key+"FileName"] = file.name;
+      toast(`"${slot.label}" do <b>${roleLabel}</b> salvo. Clique em SALVAR CONFIGURAÇÃO para publicar.`);
+      renderBlock();
+    });
+    row.appendChild(label); row.appendChild(input);
+    if(slot.help){ const h=document.createElement("p"); h.className="cfg-help"; h.style.marginTop="-4px"; h.textContent=slot.help; row.appendChild(h); }
+    list.appendChild(row);
+  });
+  wrap.appendChild(list);
+
+  const clearBtn = document.createElement("button");
+  clearBtn.className = "ogeid-btn small"; clearBtn.textContent = "REMOVER MODELO 3D (voltar pro boneco de cores)";
+  clearBtn.addEventListener("click", ()=>{
+    CHAR_MODEL_SLOTS.forEach(s=>{ modelObj[s.key]=null; modelObj[s.key+"FileName"]=null; });
+    toast(`Modelo 3D do <b>${roleLabel}</b> removido. Clique em SALVAR CONFIGURAÇÃO para publicar.`);
+    renderBlock();
+  });
+  wrap.appendChild(clearBtn);
+
+  function renderBlock(){
+    const host = $(configKey==="playerModel" ? "#player-model-row" : "#guard-model-row");
+    host.innerHTML = ""; host.appendChild(buildAnimatedModelUploadBlock(configKey, roleLabel));
+  }
+  return wrap;
+}
+function renderPlayerModelFields(){
+  const host = $("#player-model-row"); host.innerHTML="";
+  host.appendChild(buildAnimatedModelUploadBlock("playerModel","jogador"));
+}
+function renderGuardModelFields(){
+  const host = $("#guard-model-row"); host.innerHTML="";
+  host.appendChild(buildAnimatedModelUploadBlock("guardModel","guarda"));
+}
+
+/* ---- Controles: cada ação do jogador tem uma tecla ("code" do teclado) capturada ao vivo ---- */
+let controlsDraft = null;
+function cfgInitControlsDraft(){ controlsDraft = Object.assign({}, DEFAULT_CONTROLS, UserConfig.controls); }
+function renderControlsTab(){
+  if(!controlsDraft) cfgInitControlsDraft();
+  const host = $("#controls-list"); host.innerHTML="";
+  CONTROL_ACTIONS.forEach(action=>{
+    const row = document.createElement("div"); row.className="cfg-item key-row";
+    const left = document.createElement("div"); left.className="key-row-left";
+    const badge = document.createElement("span"); badge.className="key-badge"; badge.textContent = formatKeyCode(controlsDraft[action.key]);
+    const name = document.createElement("span"); name.className="name"; name.textContent = action.label;
+    left.appendChild(badge); left.appendChild(name);
+
+    const right = document.createElement("div"); right.className="key-row-right";
+    if(action.typeKey){
+      const sel = document.createElement("select");
+      EMOTE_TYPES.forEach(t=>{
+        const opt = document.createElement("option"); opt.value=t.v; opt.textContent=t.label;
+        if(controlsDraft[action.typeKey]===t.v) opt.selected = true;
+        sel.appendChild(opt);
+      });
+      sel.addEventListener("change", ()=>{ controlsDraft[action.typeKey] = sel.value; });
+      right.appendChild(sel);
+    }
+    const btn = document.createElement("button"); btn.type="button"; btn.className="ogeid-btn small key-capture-btn"; btn.textContent="DEFINIR TECLA";
+    btn.addEventListener("click", ()=>{
+      btn.textContent = "PRESSIONE UMA TECLA..."; btn.classList.add("listening");
+      const handler = (e)=>{
+        e.preventDefault(); e.stopPropagation();
+        document.removeEventListener("keydown", handler, true);
+        controlsDraft[action.key] = e.code;
+        renderControlsTab();
+        toast(`Tecla de <b>${action.label}</b> definida: ${formatKeyCode(e.code)}`);
+      };
+      document.addEventListener("keydown", handler, true);
+    });
+    right.appendChild(btn);
+
+    row.appendChild(left); row.appendChild(right);
+    host.appendChild(row);
+  });
+}
+$("#controls-save").addEventListener("click", ()=>{
+  UserConfig.controls = Object.assign({}, controlsDraft);
+  toast("Controles atualizados. Clique em SALVAR CONFIGURAÇÃO para publicar.");
+});
+$("#controls-reset").addEventListener("click", ()=>{
+  controlsDraft = Object.assign({}, DEFAULT_CONTROLS);
+  renderControlsTab();
+  toast("Controles restaurados para o padrão (clique em SALVAR CONTROLES para confirmar).");
+});
+
+/* ---- Cenário: objetos ---- */
+function cfgCurrentObjects(){ return UserConfig.objects.length ? UserConfig.objects : CONFIG.map.objects; }
+function cfgRenderObjList(){
+  const list = $("#obj-list"); list.innerHTML="";
+  const items = cfgCurrentObjects();
+  items.forEach((o)=>{
+    const flags = [
+      o.collision===false?"sem colisão":null,
+      o.imageAssetKey?"parede lisa ✓":null,
+      o.paintable?"pintável":null,
+      (o.paintable && o.paintedImageAssetKey)?"parede pintada ✓":null,
+      o.model3dAssetKey?`modelo 3D ✓${o.modelFileName?" ("+o.modelFileName+")":""}`:null,
+      (o.paintable && o.paintedModel3dAssetKey)?`modelo 3D pintado ✓${o.paintedModelFileName?" ("+o.paintedModelFileName+")":""}`:null
+    ].filter(Boolean).join(" · ");
+    const row = document.createElement("div"); row.className="cfg-item";
+    row.innerHTML = `<span><span class="name">${o.label||o.id}</span> <span class="meta">(${o.x},${o.y} · ${o.width}x${o.height}${flags?" · "+flags:""})</span></span>
+      <div class="cfg-item-actions"><button class="cfg-icon-btn" data-id="${o.id}">✕</button></div>`;
+    row.querySelector("button").addEventListener("click", ()=>{
+      UserConfig.objects = (UserConfig.objects.length?UserConfig.objects:CONFIG.map.objects.slice()).filter(x=>x.id!==o.id);
+      cfgRenderObjList(); cfgRenderSpotLinkSelect(); cfgDrawPreview();
+    });
+    list.appendChild(row);
+  });
+  cfgRenderSpotLinkSelect();
+}
+$("#obj-add").addEventListener("click", async ()=>{
+  const id = uid("object");
+  const obj = {
+    id, label: $("#obj-name").value||"Objeto",
+    x: Number($("#obj-x").value)||0, y: Number($("#obj-y").value)||0,
+    width: Number($("#obj-w").value)||100, height: Number($("#obj-h").value)||100,
+    collision: $("#obj-collision").checked, color:"#26293a",
+    imageAssetKey:null, imageFps: Number($("#obj-fps").value)||8,
+    paintable: $("#obj-paintable").checked, paintedImageAssetKey:null, paintedImageFps: Number($("#obj-painted-fps").value)||8,
+    model3dAssetKey:null, modelFileName:null, modelUseBoundsAsCollision: $("#obj-glb-use-bounds").checked,
+    paintedModel3dAssetKey:null, paintedModelFileName:null
+  };
+  const file = $("#obj-file").files[0];
+  if(file){ obj.imageAssetKey = "object_"+id; await IDB.set(obj.imageAssetKey, file); }
+  const paintedFile = $("#obj-painted-file").files[0];
+  if(paintedFile){
+    obj.paintedImageAssetKey = "object_"+id+"_painted";
+    obj.paintable = true; // enviar a arte "depois" já marca o objeto como pintável
+    await IDB.set(obj.paintedImageAssetKey, paintedFile);
+  }
+  const glbFile = $("#obj-glb-file").files[0];
+  if(glbFile){
+    if(!/\.(glb|gltf)$/i.test(glbFile.name)){
+      toast("Arquivo do modelo 3D precisa ser <b>.glb</b> ou <b>.gltf</b> — objeto salvo sem o modelo.");
+    } else {
+      obj.model3dAssetKey = "object_"+id+"_glb";
+      obj.modelFileName = glbFile.name;
+      await IDB.set(obj.model3dAssetKey, glbFile);
+    }
+  }
+  const glbPaintedFile = $("#obj-glb-painted-file").files[0];
+  if(glbPaintedFile){
+    if(!/\.(glb|gltf)$/i.test(glbPaintedFile.name)){
+      toast("Arquivo do modelo 3D pintado precisa ser <b>.glb</b> ou <b>.gltf</b> — objeto salvo sem esse modelo.");
+    } else {
+      obj.paintedModel3dAssetKey = "object_"+id+"_painted_glb";
+      obj.paintedModelFileName = glbPaintedFile.name;
+      obj.paintable = true; // enviar o modelo "depois" já marca o objeto como pintável
+      await IDB.set(obj.paintedModel3dAssetKey, glbPaintedFile);
+    }
+  }
+  if(!UserConfig.objects.length) UserConfig.objects = CONFIG.map.objects.slice();
+  UserConfig.objects.push(obj);
+  cfgRenderObjList(); cfgDrawPreview();
+  $("#obj-name").value=""; $("#obj-file").value=""; $("#obj-painted-file").value=""; $("#obj-paintable").checked=false;
+  $("#obj-glb-file").value=""; $("#obj-glb-use-bounds").checked=true; $("#obj-glb-painted-file").value="";
+  toast("Objeto adicionado. Clique em SALVAR CONFIGURAÇÃO para publicar.");
+});
+$("#cfg-bg-remove").addEventListener("click", ()=>{ UserConfig.backgroundAssetKey=null; toast("Fundo removido (salve para confirmar)."); });
+$("#cfg-bg-file").addEventListener("change", async (e)=>{ const f=e.target.files[0]; if(!f) return; await IDB.set("map_background",f); UserConfig.backgroundAssetKey="map_background"; toast("Imagem de fundo salva."); });
+
+/* ---- Sprays ---- */
+function renderSprayIconFields(){
+  const host = $("#spray-icon-fields"); host.innerHTML="";
+  for(const type in CONFIG.sprayTypes){
+    const cfg = CONFIG.sprayTypes[type];
+    const card = document.createElement("div"); card.className="dir-card";
+    const label = document.createElement("label");
+    label.innerHTML = `<span class="inv-swatch" style="background:${cfg.swatch}"></span> ${cfg.label}`;
+    const input = document.createElement("input"); input.type="file"; input.accept="image/*";
+    input.addEventListener("change", async ()=>{
+      const file = input.files[0]; if(!file) return;
+      const key = "sprayicon_"+type;
+      await IDB.set(key, file);
+      UserConfig.sprayIcons[type] = key;
+      toast(`Ícone animado de <b>${cfg.label}</b> salvo.`);
+    });
+    card.appendChild(label); card.appendChild(input);
+    host.appendChild(card);
+  }
+}
+function renderSprayTypeSelect(){
+  const sel = $("#spray-type"); sel.innerHTML="";
+  for(const type in CONFIG.sprayTypes){
+    const opt = document.createElement("option"); opt.value=type; opt.textContent=CONFIG.sprayTypes[type].label;
+    sel.appendChild(opt);
+  }
+}
+function cfgRenderSprayList(){
+  const list = $("#spray-list"); list.innerHTML="";
+  const items = UserConfig.sprays.length ? UserConfig.sprays : CONFIG.sprays;
+  items.forEach(s=>{
+    const label = CONFIG.sprayTypes[s.type] ? CONFIG.sprayTypes[s.type].label : s.type;
+    const row=document.createElement("div"); row.className="cfg-item";
+    row.innerHTML = `<span><span class="name">${label}</span> <span class="meta">(${s.x},${s.y})</span></span>
+      <div class="cfg-item-actions"><button class="cfg-icon-btn" data-id="${s.id}">✕</button></div>`;
+    row.querySelector("button").addEventListener("click", ()=>{
+      UserConfig.sprays = (UserConfig.sprays.length?UserConfig.sprays:CONFIG.sprays.slice()).filter(x=>x.id!==s.id);
+      cfgRenderSprayList(); cfgDrawPreview();
+    });
+    list.appendChild(row);
+  });
+}
+$("#spray-add").addEventListener("click", ()=>{
+  const spray = { id: uid("spray"), type: $("#spray-type").value, x:Number($("#spray-x").value)||0, y:Number($("#spray-y").value)||0 };
+  if(!UserConfig.sprays.length) UserConfig.sprays = CONFIG.sprays.slice();
+  UserConfig.sprays.push(spray);
+  cfgRenderSprayList(); cfgDrawPreview();
+  toast("Spray adicionado. Clique em SALVAR CONFIGURAÇÃO para publicar.");
+});
+
+/* ---- Objetos pintáveis ---- */
+function cfgRenderReqRow(){
+  const row = $("#spot-req-row"); row.innerHTML="";
+  for(const type in CONFIG.sprayTypes){
+    const cfg = CONFIG.sprayTypes[type];
+    const chip = document.createElement("div"); chip.className="req-chip";
+    chip.innerHTML = `<span class="inv-swatch" style="background:${cfg.swatch}"></span>${cfg.label} <input type="number" min="0" value="0" data-type="${type}">`;
+    row.appendChild(chip);
+  }
+}
+function cfgObjectLabel(objId){
+  if(!objId) return null;
+  const found = cfgCurrentObjects().find(o=>o.id===objId);
+  return found ? (found.label||found.id) : null;
+}
+function cfgRenderSpotLinkSelect(){
+  const sel = $("#spot-linked-object"); if(!sel) return;
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">— nenhum (só marcador, sem trocar parede) —</option>';
+  cfgCurrentObjects().filter(o=>o.paintable).forEach(o=>{
+    const opt = document.createElement("option"); opt.value=o.id; opt.textContent = o.label||o.id;
+    sel.appendChild(opt);
+  });
+  if([...sel.options].some(o=>o.value===prev)) sel.value = prev;
+  if(sel.options.length===1){
+    const hint = document.createElement("option");
+    hint.disabled=true; hint.textContent="(marque um objeto como \"pintável\" na aba CENÁRIO primeiro)";
+    sel.appendChild(hint);
+  }
+}
+function cfgRenderSpotList(){
+  const list = $("#spot-list"); list.innerHTML="";
+  const items = UserConfig.spots.length ? UserConfig.spots : CONFIG.spots;
+  items.forEach(s=>{
+    const reqTxt = Object.entries(s.requirements||{}).map(([t,n])=>`${n} ${CONFIG.sprayTypes[t]?CONFIG.sprayTypes[t].label:t}`).join(", ") || "sem requisitos";
+    const linkLabel = cfgObjectLabel(s.linkedObjectId);
+    const completionTxt = s.completionMode==="anim" ? `animação no jogo ${s.animAssetKey?"✓":"(sem arquivo)"} · ${s.animDurationSec||3}s` : (s.videoAssetKey?"vídeo ✓":"vídeo (padrão do jogo)");
+    const files = [completionTxt, linkLabel?`vinculado a "${linkLabel}"`:"sem objeto vinculado"].filter(Boolean).join(" · ");
+    const row=document.createElement("div"); row.className="cfg-item";
+    row.innerHTML = `<span><span class="name">${s.name}</span> <span class="meta">(${s.x},${s.y}) · requer ${reqTxt}${files?" · "+files:""}</span></span>
+      <div class="cfg-item-actions"><button class="cfg-icon-btn" data-id="${s.id}">✕</button></div>`;
+    row.querySelector("button").addEventListener("click", ()=>{
+      UserConfig.spots = (UserConfig.spots.length?UserConfig.spots:CONFIG.spots.slice()).filter(x=>x.id!==s.id);
+      cfgRenderSpotList(); cfgDrawPreview();
+    });
+    list.appendChild(row);
+  });
+}
+function cfgUpdateSpotCompletionFields(){
+  const mode = $("#spot-completion-mode").value;
+  $("#spot-video-fields").style.display = mode==="anim" ? "none" : "";
+  $("#spot-anim-fields").style.display = mode==="anim" ? "" : "none";
+}
+$("#spot-completion-mode").addEventListener("change", cfgUpdateSpotCompletionFields);
+cfgUpdateSpotCompletionFields();
+$("#spot-add").addEventListener("click", async ()=>{
+  const id = uid("spot");
+  const requirements = {};
+  $$("#spot-req-row input").forEach(inp=>{ const n=Number(inp.value)||0; if(n>0) requirements[inp.dataset.type]=n; });
+  const completionMode = $("#spot-completion-mode").value === "anim" ? "anim" : "video";
+  const spot = { id, name: $("#spot-name").value||"NOVO SPOT", x:Number($("#spot-x").value)||0, y:Number($("#spot-y").value)||0,
+    requirements, video:null, videoAssetKey:null, linkedObjectId: $("#spot-linked-object").value || null,
+    completionMode, animAssetKey:null, animFps: Number($("#spot-anim-fps").value)||8, animDurationSec: Number($("#spot-anim-duration").value)||3 };
+  if(completionMode==="anim"){
+    const animFile = $("#spot-anim-file").files[0];
+    if(animFile){ spot.animAssetKey="spot_"+id+"_anim"; await IDB.set(spot.animAssetKey, animFile); }
+    else toast("Nenhuma animação enviada pra este spot — ele vai só esperar a duração configurada, sem mostrar nada.");
+  } else {
+    const vidFile = $("#spot-video-file").files[0];
+    if(vidFile){ spot.videoAssetKey="spot_"+id+"_video"; await IDB.set(spot.videoAssetKey, vidFile); }
+  }
+  if(!UserConfig.spots.length) UserConfig.spots = CONFIG.spots.slice();
+  UserConfig.spots.push(spot);
+  cfgRenderSpotList(); cfgDrawPreview(); cfgRenderReqRow();
+  $("#spot-name").value=""; $("#spot-video-file").value=""; $("#spot-anim-file").value="";
+  toast("Objeto pintável adicionado. Clique em SALVAR CONFIGURAÇÃO para publicar.");
+});
+
+/* ---- Guardas extras ---- */
+let ge2PaletteDraft = Object.assign({}, DEFAULT_GUARD_EXTRA_PALETTE);
+function renderGe2PaletteFields(){
+  const host = $("#ge2-palette-row"); host.innerHTML="";
+  host.appendChild(buildPaletteRow(ge2PaletteDraft));
+}
+$("#ge2-pick-a").addEventListener("click", ()=>{ cfgPickTarget={x:"#ge2-ax",y:"#ge2-ay"}; toast("Clique no mapa para o ponto A."); });
+$("#ge2-pick-b").addEventListener("click", ()=>{ cfgPickTarget={x:"#ge2-bx",y:"#ge2-by"}; toast("Clique no mapa para o ponto B."); });
+
+function cfgRenderGe2List(){
+  const list = $("#ge2-list"); list.innerHTML="";
+  (UserConfig.guards||[]).forEach(g=>{
+    const swatch = (g.palette&&g.palette.body) || DEFAULT_GUARD_EXTRA_PALETTE.body;
+    const row=document.createElement("div"); row.className="cfg-item";
+    row.innerHTML = `<span><span class="inv-swatch" style="background:${swatch};margin-right:6px;"></span><span class="name">${g.name}</span> <span class="meta">origem (${g.spawnX},${g.spawnY}) → patrulha (${g.patrolToX},${g.patrolToY})</span></span>
+      <div class="cfg-item-actions"><button class="cfg-icon-btn" data-id="${g.id}">✕</button></div>`;
+    row.querySelector("button").addEventListener("click", ()=>{
+      UserConfig.guards = UserConfig.guards.filter(x=>x.id!==g.id);
+      cfgRenderGe2List(); cfgDrawPreview();
+    });
+    list.appendChild(row);
+  });
+}
+$("#ge2-add").addEventListener("click", ()=>{
+  const id = uid("guard_extra");
+  const guard = {
+    id, name: $("#ge2-name").value || "Guarda extra",
+    spawnX: Number($("#ge2-ax").value)||0, spawnY: Number($("#ge2-ay").value)||0,
+    patrolToX: Number($("#ge2-bx").value)||0, patrolToY: Number($("#ge2-by").value)||0,
+    palette: Object.assign({}, ge2PaletteDraft)
+  };
+  UserConfig.guards.push(guard);
+  cfgRenderGe2List(); cfgDrawPreview();
+  ge2PaletteDraft = Object.assign({}, DEFAULT_GUARD_EXTRA_PALETTE);
+  $("#ge2-name").value="";
+  renderGe2PaletteFields();
+  toast(`<b>${guard.name}</b> adicionado. Clique em SALVAR CONFIGURAÇÃO para publicar.`);
+});
+
+/* ---- Bots (mesmo sistema de arte do guarda extra; comportamento hostil/neutro escolhido por bot) ---- */
+let botDraft = { idle:{}, walk:{}, run:{}, captured:null };
+function renderBotAnimFields(){
+  const host = $("#bot-anim-fields"); host.innerHTML="";
+  MOVE_STATES.forEach(state=>{
+    const wrap = document.createElement("div");
+    const title = document.createElement("div"); title.className="cfg-subtitle"; title.textContent = STATE_LABELS[state];
+    wrap.appendChild(title);
+    const grid = document.createElement("div"); grid.className="dir-grid";
+    DIRS.forEach(dir=>{
+      const card = document.createElement("div"); card.className="dir-card";
+      const label = document.createElement("label"); label.textContent = DIR_LABELS[dir];
+      const input = document.createElement("input"); input.type="file"; input.accept="image/*";
+      input.dataset.state=state; input.dataset.dir=dir;
+      input.addEventListener("change", ()=>{ if(input.files[0]) botDraft[state][dir]=input.files[0]; });
+      card.appendChild(label); card.appendChild(input);
+      grid.appendChild(card);
+    });
+    wrap.appendChild(grid);
+    host.appendChild(wrap);
+  });
+}
+function cfgUpdateBotBehaviorUI(){
+  const hostile = $("#bot-behavior").value==="hostile";
+  $("#bot-captured-row").style.display = hostile ? "flex" : "none";
+  $("#bot-captured-subtitle").textContent = hostile ? "Estado sem direção" : "Estado sem direção (não usado — bot neutro nunca captura)";
+}
+$("#bot-behavior").addEventListener("change", cfgUpdateBotBehaviorUI);
+$("#bot-pick-a").addEventListener("click", ()=>{ cfgPickTarget={x:"#bot-ax",y:"#bot-ay"}; toast("Clique no mapa para o ponto A."); });
+$("#bot-pick-b").addEventListener("click", ()=>{ cfgPickTarget={x:"#bot-bx",y:"#bot-by"}; toast("Clique no mapa para o ponto B."); });
+$("#bot-captured-file").addEventListener("change", (e)=>{ if(e.target.files[0]) botDraft.captured = e.target.files[0]; });
+
+function cfgRenderBotList(){
+  const list = $("#bot-list"); list.innerHTML="";
+  (UserConfig.bots||[]).forEach(b=>{
+    const hostile = b.hostile!==false;
+    const row=document.createElement("div"); row.className="cfg-item";
+    row.innerHTML = `<span><span class="name">${b.name}</span> <span class="meta">${hostile?"hostil":"neutro"} · origem (${b.spawnX},${b.spawnY}) → patrulha (${b.patrolToX},${b.patrolToY})</span></span>
+      <div class="cfg-item-actions"><button class="cfg-icon-btn" data-id="${b.id}">✕</button></div>`;
+    row.querySelector("button").addEventListener("click", ()=>{
+      UserConfig.bots = UserConfig.bots.filter(x=>x.id!==b.id);
+      cfgRenderBotList(); cfgDrawPreview();
+    });
+    list.appendChild(row);
+  });
+}
+$("#bot-add").addEventListener("click", async ()=>{
+  const id = uid("bot");
+  const hostile = $("#bot-behavior").value==="hostile";
+  const anim = { idle:{}, walk:{}, run:{}, captured:null };
+  for(const state of MOVE_STATES){
+    for(const dir of DIRS){
+      const file = botDraft[state][dir];
+      if(file){ const key = `${id}_${state}_${dir}`; await IDB.set(key, file); anim[state][dir]=key; }
+    }
+  }
+  if(hostile && botDraft.captured){ const key = `${id}_captured`; await IDB.set(key, botDraft.captured); anim.captured = key; }
+  const bot = {
+    id, name: $("#bot-name").value || "Bot", hostile,
+    spawnX: Number($("#bot-ax").value)||0, spawnY: Number($("#bot-ay").value)||0,
+    patrolToX: Number($("#bot-bx").value)||0, patrolToY: Number($("#bot-by").value)||0,
+    anim
+  };
+  UserConfig.bots.push(bot);
+  cfgRenderBotList(); cfgDrawPreview();
+  botDraft = { idle:{}, walk:{}, run:{}, captured:null };
+  $("#bot-name").value="";
+  renderBotAnimFields();
+  toast(`<b>${bot.name}</b> adicionado (${hostile?"hostil":"neutro"}). Clique em SALVAR CONFIGURAÇÃO para publicar.`);
+});
+
+/* ---- Vídeos ---- */
+function cfgRenderVideoList(){
+  const list=$("#video-list"); list.innerHTML="";
+  [["Introdução",UserConfig.videos.intro],["Derrota",UserConfig.videos.lose],["Vitória",UserConfig.videos.win]].forEach(([label,key])=>{
+    if(!key) return;
+    const row=document.createElement("div"); row.className="cfg-item";
+    row.innerHTML=`<span class="name">${label}</span><span class="meta">vídeo enviado ✓</span>`;
+    list.appendChild(row);
+  });
+}
+$("#video-intro").addEventListener("change", async (e)=>{ const f=e.target.files[0]; if(!f) return; await IDB.set("video_intro",f); UserConfig.videos.intro="video_intro"; cfgRenderVideoList(); toast("Vídeo de introdução salvo."); });
+$("#video-lose").addEventListener("change", async (e)=>{ const f=e.target.files[0]; if(!f) return; await IDB.set("video_lose",f); UserConfig.videos.lose="video_lose"; cfgRenderVideoList(); toast("Vídeo de derrota salvo."); });
+$("#video-win").addEventListener("change", async (e)=>{ const f=e.target.files[0]; if(!f) return; await IDB.set("video_win",f); UserConfig.videos.win="video_win"; cfgRenderVideoList(); toast("Vídeo de vitória salvo."); });
+
+/* ---- Evento do guarda ---- */
+$("#ge-pick-spawn").addEventListener("click", ()=>{ cfgPickTarget={x:"#ge-spawn-x",y:"#ge-spawn-y"}; toast("Clique no mapa para definir onde o guarda aparece."); });
+$("#ge-video").addEventListener("change", async (e)=>{
+  const f=e.target.files[0]; if(!f) return;
+  await IDB.set("guard_event_video", f);
+  UserConfig.guardEvent.cutsceneAssetKey = "guard_event_video";
+  toast("Vídeo do evento salvo.");
+});
+$("#ge-save").addEventListener("click", ()=>{
+  UserConfig.guardEvent = {
+    enabled: $("#ge-enabled").checked,
+    x:Number($("#ge-x").value)||0, y:Number($("#ge-y").value)||0,
+    width:Number($("#ge-w").value)||100, height:Number($("#ge-h").value)||100,
+    title: $("#ge-title").value || "O GUARDA APARECE",
+    cutsceneAssetKey: UserConfig.guardEvent.cutsceneAssetKey || null,
+    spawnX:Number($("#ge-spawn-x").value)||0, spawnY:Number($("#ge-spawn-y").value)||0
+  };
+  cfgDrawPreview();
+  toast("Evento do guarda definido. Clique em SALVAR CONFIGURAÇÃO para publicar.");
+});
+function cfgFillGuardEventForm(){
+  const ge = UserConfig.guardEvent;
+  $("#ge-enabled").checked = !!ge.enabled;
+  $("#ge-x").value=ge.x; $("#ge-y").value=ge.y; $("#ge-w").value=ge.width; $("#ge-h").value=ge.height;
+  $("#ge-title").value = ge.title||"O GUARDA APARECE";
+  $("#ge-spawn-x").value=ge.spawnX; $("#ge-spawn-y").value=ge.spawnY;
+}
+
+/* ---- Telas: menu / derrota / vitória ---- */
+const UI_SCREEN_FIELDS = {
+  menu:{ bgFile:"#ui-menu-bg-file", bgRemove:"#ui-menu-bg-remove", title:"#ui-menu-title", subtitle:"#ui-menu-subtitle",
+    buttons:{ newGame:"#ui-menu-btn-newgame", continueGame:"#ui-menu-btn-continue", reset:"#ui-menu-btn-reset" }, bgKey:"ui_menu_bg", label:"Menu inicial" },
+  lose:{ bgFile:"#ui-lose-bg-file", bgRemove:"#ui-lose-bg-remove", title:"#ui-lose-title", subtitle:"#ui-lose-subtitle",
+    buttons:{ retry:"#ui-lose-btn-retry", menu:"#ui-lose-btn-menu" }, bgKey:"ui_lose_bg", label:"Você foi pego" },
+  win:{ bgFile:"#ui-win-bg-file", bgRemove:"#ui-win-bg-remove", title:"#ui-win-title", subtitle:"#ui-win-subtitle",
+    buttons:{ playAgain:"#ui-win-btn-playagain", menu:"#ui-win-btn-menu" }, bgKey:"ui_win_bg", label:"Vitória" }
+};
+function cfgFillUiForm(){
+  for(const screen in UI_SCREEN_FIELDS){
+    const f = UI_SCREEN_FIELDS[screen];
+    const cfg = UserConfig.ui[screen];
+    $(f.title).value = cfg.title || "";
+    $(f.subtitle).value = cfg.subtitle || "";
+    for(const bk in f.buttons){ $(f.buttons[bk]).value = (cfg.buttons||{})[bk] || ""; }
+  }
+  cfgRenderUiStatus();
+}
+function cfgRenderUiStatus(){
+  const list = $("#ui-screens-status"); list.innerHTML="";
+  for(const screen in UI_SCREEN_FIELDS){
+    const f = UI_SCREEN_FIELDS[screen];
+    const cfg = UserConfig.ui[screen];
+    const row=document.createElement("div"); row.className="cfg-item";
+    row.innerHTML = `<span class="name">${f.label}</span><span class="meta">${cfg.backgroundAssetKey ? "imagem de fundo enviada ✓" : "sem imagem de fundo (usa o padrão do jogo)"}</span>`;
+    list.appendChild(row);
+  }
+}
+function cfgWireUiScreenInputs(){
+  for(const screen in UI_SCREEN_FIELDS){
+    const f = UI_SCREEN_FIELDS[screen];
+    const cfg = UserConfig.ui[screen];
+    $(f.title).addEventListener("input", ()=>{ cfg.title = $(f.title).value || null; });
+    $(f.subtitle).addEventListener("input", ()=>{ cfg.subtitle = $(f.subtitle).value || null; });
+    for(const bk in f.buttons){
+      $(f.buttons[bk]).addEventListener("input", ()=>{ cfg.buttons[bk] = $(f.buttons[bk]).value || null; });
+    }
+    $(f.bgFile).addEventListener("change", async (e)=>{
+      const file = e.target.files[0]; if(!file) return;
+      await IDB.set(f.bgKey, file);
+      cfg.backgroundAssetKey = f.bgKey;
+      cfgRenderUiStatus();
+      toast(`Imagem de fundo de <b>${f.label}</b> salva.`);
+    });
+    $(f.bgRemove).addEventListener("click", ()=>{
+      cfg.backgroundAssetKey = null;
+      cfgRenderUiStatus();
+      toast(`Fundo de <b>${f.label}</b> removido (salve para confirmar).`);
+    });
+  }
+}
+cfgWireUiScreenInputs();
+
+/* ---- HUD do jogo: posição dos 4 blocos (minimapa/recursos/spots/objetivo) + tema visual dos painéis ---- */
+const HUD_ZONES = [
+  {v:"top-left", label:"Canto superior esquerdo"},
+  {v:"top-center", label:"Topo centralizado"},
+  {v:"top-right", label:"Canto superior direito"},
+  {v:"bottom-left", label:"Canto inferior esquerdo"},
+  {v:"bottom-center", label:"Base centralizada"},
+  {v:"bottom-right", label:"Canto inferior direito"}
+];
+const HUD_ELEMENT_SELECTS = { minimap:"#hud-pos-minimap", inventory:"#hud-pos-inventory", spots:"#hud-pos-spots", objective:"#hud-pos-objective" };
+const HUD_ELEMENT_LABELS = { minimap:"Minimapa", inventory:"Recursos", spots:"Spots livres", objective:"Objetivo/ações" };
+function cfgPopulateHudSelects(){
+  Object.values(HUD_ELEMENT_SELECTS).forEach(sel=>{
+    const el = $(sel); el.innerHTML="";
+    HUD_ZONES.forEach(z=>{ const opt=document.createElement("option"); opt.value=z.v; opt.textContent=z.label; el.appendChild(opt); });
+  });
+}
+function cfgFillHudForm(){
+  const layout = UserConfig.hud.layout, theme = UserConfig.hud.theme;
+  for(const key in HUD_ELEMENT_SELECTS){ $(HUD_ELEMENT_SELECTS[key]).value = layout[key]; }
+  $("#hud-accent").value = theme.accent;
+  $("#hud-opacity").value = theme.panelOpacity;
+  $("#hud-radius").value = theme.radius;
+  cfgRenderHudZonePreview();
+  cfgRenderHudStatus();
+}
+function cfgRenderHudZonePreview(){
+  const layout = { minimap:$("#hud-pos-minimap").value, inventory:$("#hud-pos-inventory").value, spots:$("#hud-pos-spots").value, objective:$("#hud-pos-objective").value };
+  const byZone = {}; HUD_ZONES.forEach(z=> byZone[z.v]=[]);
+  for(const key in layout) if(byZone[layout[key]]) byZone[layout[key]].push(HUD_ELEMENT_LABELS[key]);
+  const gridOrder = ["top-left","top-center","top-right","bottom-left","bottom-center","bottom-right"];
+  const alignClass = { "top-left":"", "bottom-left":"", "top-center":"align-c", "bottom-center":"align-c", "top-right":"align-e", "bottom-right":"align-e" };
+  const host = $("#hud-zone-preview"); host.innerHTML="";
+  gridOrder.forEach(z=>{
+    const cell = document.createElement("div"); cell.className="hud-zone-cell "+(alignClass[z]||"");
+    const chips = byZone[z].map(label=>`<span class="hud-chip">${label}</span>`).join("");
+    cell.innerHTML = chips || `<span class="hud-chip" style="opacity:0.35;">vazio</span>`;
+    host.appendChild(cell);
+  });
+}
+Object.values(HUD_ELEMENT_SELECTS).forEach(sel=> $(sel).addEventListener("change", cfgRenderHudZonePreview));
+function cfgRenderHudStatus(){
+  const theme = UserConfig.hud.theme;
+  const list = $("#hud-status"); list.innerHTML="";
+  const row=document.createElement("div"); row.className="cfg-item";
+  row.innerHTML = `<span class="name">Tema atual</span><span class="meta"><span class="inv-swatch" style="background:${theme.accent};"></span> destaque ${theme.accent} · opacidade ${theme.panelOpacity} · raio ${theme.radius}px</span>`;
+  list.appendChild(row);
+}
+$("#hud-save").addEventListener("click", ()=>{
+  UserConfig.hud = {
+    layout: {
+      minimap: $("#hud-pos-minimap").value, inventory: $("#hud-pos-inventory").value,
+      spots: $("#hud-pos-spots").value, objective: $("#hud-pos-objective").value
+    },
+    theme: {
+      accent: $("#hud-accent").value,
+      panelOpacity: Number($("#hud-opacity").value)||0.72,
+      radius: Number($("#hud-radius").value)||10
+    }
+  };
+  cfgRenderHudStatus();
+  toast("Interface do jogo (HUD) atualizada. Clique em SALVAR CONFIGURAÇÃO para publicar.");
+});
+cfgPopulateHudSelects();
+
+/* ---- Checklist: lista todo arquivo que o jogo pode usar, calculado a partir do UserConfig atual ---- */
+function cfgChecklistItems(){
+  const items = [];
+  const push = (section,label,done,tier)=> items.push({section,label,done:!!done,tier});
+
+  // Cenário
+  push("Cenário", "Imagem de fundo do mapa", UserConfig.backgroundAssetKey, "opcional");
+  cfgCurrentObjects().forEach(o=>{
+    const name = o.label||o.id;
+    push("Cenário", `${name} — parede lisa`, o.imageAssetKey, "recomendado");
+    if(o.paintable){
+      push("Cenário", `${name} — parede pintada`, o.paintedImageAssetKey, "recomendado");
+      push("Cenário", `${name} — modelo 3D pintado (.glb)`, o.paintedModel3dAssetKey, "opcional");
+    }
+    push("Cenário", `${name} — modelo 3D (.glb)`, o.model3dAssetKey, "opcional");
+  });
+
+  // Jogador/Guarda principal — não entram no checklist: são um modelo 3D por código (Humanoid3D),
+  // e a "arte" deles é só uma paleta de 5 cores (aba MOVIMENTAÇÃO) que sempre tem um valor padrão,
+  // então nunca há nada "faltando" pra enviar.
+  const geOn = !!(UserConfig.guardEvent && UserConfig.guardEvent.enabled);
+
+  // Sprays — ícone por tipo, só dos tipos que existem sprays no mapa
+  const usedTypes = new Set((UserConfig.sprays.length ? UserConfig.sprays : CONFIG.sprays).map(s=>s.type));
+  usedTypes.forEach(type=>{
+    const label = CONFIG.sprayTypes[type] ? CONFIG.sprayTypes[type].label : type;
+    push("Sprays", `Ícone animado — ${label}`, (UserConfig.sprayIcons||{})[type], "recomendado");
+  });
+
+  // Objetos pintáveis
+  (UserConfig.spots.length ? UserConfig.spots : CONFIG.spots).forEach(s=>{
+    if(s.completionMode==="anim") push("Objetos pintáveis", `${s.name} — animação de conclusão`, s.animAssetKey, "recomendado");
+    else push("Objetos pintáveis", `${s.name} — vídeo de pintura (.mp4)`, s.videoAssetKey, "recomendado");
+  });
+
+  // Guardas extras — não entram no checklist: usam o mesmo modelo 3D por código do guarda
+  // principal, só com paleta de cores própria (sempre definida ao adicionar o guarda).
+
+  // Bots — mesmo critério dos guardas extras; "capturou" só é relevante para bots hostis
+  (UserConfig.bots||[]).forEach(b=>{
+    const hostile = b.hostile!==false;
+    MOVE_STATES.forEach(st=>{
+      const a = (b.anim&&b.anim[st])||{};
+      push("Bots", `${b.name} — ${STATE_LABELS[st]} · frente`, a.down, "obrigatório");
+      push("Bots", `${b.name} — ${STATE_LABELS[st]} · costas`, a.up, "obrigatório");
+      push("Bots", `${b.name} — ${STATE_LABELS[st]} · lado`, a.side, "recomendado");
+      push("Bots", `${b.name} — ${STATE_LABELS[st]} · diagonal frente`, a.frontDiag, "opcional");
+      push("Bots", `${b.name} — ${STATE_LABELS[st]} · diagonal costas`, a.backDiag, "opcional");
+    });
+    if(hostile) push("Bots", `${b.name} — capturou`, b.anim&&b.anim.captured, "obrigatório");
+  });
+
+  // Vídeos gerais — já têm cutscene placeholder automática, então tudo opcional
+  push("Vídeos", "Introdução (abertura do jogo)", UserConfig.videos.intro, "opcional");
+  push("Vídeos", "Derrota (guarda captura o jogador)", UserConfig.videos.lose, "opcional");
+  push("Vídeos", "Vitória (todos os spots concluídos)", UserConfig.videos.win, "opcional");
+  if(geOn) push("Evento do guarda", "Vídeo/animação do evento", UserConfig.guardEvent.cutsceneAssetKey, "recomendado");
+
+  // Telas de interface
+  push("Telas", "Fundo — Menu inicial", UserConfig.ui.menu.backgroundAssetKey, "opcional");
+  push("Telas", "Fundo — Você foi pego", UserConfig.ui.lose.backgroundAssetKey, "opcional");
+  push("Telas", "Fundo — Vitória", UserConfig.ui.win.backgroundAssetKey, "opcional");
+
+  return items;
+}
+function cfgRenderChecklist(){
+  const items = cfgChecklistItems();
+  const tiers = ["obrigatório","recomendado","opcional"];
+  const tierCount = {}; tiers.forEach(t=> tierCount[t]={done:0,total:0});
+  items.forEach(it=>{ tierCount[it.tier].total++; if(it.done) tierCount[it.tier].done++; });
+  const totalDone = items.filter(i=>i.done).length, totalAll = items.length;
+  const pct = totalAll ? Math.round(100*totalDone/totalAll) : 100;
+  const tierColor = {"obrigatório":"var(--danger)","recomendado":"var(--yellow)","opcional":"var(--ink-dim)"};
+
+  const summary = $("#checklist-summary");
+  summary.innerHTML = `
+    <div class="cfg-item" style="margin-bottom:10px;background:var(--wall);">
+      <span class="name">TOTAL GERAL</span>
+      <span class="meta" style="color:var(--green);font-size:14px;">${totalDone} / ${totalAll} arquivos enviados (${pct}%)</span>
+    </div>
+    ${tiers.map(t=>`
+      <div class="cfg-item">
+        <span class="name" style="text-transform:uppercase;color:${tierColor[t]};">${t}</span>
+        <span class="meta">${tierCount[t].done} / ${tierCount[t].total} enviados${tierCount[t].total>tierCount[t].done ? ` · faltam ${tierCount[t].total-tierCount[t].done}` : " · completo ✓"}</span>
+      </div>`).join("")}
+  `;
+
+  const bySection = {};
+  items.forEach(it=>{ (bySection[it.section]=bySection[it.section]||[]).push(it); });
+  const host = $("#checklist-sections"); host.innerHTML="";
+  Object.keys(bySection).forEach(section=>{
+    const secItems = bySection[section];
+    const done = secItems.filter(i=>i.done).length;
+    const title = document.createElement("div"); title.className="cfg-section-title";
+    title.textContent = `${section} — ${done}/${secItems.length}`;
+    host.appendChild(title);
+    const list = document.createElement("div"); list.className="cfg-list";
+    secItems.forEach(it=>{
+      const row = document.createElement("div"); row.className="cfg-item";
+      row.style.opacity = it.done ? "1" : "0.85";
+      row.innerHTML = `<span class="name">${it.done?"✓":"○"} ${it.label}</span>
+        <span class="meta" style="color:${tierColor[it.tier]};text-transform:uppercase;font-size:10px;">${it.tier}</span>`;
+      list.appendChild(row);
+    });
+    host.appendChild(list);
+  });
+}
+
+/* ---- Rodapé ---- */
+$("#cfg-apply").addEventListener("click", ()=>{
+  saveUserConfig(UserConfig);
+  toast("Configuração salva! Abra ou recarregue o jogo para ver as mudanças.");
+});
+$("#cfg-reset-all").addEventListener("click", async ()=>{
+  if(!confirm("Isso apaga todos os arquivos enviados e restaura os padrões do jogo. Continuar?")) return;
+  await IDB.clear();
+  localStorage.removeItem(USERCONFIG_KEY);
+  toast("Configuração restaurada. Recarregando...");
+  setTimeout(()=>location.reload(), 700);
+});
+$("#cfg-export").addEventListener("click", ()=>{
+  const blob = new Blob([JSON.stringify(UserConfig,null,2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href=url; a.download="ogeid-config.json"; a.click();
+  URL.revokeObjectURL(url);
+});
+$("#cfg-import").addEventListener("change",(e)=>{
+  const f = e.target.files[0]; if(!f) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const data = JSON.parse(reader.result);
+      UserConfig = Object.assign(defaultUserConfig(), data);
+      cfgRenderAll();
+      toast("Configuração importada. Clique em SALVAR CONFIGURAÇÃO para publicar.");
+    }catch(err){ toast("Arquivo inválido."); }
+  };
+  reader.readAsText(f);
+});
+
+/* boot da página */
+function cfgRenderAll(){
+  cfgRenderObjList(); cfgRenderSpotLinkSelect();
+  renderPlayerPaletteFields(); renderGuardPaletteFields(); renderPlayerModelFields(); renderGuardModelFields(); renderControlsTab();
+  renderSprayIconFields(); renderSprayTypeSelect(); cfgRenderSprayList();
+  cfgRenderSpotList(); cfgRenderReqRow();
+  renderGe2PaletteFields(); cfgRenderGe2List();
+  cfgRenderVideoList(); cfgFillGuardEventForm();
+  cfgFillUiForm();
+  cfgDrawPreview();
+  cfgRenderChecklist();
+}
+cfgRenderAll();
+
+})();
+</script>
+</body>
+</html>

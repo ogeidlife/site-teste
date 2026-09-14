@@ -1,0 +1,2212 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>OGEID — TAG THE CITY</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<!-- three.js via import map (ES modules) — dá acesso ao GLTFLoader oficial, que sabe
+     ler esqueleto (skinning) e animações do .glb, algo que o parser manual antigo não fazia. -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.1/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.1/examples/jsm/"
+  }
+}
+</script>
+<style>
+/* ============================================================
+   OGEID · TAG THE CITY
+   Cor:  #0b0c10 asfalto | #1a1c24 concreto | #232631 concreto claro
+         #ff2f92 magenta | #17d6e8 ciano | #ffe14d amarelo | #7CFF3C verde-ação (assinatura)
+   Tipo: "Bungee" (display) · "Space Grotesk" (corpo) · "JetBrains Mono" (HUD/dados)
+   ============================================================ */
+:root{
+  --asphalt:#0b0c10; --concrete:#1a1c24; --concrete-2:#232631; --wall:#15161c;
+  --line: rgba(255,255,255,0.08); --ink:#f2f1ec; --ink-dim:#a9adba;
+  --magenta:#ff2f92; --cyan:#17d6e8; --yellow:#ffe14d; --green:#7CFF3C; --danger:#ff4d4d;
+  --radius: 10px;
+  --font-display:'Bungee','Space Grotesk',sans-serif;
+  --font-body:'Space Grotesk',sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;}
+html,body{ margin:0; padding:0; width:100%; height:100%; background:var(--asphalt); color:var(--ink);
+  font-family:var(--font-body); overflow:hidden; -webkit-user-select:none; user-select:none; touch-action:none; }
+#ogeid-root{ position:relative; width:100%; height:100%; min-height:100dvh; background:var(--asphalt); }
+#ogeid-root::before{ content:""; position:absolute; inset:0; z-index:0; pointer-events:none;
+  background-image: radial-gradient(circle at 20% 30%, rgba(255,255,255,0.025), transparent 40%),
+                     radial-gradient(circle at 80% 70%, rgba(255,255,255,0.02), transparent 45%); }
+#game-canvas{ position:absolute; inset:0; display:block; width:100%; height:100%; background:var(--asphalt); cursor:crosshair; }
+#gif-holder{ position:fixed; left:-99999px; top:-99999px; width:1px; height:1px; overflow:hidden; }
+
+/* ---------- Loading ---------- */
+#loading-screen{ position:absolute; inset:0; z-index:100; display:flex; flex-direction:column; align-items:center; justify-content:center; background:var(--asphalt); gap:18px; }
+.brand-tag{ font-family:var(--font-display); font-size:clamp(28px,7vw,58px); letter-spacing:2px; color:var(--ink);
+  text-shadow:3px 3px 0 var(--magenta), 6px 6px 0 rgba(0,0,0,0.4); transform:rotate(-2deg); }
+.brand-sub{ font-family:var(--font-mono); font-size:12px; letter-spacing:4px; color:var(--ink-dim); text-transform:uppercase; }
+.spray-loader{ width:220px; height:6px; background:var(--concrete-2); border-radius:4px; overflow:hidden; position:relative; }
+.spray-loader > i{ position:absolute; left:0; top:0; bottom:0; width:0%; background:linear-gradient(90deg,var(--magenta),var(--cyan),var(--green)); transition:width .2s ease; }
+
+/* ---------- Cutscene ---------- */
+#cutscene-overlay{ position:absolute; inset:0; z-index:90; background:#000; display:none; align-items:center; justify-content:center; opacity:0; transition:opacity .5s ease; }
+#cutscene-overlay.show{ display:flex; opacity:1; }
+#cutscene-video{ width:100%; height:100%; object-fit:cover; display:none; }
+#cutscene-placeholder{ width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px;
+  background:radial-gradient(circle at 50% 50%, rgba(124,255,60,0.06), transparent 60%), repeating-linear-gradient(45deg,#0c0d11 0 2px,#101119 2px 40px); }
+.cutscene-title{ font-family:var(--font-display); font-size:clamp(22px,5vw,44px); color:var(--ink); letter-spacing:2px; text-align:center; padding:0 20px; }
+.cutscene-drip{ width:70%; max-width:520px; height:10px; position:relative; overflow:visible; }
+.cutscene-drip i{ position:absolute; left:0; top:0; height:10px; width:0%; background:var(--magenta); border-radius:6px; }
+.cutscene-hint{ font-family:var(--font-mono); font-size:11px; color:var(--ink-dim); letter-spacing:2px; }
+#skip-video-btn{ position:absolute; right:18px; bottom:18px; z-index:2; background:rgba(255,255,255,0.08); border:1px solid var(--line); color:var(--ink);
+  font-family:var(--font-mono); font-size:12px; letter-spacing:1px; padding:10px 16px; border-radius:30px; cursor:pointer; }
+#skip-video-btn:hover{ background:rgba(255,255,255,0.16); }
+
+/* ---------- HUD ---------- */
+#hud{ position:absolute; inset:0; z-index:20; pointer-events:none; }
+#hud > *{ pointer-events:auto; }
+.hud-panel{ background:rgba(15,16,20,0.72); backdrop-filter:blur(6px); border:1px solid var(--line); border-radius:var(--radius); }
+#objective-bar{ position:absolute; top:16px; left:16px; right:16px; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 16px; }
+#objective-text{ font-family:var(--font-mono); font-size:12px; letter-spacing:1.5px; color:var(--ink-dim); text-transform:uppercase; }
+#objective-text b{ color:var(--green); }
+#pause-btn{ background:transparent; border:1px solid var(--line); color:var(--ink); width:34px; height:34px; border-radius:8px; cursor:pointer; font-size:16px; line-height:1; display:flex; align-items:center; justify-content:center; }
+#spot-progress{ position:absolute; top:66px; left:16px; display:flex; gap:6px; padding:8px 10px; flex-wrap:wrap; max-width:200px; }
+.spot-pip{ width:26px; height:26px; border-radius:6px; border:2px solid var(--line); display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-mono); font-size:11px; color:var(--ink-dim); background:var(--concrete-2); transition:all .25s ease; }
+.spot-pip.done{ background:var(--green); border-color:var(--green); color:#0b0c10; box-shadow:0 0 12px rgba(124,255,60,0.5); }
+.spot-pip.unlocked{ border-color:var(--magenta); color:var(--magenta); }
+#inventory-bar{ position:absolute; bottom:16px; left:16px; display:flex; gap:8px; padding:10px 12px; flex-wrap:wrap; max-width:60vw; }
+.inv-chip{ display:flex; align-items:center; gap:6px; font-family:var(--font-mono); font-size:12px; color:var(--ink); background:var(--concrete-2); border-radius:8px; padding:6px 10px; border:1px solid var(--line); }
+.inv-swatch{ width:12px; height:12px; border-radius:3px; }
+.inv-chip .n{ min-width:14px; text-align:right; color:var(--ink-dim); }
+#minimap-wrap{ position:absolute; top:16px; right:16px; width:150px; height:150px; border-radius:50%; overflow:hidden; border:3px solid var(--concrete-2);
+  box-shadow:0 0 0 2px rgba(124,255,60,0.35), 0 8px 24px rgba(0,0,0,0.5); background:var(--wall); }
+#minimap-canvas{ width:100%; height:100%; display:block; }
+#interaction-prompt{ position:absolute; transform:translate(-50%,-140%); font-family:var(--font-mono); font-size:12px; letter-spacing:1px;
+  background:var(--green); color:#0b0c10; padding:8px 14px; border-radius:20px; font-weight:700; white-space:nowrap; display:none;
+  box-shadow:0 4px 14px rgba(0,0,0,0.4); cursor:pointer; }
+#interaction-prompt.show{ display:block; animation:promptPulse 1.1s ease-in-out infinite; }
+@keyframes promptPulse{ 0%,100%{ transform:translate(-50%,-140%) scale(1);} 50%{ transform:translate(-50%,-140%) scale(1.06);} }
+#toast-stack{ position:absolute; bottom:70px; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:8px; pointer-events:none; }
+.toast{ font-family:var(--font-mono); font-size:12px; letter-spacing:1px; background:rgba(15,16,20,0.85); border:1px solid var(--line); color:var(--ink);
+  padding:8px 16px; border-radius:20px; opacity:0; transform:translateY(10px); animation:toastIn .3s ease forwards, toastOut .3s ease forwards 2.2s; white-space:nowrap; }
+.toast b{ color:var(--yellow); }
+@keyframes toastIn{ to{ opacity:1; transform:translateY(0);} }
+@keyframes toastOut{ to{ opacity:0; transform:translateY(-8px);} }
+#guard-alert{ position:absolute; top:16px; left:50%; transform:translateX(-50%); font-family:var(--font-display); font-size:14px; letter-spacing:2px; color:var(--danger);
+  padding:8px 18px; border-radius:20px; background:rgba(255,77,77,0.12); border:1px solid var(--danger); display:none; }
+#guard-alert.show{ display:block; animation:alertBlink .6s steps(2) infinite; }
+@keyframes alertBlink{ 50%{ opacity:0.35; } }
+
+/* ---------- Ecrãs ---------- */
+.screen{ position:absolute; inset:0; z-index:80; display:none; align-items:center; justify-content:center; background:rgba(6,6,8,0.86); backdrop-filter:blur(4px); flex-direction:column; gap:22px; text-align:center; padding:20px; overflow:auto; }
+.screen.show{ display:flex; }
+.screen-bg-img{ position:absolute; inset:0; z-index:-1; background-size:cover; background-position:center; background-repeat:no-repeat; opacity:0; transition:opacity .4s ease; }
+.screen-bg-img.show{ opacity:1; }
+.screen-title{ font-family:var(--font-display); font-size:clamp(30px,7vw,56px); letter-spacing:2px; text-shadow:4px 4px 0 var(--magenta); }
+.screen-title.lose{ text-shadow:4px 4px 0 var(--danger); }
+.screen-title.win{ text-shadow:4px 4px 0 var(--green); }
+.screen-sub{ font-family:var(--font-mono); color:var(--ink-dim); letter-spacing:2px; font-size:13px; }
+.btn-row{ display:flex; gap:12px; flex-wrap:wrap; justify-content:center; }
+.ogeid-btn{ font-family:var(--font-mono); letter-spacing:1.5px; font-size:13px; text-transform:uppercase; background:var(--concrete-2); color:var(--ink);
+  border:1px solid var(--line); padding:14px 26px; border-radius:8px; cursor:pointer; transition:all .15s ease; }
+.ogeid-btn:hover{ transform:translateY(-2px); border-color:var(--green); color:var(--green); }
+.ogeid-btn.primary{ background:var(--green); color:#0b0c10; border-color:var(--green); font-weight:700; }
+.ogeid-btn.primary:hover{ background:#8dff56; color:#0b0c10; }
+.ogeid-btn.danger:hover{ border-color:var(--danger); color:var(--danger); }
+.ogeid-btn.small{ padding:8px 14px; font-size:11px; }
+#victory-stamp{ width:120px; height:120px; border-radius:50%; border:4px solid var(--green); display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-display); font-size:34px; color:var(--green); transform:rotate(-8deg); box-shadow:0 0 30px rgba(124,255,60,0.4); }
+
+@media (max-width:640px){
+  #minimap-wrap{ width:104px; height:104px; top:10px; right:10px; }
+  #objective-bar{ top:10px; left:10px; right:10px; padding:8px 12px; }
+  #objective-text{ font-size:10px; }
+  #spot-progress{ top:56px; left:10px; padding:6px 8px; }
+  .spot-pip{ width:20px; height:20px; font-size:9px; }
+  #inventory-bar{ bottom:10px; left:10px; padding:8px; gap:6px; }
+  .inv-chip{ padding:5px 8px; font-size:11px; }
+}
+</style>
+</head>
+<body>
+<div id="ogeid-root">
+
+  <canvas id="game-canvas"></canvas>
+  <div id="gif-holder"></div>
+
+  <!-- HUD -->
+  <div id="hud">
+    <div id="objective-bar" class="hud-panel">
+      <div id="objective-text">REALIZE OS GRAFFITIS SEM SER PEGO — <b id="objective-count">0 / 5</b></div>
+      <button id="pause-btn" title="Pausar">II</button>
+    </div>
+    <div id="spot-progress" class="hud-panel"></div>
+    <div id="inventory-bar" class="hud-panel"></div>
+    <div id="minimap-wrap"><canvas id="minimap-canvas" width="300" height="300"></canvas></div>
+    <div id="interaction-prompt"></div>
+    <div id="toast-stack"></div>
+    <div id="guard-alert">⚠ O GUARDA TE VIU ⚠</div>
+  </div>
+
+  <!-- Cutscenes -->
+  <div id="cutscene-overlay">
+    <video id="cutscene-video" playsinline muted></video>
+    <div id="cutscene-placeholder">
+      <div class="cutscene-title" id="cutscene-title">INTRODUÇÃO</div>
+      <div class="cutscene-drip"><i id="cutscene-drip-fill"></i></div>
+      <div class="cutscene-hint">reproduzindo cutscene — envie seu vídeo pelo CONFIGURADOR para substituir</div>
+    </div>
+    <button id="skip-video-btn">PULAR ▶</button>
+  </div>
+
+  <!-- Loading -->
+  <div id="loading-screen">
+    <div class="brand-tag">OGEID</div>
+    <div class="brand-sub">TAG THE CITY</div>
+    <div class="spray-loader"><i id="loading-fill"></i></div>
+  </div>
+
+  <!-- Menu -->
+  <div id="menu-screen" class="screen">
+    <div class="screen-bg-img" id="menu-bg-img"></div>
+    <div class="brand-tag" id="menu-title-text">OGEID</div>
+    <div class="screen-sub" id="menu-subtitle-text">TAG THE CITY — um jogo urbano de exploração</div>
+    <div class="btn-row">
+      <button class="ogeid-btn primary" id="btn-new-game">NOVO JOGO</button>
+      <button class="ogeid-btn" id="btn-continue">CONTINUAR</button>
+      <button class="ogeid-btn danger" id="btn-reset">RESETAR PROGRESSO</button>
+    </div>
+  </div>
+
+  <!-- Pausa -->
+  <div id="pause-screen" class="screen">
+    <div class="screen-title" style="font-size:32px;">PAUSADO</div>
+    <div class="btn-row">
+      <button class="ogeid-btn primary" id="btn-resume">CONTINUAR JOGANDO</button>
+      <button class="ogeid-btn" id="btn-menu-from-pause">VOLTAR AO MENU</button>
+    </div>
+  </div>
+
+  <!-- Derrota -->
+  <div id="lose-screen" class="screen">
+    <div class="screen-bg-img" id="lose-bg-img"></div>
+    <div class="screen-title lose" id="lose-title-text">VOCÊ FOI PEGO!</div>
+    <div class="screen-sub" id="lose-sub">O guarda encerrou sua produção artística.</div>
+    <div class="btn-row">
+      <button class="ogeid-btn primary" id="btn-retry">TENTAR NOVAMENTE</button>
+      <button class="ogeid-btn" id="btn-menu-from-lose">VOLTAR AO MENU</button>
+    </div>
+  </div>
+
+  <!-- Vitória -->
+  <div id="win-screen" class="screen">
+    <div class="screen-bg-img" id="win-bg-img"></div>
+    <div id="victory-stamp">OK</div>
+    <div class="screen-title win" id="win-title-text">MISSÃO CONCLUÍDA</div>
+    <div class="screen-sub" id="win-subtitle-text">A CIDADE AGORA É OGEID.</div>
+    <div class="btn-row">
+      <button class="ogeid-btn primary" id="btn-play-again">JOGAR NOVAMENTE</button>
+      <button class="ogeid-btn" id="btn-menu-from-win">VOLTAR AO MENU</button>
+    </div>
+  </div>
+
+</div>
+
+<script type="module">
+/* =====================================================================================
+   OGEID · TAG THE CITY — GAME ENGINE + CONFIGURADOR
+   Tudo lê de CONFIG + UserConfig (localStorage) + arquivos enviados (IndexedDB).
+   Nenhuma arte real está embutida: sem uploads, o jogo usa placeholders automáticos.
+   ===================================================================================== */
+import * as THREE from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
+
+(function(){
+"use strict";
+
+/* =========================================================
+   1. CONFIG — valores padrão do jogo
+   ========================================================= */
+const CONFIG = {
+  map:{
+    width: 2400, height: 1600, gridSize: 32,
+    backgroundAssetKey: null,
+    /* heightMeters = altura do prédio no cenário 3D (unidades arbitrárias, ~1 unidade = 1 "andar-e-meio").
+       model3dAssetKey = chave no IndexedDB de um arquivo .glb enviado no CONFIGURADOR; quando presente,
+       o prédio é renderizado com o modelo 3D real em vez da caixa colorida com a imagem 2D. */
+    objects: [
+      {id:"building_01", x:250,  y:150, width:300, height:220, color:"#26293a", collision:true, label:"BLOCO A", imageAssetKey:null, heightMeters:6, model3dAssetKey:null},
+      {id:"building_02", x:700,  y:120, width:260, height:260, color:"#232636", collision:true, label:"BLOCO B", imageAssetKey:null, heightMeters:8, model3dAssetKey:null},
+      {id:"building_03", x:1150, y:180, width:320, height:200, color:"#2a2d3f", collision:true, label:"BLOCO C", imageAssetKey:null, heightMeters:5, model3dAssetKey:null},
+      {id:"building_04", x:1650, y:150, width:280, height:240, color:"#242738", collision:true, label:"BLOCO D", imageAssetKey:null, heightMeters:9, model3dAssetKey:null},
+      {id:"building_05", x:2000, y:220, width:250, height:220, color:"#282b3c", collision:true, label:"BLOCO E", imageAssetKey:null, heightMeters:6, model3dAssetKey:null},
+      {id:"building_06", x:200,  y:600, width:280, height:240, color:"#26293a", collision:true, label:"BLOCO F", imageAssetKey:null, heightMeters:7, model3dAssetKey:null},
+      {id:"building_07", x:650,  y:650, width:300, height:220, color:"#232636", collision:true, label:"BLOCO G", imageAssetKey:null, heightMeters:5, model3dAssetKey:null},
+      {id:"building_08", x:1100, y:620, width:260, height:260, color:"#2a2d3f", collision:true, label:"BLOCO H", imageAssetKey:null, heightMeters:9, model3dAssetKey:null},
+      {id:"building_09", x:1600, y:600, width:300, height:240, color:"#242738", collision:true, label:"BLOCO I", imageAssetKey:null, heightMeters:6, model3dAssetKey:null},
+      {id:"building_10", x:2000, y:650, width:260, height:220, color:"#282b3c", collision:true, label:"BLOCO J", imageAssetKey:null, heightMeters:8, model3dAssetKey:null},
+      {id:"building_11", x:300,  y:1050,width:300, height:230, color:"#26293a", collision:true, label:"BLOCO K", imageAssetKey:null, heightMeters:5, model3dAssetKey:null},
+      {id:"building_12", x:750,  y:1080,width:280, height:220, color:"#232636", collision:true, label:"BLOCO L", imageAssetKey:null, heightMeters:7, model3dAssetKey:null},
+      {id:"building_13", x:1200, y:1050,width:300, height:240, color:"#2a2d3f", collision:true, label:"BLOCO M", imageAssetKey:null, heightMeters:9, model3dAssetKey:null},
+      {id:"building_14", x:1650, y:1080,width:280, height:220, color:"#242738", collision:true, label:"BLOCO N", imageAssetKey:null, heightMeters:6, model3dAssetKey:null},
+      {id:"building_15", x:2050, y:1050,width:250, height:230, color:"#282b3c", collision:true, label:"BLOCO O", imageAssetKey:null, heightMeters:8, model3dAssetKey:null}
+    ],
+    decorations: [
+      {x:600,y:420,type:"tree"}, {x:1050,y:440,type:"post"}, {x:1500,y:420,type:"tree"},
+      {x:1950,y:480,type:"trash"}, {x:420,y:900,type:"post"}, {x:980,y:920,type:"tree"},
+      {x:1420,y:900,type:"trash"}, {x:1880,y:920,type:"tree"}, {x:600,y:1320,type:"post"},
+      {x:1080,y:1330,type:"tree"}, {x:1550,y:1320,type:"trash"}, {x:2050,y:1330,type:"post"}
+    ],
+    areas: [
+      {id:"area_norte", name:"DISTRITO NORTE", x:0,   y:0,   width:2400, height:520, discovered:false},
+      {id:"area_centro",name:"CENTRO",         x:0,   y:520, width:2400, height:500, discovered:false},
+      {id:"area_sul",   name:"ZONA SUL",       x:0,   y:1020,width:2400, height:580, discovered:false}
+    ]
+  },
+
+  player:{
+    startX: 150, startY: 420, walkSpeed: 150, runSpeed: 250, arriveDistance: 6, interactionRadius: 62,
+    /* personagem 100% 3D (malha proceduralmente construída em three.js, sem sprites/imagens) —
+       a "arte" dele agora é só um conjunto de cores. Ver Humanoid3D mais abaixo. */
+    palette:{body:"#1c1c22", accent:"#ff2f92", legs:"#111114", arms:"#1c1c22", skin:"#e8b48a"},
+    /* model = modelSpec do personagem 3D animado enviado no CONFIGURADOR (ver AnimatedCharacter3D);
+       null enquanto nada for enviado — aí o jogo usa o boneco procedural (palette acima) */
+    model: null
+  },
+
+  guard:{
+    activationMode: "always", // "always" (patrulha desde o início) | "onEvent" (some até o gatilho)
+    patrolRoute:[
+      {x:160,  y:900}, {x:1200, y:900}, {x:1200, y:480}, {x:2260, y:480},
+      {x:2260, y:1400},{x:1200, y:1400},{x:1200, y:900}
+    ],
+    walkSpeed: 95, chaseSpeed: 205, visionRadius: 260, visionAngle: 110, reactionTime: 0.35,
+    captureRadius: 30, loseInterestTime: 3.5,
+    palette:{body:"#1e2b4d", accent:"#ffe14d", legs:"#12131a", arms:"#1e2b4d", skin:"#d9a878"},
+    /* model = modelSpec do personagem 3D animado enviado no CONFIGURADOR pra guardas (ver
+       AnimatedCharacter3D) — compartilhado pelo guarda principal E por todos os guardas extras;
+       null enquanto nada for enviado — aí eles usam o boneco procedural (palette acima) */
+    model: null
+  },
+
+  /* Teclas que controlam o jogador. Cada valor é um "code" de teclado (e.code do navegador,
+     ex: "KeyW", "ArrowUp", "Space", "ShiftLeft", "Digit1"...). Sobrescrito pelo CONFIGURADOR
+     (aba CONTROLES) via UserConfig.controls, ver applyUserConfigToCONFIG(). */
+  controls:{
+    forward:"KeyW", backward:"KeyS", left:"KeyA", right:"KeyD",
+    run:"ShiftLeft", interact:"KeyE", jump:"Space",
+    emote1:"Digit1", emote1Type:"wave",
+    emote2:"Digit2", emote2Type:"dance",
+    emote3:"Digit3", emote3Type:"point"
+  },
+
+  guardsExtra: [], // preenchido a partir de UserConfig.guards em applyUserConfigToCONFIG()
+
+  guardEvent:{
+    enabled:false, x:1000, y:1000, width:300, height:250,
+    title:"O GUARDA APARECE", cutsceneAssetKey:null,
+    spawnX:1050, spawnY:1050
+  },
+
+  sprayTypes:{
+    red:     {label:"Vermelho", color:"#ff2f92", swatch:"#ff2f92"},
+    blue:    {label:"Azul",     color:"#17d6e8", swatch:"#17d6e8"},
+    yellow:  {label:"Amarelo",  color:"#ffe14d", swatch:"#ffe14d"},
+    black:   {label:"Preto",    color:"#e7e7ea", swatch:"#2b2d36"},
+    special: {label:"Especial", color:"#7CFF3C", swatch:"#7CFF3C"}
+  },
+  sprayIconKeys:{ red:null, blue:null, yellow:null, black:null, special:null }, // preenchido a partir de UserConfig.sprayIcons
+
+  sprays:[
+    {id:"spray_01",x:480, y:430, type:"red"}, {id:"spray_02",x:820, y:380, type:"red"},
+    {id:"spray_03",x:1300,y:420, type:"red"}, {id:"spray_04",x:1780,y:400, type:"blue"},
+    {id:"spray_05",x:2150,y:460, type:"red"}, {id:"spray_06",x:380, y:820, type:"black"},
+    {id:"spray_07",x:900, y:900, type:"black"},{id:"spray_08",x:1420,y:860, type:"yellow"},
+    {id:"spray_09",x:1850,y:900, type:"blue"}, {id:"spray_10",x:2200,y:840, type:"blue"},
+    {id:"spray_11",x:520, y:1280,type:"special"},{id:"spray_12",x:900, y:1320,type:"special"},
+    {id:"spray_13",x:1280,y:1300,type:"special"},{id:"spray_14",x:1680,y:1330,type:"special"},
+    {id:"spray_15",x:2100,y:1300,type:"special"},{id:"spray_16",x:1900,y:1300,type:"special"},
+    {id:"spray_17",x:150, y:1150,type:"yellow"}, {id:"spray_18",x:620, y:560, type:"red"},
+    {id:"spray_19",x:1980,y:1030,type:"yellow"}, {id:"spray_20",x:1080,y:520, type:"blue"}
+  ],
+
+  spots:[
+    {id:"spot01", name:"SPOT 01", x:560,  y:380,  requirements:{red:2},            video:"assets/videos/spots/spot01.mp4", videoAssetKey:null, imageAssetKey:null},
+    {id:"spot02", name:"SPOT 02", x:1350, y:420,  requirements:{red:3, blue:1},    video:"assets/videos/spots/spot02.mp4", videoAssetKey:null, imageAssetKey:null},
+    {id:"spot03", name:"SPOT 03", x:980,  y:900,  requirements:{black:2, yellow:2},video:"assets/videos/spots/spot03.mp4", videoAssetKey:null, imageAssetKey:null},
+    {id:"spot04", name:"SPOT 04", x:1930, y:870,  requirements:{blue:3, red:2},    video:"assets/videos/spots/spot04.mp4", videoAssetKey:null, imageAssetKey:null},
+    {id:"spot05", name:"SPOT 05", x:1500, y:1300, requirements:{special:5},        video:"assets/videos/spots/spot05.mp4", videoAssetKey:null, imageAssetKey:null}
+  ],
+
+  videos:{
+    intro:"assets/videos/intro.mp4", introAssetKey:null,
+    lose:"assets/videos/endings/lose.mp4", loseAssetKey:null,
+    win:"assets/videos/endings/win.mp4", winAssetKey:null
+  },
+
+  camera:{ smoothing: 0.09, zoom: 1 },
+  interface:{ minimapColors:{ spray:"#7CFF3C", spot:"#ff2f92", spotDone:"#ffe14d", player:"#17d6e8", guard:"#ff4d4d" } },
+  ui:{
+    menu:{ backgroundAssetKey:null, title:"OGEID", subtitle:"TAG THE CITY — um jogo urbano de exploração",
+      buttons:{ newGame:"NOVO JOGO", continueGame:"CONTINUAR", reset:"RESETAR PROGRESSO" } },
+    lose:{ backgroundAssetKey:null, title:"VOCÊ FOI PEGO!", subtitle:"O guarda encerrou sua produção artística.",
+      buttons:{ retry:"TENTAR NOVAMENTE", menu:"VOLTAR AO MENU" } },
+    win:{ backgroundAssetKey:null, title:"MISSÃO CONCLUÍDA", subtitle:"A CIDADE AGORA É OGEID.",
+      buttons:{ playAgain:"JOGAR NOVAMENTE", menu:"VOLTAR AO MENU" } }
+  },
+  audio:{
+    ambient:"assets/audio/ambient.mp3", walk:"assets/audio/walk.mp3", collect:"assets/audio/collect.mp3",
+    alert:"assets/audio/alert.mp3", chase:"assets/audio/chase.mp3", paint:"assets/audio/paint.mp3",
+    capture:"assets/audio/capture.mp3", complete:"assets/audio/complete.mp3"
+  },
+  save:{ storageKey:"ogeid_tag_the_city_save_v1" }
+};
+
+const USERCONFIG_KEY = "ogeid_userconfig_v1";
+
+/* =========================================================
+   2. UTILITÁRIOS
+   ========================================================= */
+const $ = (sel)=>document.querySelector(sel);
+const $$ = (sel)=>Array.from(document.querySelectorAll(sel));
+const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+const dist = (ax,ay,bx,by)=>Math.hypot(ax-bx,ay-by);
+const lerp = (a,b,t)=>a+(b-a)*t;
+const uid = (p)=> p+"_"+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+}
+
+/* =========================================================
+   3. INDEXEDDB — armazenamento dos arquivos enviados (imagens/gifs/vídeos)
+   ========================================================= */
+const IDB = (function(){
+  const DB_NAME="ogeid_assets_db", STORE="files";
+  function open(){
+    return new Promise((res,rej)=>{
+      const req = indexedDB.open(DB_NAME,1);
+      req.onupgradeneeded = ()=>{ req.result.createObjectStore(STORE); };
+      req.onsuccess = ()=>res(req.result);
+      req.onerror = ()=>rej(req.error);
+    });
+  }
+  async function set(key, blob){
+    const db = await open();
+    return new Promise((res,rej)=>{
+      const tx = db.transaction(STORE,"readwrite");
+      tx.objectStore(STORE).put(blob,key);
+      tx.oncomplete=()=>res(true); tx.onerror=()=>rej(tx.error);
+    });
+  }
+  async function get(key){
+    try{
+      const db = await open();
+      return await new Promise((res,rej)=>{
+        const tx = db.transaction(STORE,"readonly");
+        const r = tx.objectStore(STORE).get(key);
+        r.onsuccess=()=>res(r.result||null); r.onerror=()=>rej(r.error);
+      });
+    }catch(err){
+      console.warn("[OGEID] IndexedDB indisponível, seguindo sem asset salvo:", err);
+      return null;
+    }
+  }
+  async function del(key){
+    const db = await open();
+    return new Promise((res,rej)=>{
+      const tx = db.transaction(STORE,"readwrite");
+      tx.objectStore(STORE).delete(key);
+      tx.oncomplete=()=>res(true); tx.onerror=()=>rej(tx.error);
+    });
+  }
+  async function clear(){
+    const db = await open();
+    return new Promise((res,rej)=>{
+      const tx = db.transaction(STORE,"readwrite");
+      tx.objectStore(STORE).clear();
+      tx.oncomplete=()=>res(true); tx.onerror=()=>rej(tx.error);
+    });
+  }
+  return { set, get, del, clear };
+})();
+
+/* =========================================================
+   4. ASSET MANAGER
+   Prioridade: arquivo enviado (IndexedDB) > sequência 001.png/002.png... na pasta
+   configurada > placeholder vetorial gerado automaticamente.
+   ========================================================= */
+const AssetManager = {
+  cache:{}, imgCache:{}, videoUrlCache:{}, liveGifCache:{},
+
+  probeSequence(folderPath, maxProbe){
+    maxProbe = maxProbe || 200;
+    return new Promise((resolve)=>{
+      const frames = []; let i=1;
+      const tryNext = ()=>{
+        if(i>maxProbe){ resolve(frames); return; }
+        const num = String(i).padStart(3,"0");
+        const img = new Image();
+        img.onload=()=>{ frames.push(img); i++; tryNext(); };
+        img.onerror=()=>{ resolve(frames); };
+        img.src = folderPath+num+".png";
+      };
+      tryNext();
+    });
+  },
+
+  async loadAnimation(folderPath, fallbackCount, placeholderFn){
+    const key = folderPath;
+    if(this.cache[key]) return this.cache[key];
+    let frames = await this.probeSequence(folderPath);
+    let generated=false;
+    if(frames.length===0){
+      generated=true; frames=[];
+      for(let f=0; f<fallbackCount; f++) frames.push(placeholderFn(f,fallbackCount));
+    }
+    const result = {frames, generated};
+    this.cache[key]=result;
+    return result;
+  },
+
+  async resolveImageAsset(key){
+    if(!key) return null;
+    if(this.imgCache[key]!==undefined) return this.imgCache[key];
+    const blob = await IDB.get(key);
+    if(!blob){ this.imgCache[key]=null; return null; }
+    const url = URL.createObjectURL(blob);
+    const img = await new Promise(res=>{ const im=new Image(); im.onload=()=>res(im); im.onerror=()=>res(null); im.src=url; });
+    this.imgCache[key]=img;
+    return img;
+  },
+
+  async resolveVideoAssetURL(key){
+    if(!key) return null;
+    if(this.videoUrlCache[key]!==undefined) return this.videoUrlCache[key];
+    const blob = await IDB.get(key);
+    if(!blob){ this.videoUrlCache[key]=null; return null; }
+    const url = URL.createObjectURL(blob);
+    this.videoUrlCache[key]=url;
+    return url;
+  },
+
+  async resolveLiveGifElement(key){
+    if(!key) return null;
+    if(this.liveGifCache[key]!==undefined) return this.liveGifCache[key];
+    const blob = await IDB.get(key);
+    if(!blob){ this.liveGifCache[key]=null; return null; }
+    const url = URL.createObjectURL(blob);
+    const img = document.createElement("img");
+    img.src = url;
+    $("#gif-holder").appendChild(img);
+    await new Promise(res=>{ img.onload=res; img.onerror=res; });
+    this.liveGifCache[key]=img;
+    return img;
+  },
+
+  /* ---- Modelos 3D (.glb) enviados no configurador ---- */
+  blobCache:{},
+  async resolveBlob(key){
+    if(!key) return null;
+    if(this.blobCache[key]!==undefined) return this.blobCache[key];
+    const blob = await IDB.get(key);
+    this.blobCache[key] = blob || null;
+    return this.blobCache[key];
+  }
+};
+
+/* ---- Geradores de placeholder (arte provisória vetorial) ---- */
+function makeSprayIcon(type,size){
+  const cfg = CONFIG.sprayTypes[type]||{color:"#fff"};
+  const cvs = document.createElement("canvas"); cvs.width=size; cvs.height=size;
+  const ctx = cvs.getContext("2d");
+  const w=size*0.34,h=size*0.62,x=size/2-w/2,y=size*0.24;
+  ctx.save(); ctx.shadowColor=cfg.color; ctx.shadowBlur=size*0.28;
+  ctx.fillStyle=cfg.color; roundRect(ctx,x,y,w,h,4); ctx.fill(); ctx.restore();
+  ctx.fillStyle="#e7e7ea"; ctx.fillRect(x+w*0.15,y-size*0.10,w*0.7,size*0.12);
+  ctx.fillStyle="rgba(0,0,0,0.25)"; ctx.fillRect(x,y+h*0.35,w,h*0.22);
+  return cvs;
+}
+function makeStencilWallIcon(state,size){
+  const cvs = document.createElement("canvas"); cvs.width=size; cvs.height=size;
+  const ctx = cvs.getContext("2d");
+  const colors={locked:"#5a5d6b",unlocked:"#ff2f92",done:"#7CFF3C"};
+  ctx.strokeStyle=colors[state]; ctx.lineWidth=3;
+  ctx.strokeRect(size*0.15,size*0.15,size*0.7,size*0.7);
+  ctx.beginPath(); ctx.moveTo(size*0.28,size*0.65); ctx.lineTo(size*0.42,size*0.4); ctx.lineTo(size*0.55,size*0.55); ctx.lineTo(size*0.72,size*0.3); ctx.stroke();
+  if(state==="locked"){ ctx.font=`${size*0.28}px sans-serif`; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillText("🔒",size/2,size/2); }
+  return cvs;
+}
+
+/* =========================================================
+   5. PERSONAGEM 100% 3D — malha real em three.js (nada de sprite/billboard).
+   Um humanoide "low-poly" feito só de caixas, montado uma vez e reaproveitado
+   pra jogador, guarda principal e guardas extras (cada um com sua paleta de
+   cores, vinda do CONFIGURADOR). As poses (andar/correr/pintar/capturado/
+   pulo/emotes) são geradas na hora, girando os "ossos" (grupos-pivô de
+   braço/perna) com seno — não precisa de nenhum arquivo de animação.
+   ========================================================= */
+class Humanoid3D{
+  constructor(worldHeightUnits, palette){
+    this.height = worldHeightUnits;
+    this.palette = Object.assign({body:"#1c1c22",accent:"#ff2f92",legs:"#111114",arms:"#1c1c22",skin:"#e8b48a"}, palette||{});
+    this.group = new THREE.Group();
+    this._build();
+  }
+  _mat(hex){ return new THREE.MeshStandardMaterial({color:hex, roughness:0.8, metalness:0.05}); }
+  _box(w,h,d,hex){
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), this._mat(hex));
+    m.castShadow = true; m.receiveShadow = true;
+    return m;
+  }
+  _build(){
+    const H=this.height, p=this.palette;
+    const legH=H*0.44, torsoH=H*0.32, headS=H*0.20;
+    const legW=H*0.14, armW=H*0.105, armH=H*0.30, torsoW=H*0.32, torsoD=H*0.18;
+    const hipY = legH, shoulderY = hipY + torsoH*0.92;
+
+    this.legL=new THREE.Group(); this.legR=new THREE.Group();
+    this.legL.position.set(-legW*0.55, hipY, 0); this.legR.position.set(legW*0.55, hipY, 0);
+    const legMeshL=this._box(legW,legH,legW,p.legs); legMeshL.position.y=-legH/2;
+    const legMeshR=this._box(legW,legH,legW,p.legs); legMeshR.position.y=-legH/2;
+    this.legL.add(legMeshL); this.legR.add(legMeshR);
+    this.group.add(this.legL,this.legR);
+
+    this.torso=this._box(torsoW,torsoH,torsoD,p.body);
+    this.torso.position.y = hipY+torsoH/2;
+    this.group.add(this.torso);
+    const stripe=this._box(torsoW*1.01,torsoH*0.16,torsoD*1.05,p.accent);
+    stripe.position.y = hipY+torsoH*0.28;
+    this.group.add(stripe);
+
+    this.armL=new THREE.Group(); this.armR=new THREE.Group();
+    this.armL.position.set(-(torsoW/2+armW/2), shoulderY, 0);
+    this.armR.position.set( (torsoW/2+armW/2), shoulderY, 0);
+    const armMeshL=this._box(armW,armH,armW,p.arms); armMeshL.position.y=-armH/2;
+    const armMeshR=this._box(armW,armH,armW,p.arms); armMeshR.position.y=-armH/2;
+    this.armL.add(armMeshL); this.armR.add(armMeshR);
+    this.group.add(this.armL,this.armR);
+
+    this.headGroup=new THREE.Group();
+    this.headGroup.position.y = hipY+torsoH+headS*0.55;
+    this.headGroup.add(this._box(headS,headS,headS,p.skin));
+    const visor=this._box(headS*0.7,headS*0.26,headS*0.06,p.accent);
+    visor.position.set(0,headS*0.04,headS/2+0.001);
+    this.headGroup.add(visor);
+    const cap=this._box(headS*1.05,headS*0.3,headS*1.05,p.accent);
+    cap.position.y = headS*0.5;
+    this.headGroup.add(cap);
+    this.group.add(this.headGroup);
+  }
+  addTo(scene){ scene.add(this.group); }
+  setVisible(v){ this.group.visible=v; }
+  /* state: "idle"|"walk"|"run"|"painting"|"captured" · phase: relógio contínuo (segundos) pra ciclo de passada
+     facingAngle: mesma convenção do resto do jogo (atan2(nx,ny)) · extra: {jumpT:0..1} ou {emote:"wave"|"dance"|"point"} */
+  pose(state, phase, facingAngle, extra){
+    this.group.rotation.y = facingAngle||0;
+    this.group.rotation.z = 0;
+    this.torso.rotation.x = 0; this.headGroup.rotation.x = 0;
+    let bobY = 0;
+
+    if(state==="captured"){
+      const shake = Math.sin(phase*18)*0.03;
+      this.legL.rotation.x=-0.9; this.legR.rotation.x=-0.7;
+      this.armL.rotation.set(-2.1,0,0.3+shake); this.armR.rotation.set(-2.3,0,-0.3-shake);
+      this.torso.rotation.x=0.5; this.headGroup.rotation.x=0.6;
+      this.group.position.y=bobY; return;
+    }
+    if(state==="painting"){
+      this.legL.rotation.x=0; this.legR.rotation.x=0;
+      this.armR.rotation.set(-1.7+Math.sin(phase*10)*0.15,0,-0.3);
+      this.armL.rotation.set(-0.3,0,0);
+      this.torso.rotation.x=0.05; this.headGroup.rotation.x=0.1;
+      this.group.position.y=bobY; return;
+    }
+
+    const legSwingMax = state==="run"?0.9:(state==="walk"?0.55:0);
+    const armSwingMax = state==="run"?0.7:(state==="walk"?0.42:0.05);
+    const freq = state==="run"?9:(state==="walk"?6:1.6);
+    const swing = Math.sin(phase*freq);
+    bobY = state==="idle" ? Math.sin(phase*freq)*0.015*this.height : Math.abs(swing)*0.01*this.height;
+
+    this.legL.rotation.set(swing*legSwingMax,0,0);
+    this.legR.rotation.set(-swing*legSwingMax,0,0);
+    this.armL.rotation.set(-swing*armSwingMax,0,0);
+    this.armR.rotation.set(swing*armSwingMax,0,0);
+
+    if(extra && extra.jumpT!==undefined){
+      const arc = Math.sin(Math.PI*clamp(extra.jumpT,0,1));
+      bobY += arc*this.height*0.5;
+      this.legL.rotation.x = -0.6*arc; this.legR.rotation.x = -0.6*arc;
+      this.armL.rotation.x = -1.5*arc; this.armR.rotation.x = -1.5*arc;
+    } else if(extra && extra.emote){
+      if(extra.emote==="wave"){
+        this.armR.rotation.set(-2.4,0, Math.sin(phase*12)*0.5-0.4);
+      } else if(extra.emote==="dance"){
+        this.group.rotation.z = Math.sin(phase*8)*0.08;
+        this.armL.rotation.x=-1.2+Math.sin(phase*8)*0.6;
+        this.armR.rotation.x=-1.2+Math.sin(phase*8+Math.PI)*0.6;
+        this.legL.rotation.x=Math.sin(phase*8)*0.3;
+        this.legR.rotation.x=-Math.sin(phase*8)*0.3;
+      } else if(extra.emote==="point"){
+        this.armR.rotation.set(-1.5,0,-0.6);
+      }
+    }
+    this.group.position.y = bobY;
+  }
+}
+
+/* =========================================================
+   5B. PERSONAGEM 3D ANIMADO (upload do usuário) — usa a mesma
+   "interface" do Humanoid3D (group/addTo/setVisible/pose), então
+   Player e Guarda não precisam saber qual dos dois estão usando.
+   Espera um "modelSpec": {base, idle, walk, run, painting, captured,
+   jump, wave, dance, point} — cada campo é uma chave no IndexedDB
+   (ou null). "base" é obrigatório: é o .glb com a malha+esqueleto.
+   Cada outro campo é um .glb SEPARADO contendo só uma animação pro
+   MESMO esqueleto (nomes dos ossos precisam bater com o "base") —
+   é o formato de exportação "uma animação por arquivo" comum em
+   ferramentas como Mixamo/Blender. Animações que não forem
+   enviadas caem de volta pra um estado "parente" (ver
+   CHAR_ANIM_FALLBACK) e, na ausência de qualquer clip, pra "idle". */
+const CHAR_ANIM_STATES = ["idle","walk","run","painting","captured","jump","wave","dance","point"];
+/* ETAPA 1 — cadeia de fallback quando uma animação específica não foi enviada
+   pelo configurador (regra 7 do prompt técnico). Cada estado aponta pro
+   próximo "melhor substituto" disponível; a cadeia sempre termina em "idle". */
+const CHAR_ANIM_FALLBACK = {
+  run:"walk", fall:"idle", jump:"idle", point:"idle", dance:"idle", wave:"idle", painting:"idle", captured:"idle"
+};
+
+/* ---- ETAPA 1 — normaliza um AnimationClip vindo de Mixamo/Blender pra evitar
+   "root motion" indesejado (o personagem andando fisicamente através do clip,
+   além do controle do próprio gameplay — regra 9 do prompt técnico). A tática
+   é neutralizar o deslocamento horizontal (X/Z) do primeiro PositionTrack do
+   clip (a raiz/hips), mantendo a variação vertical (Y) pra preservar bobbing
+   de passada, agachamento de captura etc. Rotações não são tocadas. Se o clip
+   não tiver PositionTrack, ele já está "in place" e nada é alterado. */
+function normalizeAnimationClip(clip){
+  if(!clip || !clip.tracks || !clip.tracks.length) return clip;
+  let rootTrackFound = false;
+  for(const track of clip.tracks){
+    if(rootTrackFound) break; // só a raiz (primeiro track de posição) costuma carregar o deslocamento global
+    if(!(track instanceof THREE.VectorKeyframeTrack)) continue;
+    if(!/\.position$/.test(track.name)) continue;
+    rootTrackFound = true;
+    const values = track.values; // [x0,y0,z0, x1,y1,z1, ...]
+    if(!values || values.length<3) continue;
+    const baseX = values[0], baseZ = values[2];
+    for(let i=0;i<values.length;i+=3){
+      values[i]   -= baseX; // trava X no valor inicial
+      values[i+2] -= baseZ; // trava Z no valor inicial
+      // Y não é tocado — preserva pulo/agachamento/bounce vertical do clip
+    }
+  }
+  return clip;
+}
+
+/* ---- ETAPA 1 — AnimationController: camada dedicada de crossfade/transição
+   em cima do THREE.AnimationMixer, com fallback automático (CHAR_ANIM_FALLBACK)
+   quando o estado pedido não tem clip carregado. Nunca troca de animação de
+   forma instantânea quando já existe uma ação ativa (regra 10). */
+class AnimationController{
+  constructor(mixer){
+    this.mixer = mixer;
+    this.actions = {}; // nome do estado -> THREE.AnimationAction
+    this.active = null;
+    this.activeName = null;
+  }
+  setAction(name, action){ this.actions[name] = action; }
+  hasAny(){ return Object.keys(this.actions).length>0; }
+  /* resolve um nome de estado pro clip mais próximo disponível, seguindo
+     CHAR_ANIM_FALLBACK até achar uma action carregada ou esgotar a cadeia */
+  _resolve(name){
+    let n = name, guard = 0;
+    while(n && !this.actions[n] && guard<10){ n = CHAR_ANIM_FALLBACK[n]; guard++; }
+    return this.actions[n] ? n : (this.actions.idle ? "idle" : null);
+  }
+  play(name){ this.crossFade(name, 0); }
+  crossFade(name, duration){
+    const resolved = this._resolve(name);
+    if(!resolved) return;
+    const action = this.actions[resolved];
+    if(action===this.active) return;
+    const d = duration===undefined ? 0.25 : duration;
+    action.reset();
+    if(d>0) action.fadeIn(d); else action.setEffectiveWeight(1);
+    action.play();
+    if(this.active && this.active!==action){
+      if(d>0) this.active.fadeOut(d); else this.active.stop();
+    }
+    this.active = action; this.activeName = resolved;
+  }
+  stop(){ if(this.active) this.active.stop(); this.active=null; this.activeName=null; }
+  update(dt){ if(this.mixer) this.mixer.update(dt); }
+}
+
+class AnimatedCharacter3D{
+  constructor(targetHeight){
+    this.height = targetHeight;
+    this.group = new THREE.Group();
+    this.mixer = null;
+    this.animCtrl = null;
+    this._lastPhase = 0;
+  }
+  async load(modelSpec, baseBlob){
+    const baseGltf = await loadGLTFFromBlob(baseBlob);
+    const model = baseGltf.scene;
+
+    // escala uniformemente pra caber na altura padrão do personagem e apoia no chão (y=0)
+    const box = new THREE.Box3().setFromObject(model);
+    const size = new THREE.Vector3(); box.getSize(size);
+    if(size.y>0.0001){ model.scale.setScalar(this.height/size.y); }
+    const box2 = new THREE.Box3().setFromObject(model);
+    const center2 = new THREE.Vector3(); box2.getCenter(center2);
+    model.position.x -= center2.x; model.position.z -= center2.z; model.position.y -= box2.min.y;
+    model.traverse(o=>{ if(o.isMesh){ o.castShadow=true; o.receiveShadow=true; } });
+    this.group.add(model);
+
+    this.mixer = new THREE.AnimationMixer(model);
+    this.animCtrl = new AnimationController(this.mixer);
+    // se o próprio arquivo-base já vier com alguma animação embutida, usa como "idle" de partida
+    if(baseGltf.animations && baseGltf.animations.length){
+      const clip = normalizeAnimationClip(baseGltf.animations[0]);
+      this.animCtrl.setAction("idle", this.mixer.clipAction(clip));
+    }
+    for(const state of CHAR_ANIM_STATES){
+      const key = modelSpec[state];
+      if(!key) continue;
+      try{
+        const blob = await AssetManager.resolveBlob(key);
+        if(!blob) continue;
+        const gltf = await loadGLTFFromBlob(blob);
+        if(gltf.animations && gltf.animations.length){
+          const clip = normalizeAnimationClip(gltf.animations[0]);
+          this.animCtrl.setAction(state, this.mixer.clipAction(clip));
+        }
+      }catch(err){ console.warn(`[OGEID] Falha ao carregar a animação "${state}" do personagem 3D:`, err); }
+    }
+    if(this.animCtrl.actions.idle) this.animCtrl.play("idle");
+  }
+  addTo(scene){ scene.add(this.group); }
+  setVisible(v){ this.group.visible = v; }
+  /* mesma assinatura do Humanoid3D.pose() — "phase" é um relógio contínuo (segundos);
+     como o mixer precisa de um delta-tempo, ele é derivado da diferença entre chamadas. */
+  pose(state, phase, facingAngle, extra){
+    this.group.rotation.y = facingAngle||0;
+    const dt = Math.max(0, phase-this._lastPhase); this._lastPhase = phase;
+    if(!this.animCtrl) return;
+    this.animCtrl.update(dt);
+    if(!this.animCtrl.hasAny()) return;
+    let target = state;
+    if(extra){
+      if(extra.jumpT!==undefined) target = "jump";
+      else if(extra.emote) target = extra.emote;
+    }
+    this.animCtrl.crossFade(target, 0.25);
+  }
+}
+/* ---- Cria o rig do personagem: usa o modelo 3D animado enviado no CONFIGURADOR
+   quando existir (modelSpec.base configurado); senão cai pro boneco procedural
+   de caixas (Humanoid3D), igual antes. Nunca deixa o boot travar por causa de
+   um .glb com problema — se falhar, usa o boneco procedural como reserva. */
+async function buildCharacterRig(targetHeight, palette, modelSpec){
+  if(modelSpec && modelSpec.base){
+    try{
+      const baseBlob = await AssetManager.resolveBlob(modelSpec.base);
+      if(baseBlob){
+        const rig = new AnimatedCharacter3D(targetHeight);
+        await rig.load(modelSpec, baseBlob);
+        return rig;
+      }
+    }catch(err){
+      console.warn("[OGEID] Falha ao carregar o modelo 3D animado, usando o personagem padrão:", err);
+    }
+  }
+  return new Humanoid3D(targetHeight, palette);
+}
+
+/* ---- Monta a paleta de cores de um guarda extra a partir de UserConfig.guards[i].palette ---- */
+function buildGuardExtraPalette(source){
+  return Object.assign({body:"#1e2b4d",accent:"#17d6e8",legs:"#12131a",arms:"#1e2b4d",skin:"#d9a878"}, source||{});
+}
+/* =========================================================
+   6. PATHFINDING — grid A*
+   ========================================================= */
+class NavGrid{
+  constructor(width,height,cell,obstacles){
+    this.cell=cell; this.cols=Math.ceil(width/cell); this.rows=Math.ceil(height/cell);
+    this.blocked = new Uint8Array(this.cols*this.rows);
+    obstacles.forEach(o=>{
+      const pad=10;
+      const x0=Math.max(0,Math.floor((o.x-pad)/cell)), y0=Math.max(0,Math.floor((o.y-pad)/cell));
+      const x1=Math.min(this.cols-1,Math.ceil((o.x+o.width+pad)/cell)), y1=Math.min(this.rows-1,Math.ceil((o.y+o.height+pad)/cell));
+      for(let gy=y0; gy<=y1; gy++) for(let gx=x0; gx<=x1; gx++) this.blocked[gy*this.cols+gx]=1;
+    });
+  }
+  idx(gx,gy){ return gy*this.cols+gx; }
+  isBlocked(gx,gy){ if(gx<0||gy<0||gx>=this.cols||gy>=this.rows) return true; return this.blocked[this.idx(gx,gy)]===1; }
+  worldToGrid(x,y){ return {gx:Math.floor(x/this.cell), gy:Math.floor(y/this.cell)}; }
+  gridToWorld(gx,gy){ return {x:gx*this.cell+this.cell/2, y:gy*this.cell+this.cell/2}; }
+  nearestFree(gx,gy){
+    if(!this.isBlocked(gx,gy)) return {gx,gy};
+    for(let r=1;r<12;r++){ for(let dy=-r;dy<=r;dy++) for(let dx=-r;dx<=r;dx++){ const nx=gx+dx,ny=gy+dy; if(!this.isBlocked(nx,ny)) return {gx:nx,gy:ny}; } }
+    return {gx,gy};
+  }
+  findPath(sx,sy,tx,ty){
+    let s=this.worldToGrid(sx,sy), t=this.worldToGrid(tx,ty);
+    s=this.nearestFree(s.gx,s.gy); t=this.nearestFree(t.gx,t.gy);
+    const open=new Map(); const startKey=s.gx+","+s.gy;
+    open.set(startKey,{gx:s.gx,gy:s.gy,g:0,f:0,parent:null});
+    const closed=new Set();
+    const heur=(ax,ay,bx,by)=>Math.abs(ax-bx)+Math.abs(ay-by);
+    let iterations=0;
+    while(open.size>0 && iterations<4000){
+      iterations++;
+      let bestKey=null,best=null;
+      for(const [k,v] of open){ if(!best||v.f<best.f){ best=v; bestKey=k; } }
+      open.delete(bestKey); closed.add(bestKey);
+      if(best.gx===t.gx && best.gy===t.gy){
+        const path=[]; let n=best;
+        while(n){ path.unshift(this.gridToWorld(n.gx,n.gy)); n=n.parent; }
+        return this.simplify(path);
+      }
+      const neigh=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
+      for(const [dx,dy] of neigh){
+        const nx=best.gx+dx, ny=best.gy+dy;
+        if(this.isBlocked(nx,ny)) continue;
+        if(dx!==0 && dy!==0 && (this.isBlocked(best.gx+dx,best.gy)||this.isBlocked(best.gx,best.gy+dy))) continue;
+        const key=nx+","+ny; if(closed.has(key)) continue;
+        const cost=(dx!==0&&dy!==0)?1.414:1; const g=best.g+cost;
+        const existing=open.get(key);
+        if(!existing||g<existing.g) open.set(key,{gx:nx,gy:ny,g,f:g+heur(nx,ny,t.gx,t.gy),parent:best});
+      }
+    }
+    return [{x:tx,y:ty}];
+  }
+  simplify(path){
+    if(path.length<=2) return path;
+    const out=[path[0]];
+    for(let i=1;i<path.length-1;i++){
+      const a=out[out.length-1], b=path[i], c=path[i+1];
+      const d1x=b.x-a.x,d1y=b.y-a.y, d2x=c.x-b.x,d2y=c.y-b.y;
+      const cross=d1x*d2y-d1y*d2x;
+      if(Math.abs(cross)>0.01) out.push(b);
+    }
+    out.push(path[path.length-1]);
+    return out;
+  }
+}
+
+/* =========================================================
+   7. ESTADO DO JOGO
+   ========================================================= */
+const State = {
+  inventory:{}, spots:{}, areasDiscovered:{}, sprayCollected:{},
+  guardEventTriggered:false, paused:false, gameOver:false
+};
+function initSpotsState(){ State.spots={}; CONFIG.spots.forEach(s=> State.spots[s.id]={state:"locked"}); }
+for(const t in CONFIG.sprayTypes) State.inventory[t]=0;
+initSpotsState();
+
+/* =========================================================
+   8. USERCONFIG — mescla o que foi enviado no configurador
+   ========================================================= */
+function loadUserConfig(){
+  try{
+    const raw = localStorage.getItem(USERCONFIG_KEY);
+    if(!raw) return null;
+    return JSON.parse(raw);
+  }catch(e){ return null; }
+}
+function saveUserConfig(uc){
+  try{ localStorage.setItem(USERCONFIG_KEY, JSON.stringify(uc)); }catch(e){ console.warn(e); }
+}
+function defaultUserConfig(){
+  return {
+    backgroundAssetKey:null,
+    objects:[],   // se tiver itens, SUBSTITUI CONFIG.map.objects
+    spots:[],     // se tiver itens, SUBSTITUI CONFIG.spots
+    sprays:[],    // se tiver itens, SUBSTITUI CONFIG.sprays
+    sprayIcons:{ red:null, blue:null, yellow:null, black:null, special:null },
+    /* aparência 3D (paleta de cores) — substitui o antigo sistema de sprites por direção */
+    playerPalette:{body:"#1c1c22", accent:"#ff2f92", legs:"#111114", arms:"#1c1c22", skin:"#e8b48a"},
+    guardPalette:{body:"#1e2b4d", accent:"#ffe14d", legs:"#12131a", arms:"#1e2b4d", skin:"#d9a878"},
+    /* modelo 3D animado (upload no CONFIGURADOR) — null = usa o boneco procedural (paleta acima).
+       Formato: {base, idle, walk, run, painting, captured, jump, wave, dance, point}, cada campo
+       uma chave de arquivo .glb no IndexedDB (ou null). guardModel vale pro guarda principal E
+       pra todos os guardas extras (não dá pra ter um modelo por guarda extra). */
+    playerModel: null,
+    guardModel: null,
+    /* teclas do jogador — cada valor é um "code" de teclado (ver KEY_ACTIONS no configurador) */
+    controls:{
+      forward:"KeyW", backward:"KeyS", left:"KeyA", right:"KeyD",
+      run:"ShiftLeft", interact:"KeyE", jump:"Space",
+      emote1:"Digit1", emote1Type:"wave",
+      emote2:"Digit2", emote2Type:"dance",
+      emote3:"Digit3", emote3Type:"point"
+    },
+    guards:[],    // guardas extras — cada um: {id,name,spawnX,spawnY,patrolToX,patrolToY,palette}
+    videos:{ intro:null, lose:null, win:null },
+    guardEvent:{ enabled:false, x:1000,y:1000,width:300,height:250, title:"O GUARDA APARECE", cutsceneAssetKey:null, spawnX:1050, spawnY:1050 },
+    ui:{
+      menu:{ backgroundAssetKey:null, title:null, subtitle:null, buttons:{ newGame:null, continueGame:null, reset:null } },
+      lose:{ backgroundAssetKey:null, title:null, subtitle:null, buttons:{ retry:null, menu:null } },
+      win:{ backgroundAssetKey:null, title:null, subtitle:null, buttons:{ playAgain:null, menu:null } }
+    }
+  };
+}
+let UserConfig = loadUserConfig() || defaultUserConfig();
+/* garante que configurações salvas antes desta versão não quebrem o boot (preenche campos que faltarem) */
+UserConfig = Object.assign(defaultUserConfig(), UserConfig, {
+  sprayIcons: Object.assign({red:null,blue:null,yellow:null,black:null,special:null}, UserConfig.sprayIcons||{}),
+  playerPalette: Object.assign({body:"#1c1c22",accent:"#ff2f92",legs:"#111114",arms:"#1c1c22",skin:"#e8b48a"}, UserConfig.playerPalette||{}),
+  guardPalette: Object.assign({body:"#1e2b4d",accent:"#ffe14d",legs:"#12131a",arms:"#1e2b4d",skin:"#d9a878"}, UserConfig.guardPalette||{}),
+  playerModel: UserConfig.playerModel || null,
+  guardModel: UserConfig.guardModel || null,
+  controls: Object.assign({
+      forward:"KeyW", backward:"KeyS", left:"KeyA", right:"KeyD", run:"ShiftLeft", interact:"KeyE", jump:"Space",
+      emote1:"Digit1", emote1Type:"wave", emote2:"Digit2", emote2Type:"dance", emote3:"Digit3", emote3Type:"point"
+    }, UserConfig.controls||{}),
+  guards: UserConfig.guards || [],
+  ui: Object.assign(defaultUserConfig().ui, UserConfig.ui||{}, {
+    menu: Object.assign(defaultUserConfig().ui.menu, (UserConfig.ui||{}).menu||{}, { buttons: Object.assign({newGame:null,continueGame:null,reset:null}, ((UserConfig.ui||{}).menu||{}).buttons||{}) }),
+    lose: Object.assign(defaultUserConfig().ui.lose, (UserConfig.ui||{}).lose||{}, { buttons: Object.assign({retry:null,menu:null}, ((UserConfig.ui||{}).lose||{}).buttons||{}) }),
+    win:  Object.assign(defaultUserConfig().ui.win,  (UserConfig.ui||{}).win||{},  { buttons: Object.assign({playAgain:null,menu:null}, ((UserConfig.ui||{}).win||{}).buttons||{}) })
+  })
+});
+
+function applyUserConfigToCONFIG(){
+  CONFIG.map.backgroundAssetKey = UserConfig.backgroundAssetKey || null;
+  if(UserConfig.objects && UserConfig.objects.length>0) CONFIG.map.objects = UserConfig.objects;
+  if(UserConfig.spots && UserConfig.spots.length>0) CONFIG.spots = UserConfig.spots;
+  if(UserConfig.sprays && UserConfig.sprays.length>0) CONFIG.sprays = UserConfig.sprays;
+  CONFIG.sprayIconKeys = Object.assign({red:null,blue:null,yellow:null,black:null,special:null}, UserConfig.sprayIcons||{});
+
+  CONFIG.player.palette = Object.assign({}, CONFIG.player.palette, UserConfig.playerPalette||{});
+  CONFIG.guard.palette = Object.assign({}, CONFIG.guard.palette, UserConfig.guardPalette||{});
+  CONFIG.player.model = (UserConfig.playerModel && UserConfig.playerModel.base) ? UserConfig.playerModel : null;
+  CONFIG.guard.model = (UserConfig.guardModel && UserConfig.guardModel.base) ? UserConfig.guardModel : null;
+  CONFIG.controls = Object.assign({}, CONFIG.controls, UserConfig.controls||{});
+
+  CONFIG.videos.introAssetKey = (UserConfig.videos||{}).intro || null;
+  CONFIG.videos.loseAssetKey = (UserConfig.videos||{}).lose || null;
+  CONFIG.videos.winAssetKey = (UserConfig.videos||{}).win || null;
+  CONFIG.guardEvent = Object.assign({}, CONFIG.guardEvent, UserConfig.guardEvent||{});
+  CONFIG.guard.activationMode = CONFIG.guardEvent.enabled ? "onEvent" : "always";
+
+  CONFIG.guardsExtra = (UserConfig.guards||[]).map(g=>({
+    id: g.id, label: g.name || "Guarda extra",
+    route: [ {x:g.spawnX||0, y:g.spawnY||0}, {x:g.patrolToX||0, y:g.patrolToY||0} ],
+    palette: buildGuardExtraPalette(g.palette),
+    model: CONFIG.guard.model, // guardas extras compartilham o mesmo modelo 3D animado do guarda principal
+    walkSpeed: CONFIG.guard.walkSpeed, chaseSpeed: CONFIG.guard.chaseSpeed, visionRadius: CONFIG.guard.visionRadius,
+    reactionTime: CONFIG.guard.reactionTime, captureRadius: CONFIG.guard.captureRadius, loseInterestTime: CONFIG.guard.loseInterestTime,
+    activationMode: "always"
+  }));
+
+  const uui = UserConfig.ui || {};
+  ["menu","lose","win"].forEach(screen=>{
+    const src = uui[screen] || {};
+    const dst = CONFIG.ui[screen];
+    dst.backgroundAssetKey = src.backgroundAssetKey || null;
+    if(src.title) dst.title = src.title;
+    if(src.subtitle) dst.subtitle = src.subtitle;
+    const srcBtns = src.buttons || {};
+    for(const bk in dst.buttons){ if(srcBtns[bk]) dst.buttons[bk] = srcBtns[bk]; }
+  });
+  initSpotsState();
+}
+
+/* =========================================================
+   9. SAVE MANAGER (progresso da partida)
+   ========================================================= */
+const SaveManager = {
+  save(){
+    try{
+      const data = {
+        inventory: State.inventory, spots: State.spots, areasDiscovered: State.areasDiscovered,
+        sprayCollected: State.sprayCollected, guardEventTriggered: State.guardEventTriggered,
+        player:{x:Player.x,y:Player.y}, timestamp:Date.now()
+      };
+      localStorage.setItem(CONFIG.save.storageKey, JSON.stringify(data));
+    }catch(e){ console.warn("Falha ao salvar:",e); }
+  },
+  hasSave(){ try{ return !!localStorage.getItem(CONFIG.save.storageKey); }catch(e){ return false; } },
+  load(){
+    try{
+      const raw = localStorage.getItem(CONFIG.save.storageKey);
+      if(!raw) return false;
+      const data = JSON.parse(raw);
+      State.inventory = data.inventory || State.inventory;
+      State.spots = data.spots || State.spots;
+      State.areasDiscovered = data.areasDiscovered || {};
+      State.sprayCollected = data.sprayCollected || {};
+      State.guardEventTriggered = !!data.guardEventTriggered;
+      if(data.player){ Player.x=data.player.x; Player.y=data.player.y; }
+      return true;
+    }catch(e){ return false; }
+  },
+  reset(){ try{ localStorage.removeItem(CONFIG.save.storageKey); }catch(e){} }
+};
+
+/* =========================================================
+   10. ÁUDIO — silencioso se o arquivo não existir
+   ========================================================= */
+const AudioManager = {
+  sounds:{},
+  init(){
+    for(const key in CONFIG.audio){
+      const a = new Audio(); a.src = CONFIG.audio[key]; a.preload="auto";
+      a.volume = key==="ambient" ? 0.25 : 0.5;
+      if(key==="ambient"||key==="walk"||key==="chase") a.loop=true;
+      a.addEventListener("error",()=>{},true);
+      this.sounds[key]=a;
+    }
+  },
+  play(key){ const a=this.sounds[key]; if(!a) return; try{ a.currentTime=0; a.play().catch(()=>{}); }catch(e){} },
+  loopStart(key){ const a=this.sounds[key]; if(!a) return; a.play().catch(()=>{}); },
+  loopStop(key){ const a=this.sounds[key]; if(!a) return; a.pause(); }
+};
+
+/* =========================================================
+   11. MOTOR 3D (three.js) — cenário em 3D + câmera orbital estilo
+   Ragnarok Online + personagens em sprite 2D "billboard" (sempre de
+   frente pra câmera). O jogador e os guardas continuam sendo
+   posicionados/movidos em coordenadas 2D (x,y) exatamente como antes
+   — é só a RENDERIZAÇÃO e a CÂMERA que mudaram para 3D. Pathfinding,
+   colisão, guardas, spots, sprays, save etc. seguem 100% intactos.
+   ========================================================= */
+
+/* 1 unidade do mundo 3D = SCALE_3D "pixels" do mapa 2D original.
+   Ex.: mapa de 2400x1600px vira um terreno de 60x40 unidades. */
+const SCALE_3D = 1/40;
+function to3D(px, py){ return { x: px*SCALE_3D, z: py*SCALE_3D }; }
+function to3DVec(px, py, heightY){ return new THREE.Vector3(px*SCALE_3D, heightY||0, py*SCALE_3D); }
+
+/* ---------------------------------------------------------------
+   LOADER DE .GLB/.GLTF — GLTFLoader oficial do three.js (via import map,
+   ver <head>). Substitui o parser manual que existia aqui antes: o
+   oficial já resolve textura/buffer externos, Draco (se vier) e,
+   principalmente, ESQUELETO + ANIMAÇÕES — necessário pro personagem
+   3D animado (seção 5B) e opcionalmente pra prédios com portas/etc.
+   Devolve o objeto "gltf" completo ({scene, animations, ...}); quem
+   chama decide se usa só a cena (prédio) ou também as animações
+   (personagem).
+   --------------------------------------------------------------- */
+const gltfLoader = new GLTFLoader();
+/* Draco: alguns exportadores (Blender c/ compressão, Sketchfab, etc.) comprimem a geometria
+   do .glb com Draco — sem isto, esses arquivos falham ao carregar (silenciosamente, aqui, já
+   que quem chama cai pro placeholder). O decodificador é baixado do CDN oficial do Google só
+   quando o arquivo realmente usa Draco; arquivos sem Draco não são afetados. */
+const dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath("https://www.gstatic.com/draco/versioned/decoders/1.5.6/");
+gltfLoader.setDRACOLoader(dracoLoader);
+function loadGLTFFromBlob(blob){
+  return new Promise((resolve,reject)=>{
+    const url = URL.createObjectURL(blob);
+    gltfLoader.load(
+      url,
+      (gltf)=>{ URL.revokeObjectURL(url); resolve(gltf); },
+      undefined,
+      (err)=>{ URL.revokeObjectURL(url); reject(err); }
+    );
+  });
+}
+
+/* ---- Ajusta um modelo carregado para caber no "lote" (footprint) e altura do prédio ---- */
+function fitModelToFootprint(group, footprintW, footprintD, heightWorld){
+  const box = new THREE.Box3().setFromObject(group);
+  const size = new THREE.Vector3(); box.getSize(size);
+  if(size.y>0.0001){ const s = heightWorld/size.y; group.scale.setScalar(s); }
+  const box2 = new THREE.Box3().setFromObject(group);
+  const size2 = new THREE.Vector3(); box2.getSize(size2);
+  const center2 = new THREE.Vector3(); box2.getCenter(center2);
+  group.position.x -= center2.x; group.position.z -= center2.z;
+  group.position.y -= box2.min.y; // apoia no chão (y=0)
+  return group;
+}
+
+/* =========================================================
+   11B. CANVAS / RENDERER / CÂMERA 3D
+   ========================================================= */
+const canvas = $("#game-canvas");
+let viewW=0, viewH=0;
+
+const scene3D = new THREE.Scene();
+scene3D.background = new THREE.Color(0x0b0c10);
+scene3D.fog = new THREE.Fog(0x0b0c10, SCALE_3D*900, SCALE_3D*2600);
+
+const camera3D = new THREE.PerspectiveCamera(55, 1, 0.1, 1000);
+const renderer3D = new THREE.WebGLRenderer({canvas, antialias:true});
+renderer3D.shadowMap.enabled = true;
+renderer3D.shadowMap.type = THREE.PCFSoftShadowMap;
+
+function resizeCanvas(){
+  viewW = window.innerWidth; viewH = window.innerHeight;
+  renderer3D.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+  renderer3D.setSize(viewW, viewH);
+  camera3D.aspect = viewW/viewH; camera3D.updateProjectionMatrix();
+}
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
+
+scene3D.add(new THREE.HemisphereLight(0x8899bb, 0x0e0f14, 0.95));
+const sun3D = new THREE.DirectionalLight(0xffffff, 1.05);
+sun3D.position.set(SCALE_3D*900, 70, SCALE_3D*500);
+sun3D.castShadow = true; sun3D.shadow.mapSize.set(2048,2048);
+const sunCam = sun3D.shadow.camera; sunCam.left=-70; sunCam.right=70; sunCam.top=70; sunCam.bottom=-70; sunCam.far=250;
+scene3D.add(sun3D);
+
+/* ---- Câmera orbital estilo Ragnarok Online: segue o jogador, arrasta com o botão
+   direito do mouse pra girar, roda o scroll pra dar zoom. Clique ESQUERDO continua
+   sendo "andar até aqui / interagir", exatamente como no jogo original. ---- */
+const CamState = { yaw:Math.PI*0.22, pitch:0.62, distance:11, minDist:5, maxDist:26, minPitch:0.18, maxPitch:1.3 };
+let camDragging=false, camLastX=0, camLastY=0;
+canvas.addEventListener("contextmenu", e=>e.preventDefault());
+canvas.addEventListener("pointerdown", (e)=>{
+  if(e.button===2){ camDragging=true; camLastX=e.clientX; camLastY=e.clientY; canvas.setPointerCapture(e.pointerId); }
+});
+canvas.addEventListener("pointerup", (e)=>{ if(e.button===2) camDragging=false; });
+canvas.addEventListener("pointercancel", ()=>{ camDragging=false; });
+canvas.addEventListener("pointermove", (e)=>{
+  if(!camDragging) return;
+  const dx=e.clientX-camLastX, dy=e.clientY-camLastY; camLastX=e.clientX; camLastY=e.clientY;
+  CamState.yaw -= dx*0.006;
+  CamState.pitch = clamp(CamState.pitch+dy*0.005, CamState.minPitch, CamState.maxPitch);
+});
+canvas.addEventListener("wheel", (e)=>{
+  CamState.distance = clamp(CamState.distance + e.deltaY*0.01, CamState.minDist, CamState.maxDist);
+}, {passive:true});
+
+function updateCamera(){
+  const p3 = to3DVec(Player.x, Player.y, 1.75);
+  const r = CamState.distance;
+  camera3D.position.set(
+    p3.x + r*Math.cos(CamState.pitch)*Math.sin(CamState.yaw),
+    p3.y + r*Math.sin(CamState.pitch),
+    p3.z + r*Math.cos(CamState.pitch)*Math.cos(CamState.yaw)
+  );
+  camera3D.lookAt(p3);
+}
+
+
+/* ---- Projeta uma posição do mundo 2D (a mesma usada pelo Nav/gameplay) pra tela,
+   usado pra posicionar o prompt de interação (HTML) sobre o objeto certo em 3D. ---- */
+function project3DToScreen(px, py, heightY){
+  const v = to3DVec(px, py, heightY||0).project(camera3D);
+  return { x:(v.x*0.5+0.5)*viewW, y:(1-(v.y*0.5+0.5))*viewH, behind:v.z>1 };
+}
+
+/* ---- Raycast do clique do mouse contra o chão (y=0) — substitui o antigo
+   cálculo 2D "clique - deslocamento da câmera" pra achar o ponto do mundo clicado. ---- */
+const raycaster3D = new THREE.Raycaster();
+const groundPlane3D = new THREE.Plane(new THREE.Vector3(0,1,0), 0);
+function screenToWorld(clientX, clientY){
+  const rect = canvas.getBoundingClientRect();
+  const ndc = new THREE.Vector2(((clientX-rect.left)/rect.width)*2-1, -((clientY-rect.top)/rect.height)*2+1);
+  raycaster3D.setFromCamera(ndc, camera3D);
+  const hit = new THREE.Vector3();
+  const ok = raycaster3D.ray.intersectPlane(groundPlane3D, hit);
+  if(!ok) return {x:Player.x, y:Player.y};
+  return { x: hit.x/SCALE_3D, y: hit.z/SCALE_3D };
+}
+
+/* =========================================================
+   12. JOGADOR
+   ========================================================= */
+const CHAR_HEIGHT_WORLD = 1.85; // altura do personagem no mundo 3D (unidades three.js)
+
+/* ---- teclas de movimento atualmente pressionadas (ver seção 23. INPUT) ---- */
+const pressedMoveKeys = new Set();
+/* Converte WASD (ou as teclas que o CONFIGURADOR definir) num vetor de movimento
+   RELATIVO À CÂMERA — "frente" é sempre pra onde a câmera orbital está olhando,
+   igual em qualquer jogo em 3ª pessoa moderno. */
+function computeKeyboardMoveVector(){
+  const c = CONFIG.controls;
+  let fwd=0, strafe=0;
+  if(pressedMoveKeys.has(c.forward)) fwd+=1;
+  if(pressedMoveKeys.has(c.backward)) fwd-=1;
+  if(pressedMoveKeys.has(c.right)) strafe+=1;
+  if(pressedMoveKeys.has(c.left)) strafe-=1;
+  if(fwd===0 && strafe===0) return null;
+  const ang = CamState.yaw + Math.PI; // direção "pra dentro da tela" (o que a câmera enxerga)
+  const fx=Math.sin(ang), fy=Math.cos(ang);
+  const rx=Math.sin(ang+Math.PI/2), ry=Math.cos(ang+Math.PI/2);
+  let dx = fwd*fx + strafe*rx, dy = fwd*fy + strafe*ry;
+  const len = Math.hypot(dx,dy)||1;
+  return { x:dx/len, y:dy/len };
+}
+/* Colisão simples pra movimento livre (WASD): consulta a mesma grade do pathfinding
+   e desliza ao longo da parede em vez de travar (testa cada eixo separado). */
+function tryMoveFree(x,y,dx,dy,dt,speed){
+  let nx=x, ny=y;
+  const cx = clamp(x+dx*speed*dt, 0, CONFIG.map.width);
+  if(!Nav.isBlocked(Nav.worldToGrid(cx,y).gx, Nav.worldToGrid(cx,y).gy)) nx=cx;
+  const cy = clamp(y+dy*speed*dt, 0, CONFIG.map.height);
+  if(!Nav.isBlocked(Nav.worldToGrid(nx,cy).gx, Nav.worldToGrid(nx,cy).gy)) ny=cy;
+  return {x:nx, y:ny};
+}
+
+const Player = {
+  x:CONFIG.player.startX, y:CONFIG.player.startY, path:[], targetIndex:0,
+  facingAngle:0, running:false, state:"idle", interactingLock:false,
+  rig:null, _animPhase:0, action:null,
+  async init(){
+    this.rig = await buildCharacterRig(CHAR_HEIGHT_WORLD, CONFIG.player.palette, CONFIG.player.model);
+    this.rig.addTo(scene3D);
+  },
+  setDestination(wx,wy){
+    if(this.interactingLock) return;
+    this.path = Nav.findPath(this.x,this.y,wx,wy); this.targetIndex=0;
+  },
+  /* dispara uma ação avulsa: "jump" (pulo) ou um emote ("wave"/"dance"/"point") */
+  doAction(name, duration){
+    if(this.interactingLock) return;
+    this.action = { name, t:0, dur: duration || (name==="jump"?0.55:1.3) };
+  },
+  update(dt){
+    this._animPhase += dt;
+    if(this.action){ this.action.t += dt; if(this.action.t>=this.action.dur) this.action=null; }
+    if(this.interactingLock){ return; }
+    let moving=false;
+    const kv = computeKeyboardMoveVector();
+    if(kv){
+      this.path = []; // teclado assume o controle — cancela qualquer destino de clique pendente
+      const speed = this.running ? CONFIG.player.runSpeed : CONFIG.player.walkSpeed;
+      const moved = tryMoveFree(this.x, this.y, kv.x, kv.y, dt, speed);
+      this.x = moved.x; this.y = moved.y;
+      this.facingAngle = Math.atan2(kv.x, kv.y);
+      moving = true;
+    } else if(this.path.length>0 && this.targetIndex<this.path.length){
+      const tgt=this.path[this.targetIndex];
+      const d=dist(this.x,this.y,tgt.x,tgt.y);
+      const speed = this.running ? CONFIG.player.runSpeed : CONFIG.player.walkSpeed;
+      if(d<=CONFIG.player.arriveDistance){ this.targetIndex++; }
+      else{
+        const nx=(tgt.x-this.x)/d, ny=(tgt.y-this.y)/d;
+        this.x = clamp(this.x+nx*speed*dt, 0, CONFIG.map.width);
+        this.y = clamp(this.y+ny*speed*dt, 0, CONFIG.map.height);
+        this.facingAngle = Math.atan2(nx, ny);
+        moving=true;
+      }
+    }
+    this.state = moving ? (this.running?"run":"walk") : "idle";
+    checkAreaDiscovery(this.x,this.y);
+    checkGuardTrigger();
+  },
+  draw(){
+    if(!this.rig) return;
+    const p = to3D(this.x, this.y);
+    this.rig.group.position.x = p.x; this.rig.group.position.z = p.z;
+    let poseState = this.state;
+    let extra = null;
+    if(this.action){
+      if(this.action.name==="jump"){ extra = { jumpT: this.action.t/this.action.dur }; }
+      else { extra = { emote: this.action.name }; poseState = "idle"; }
+    }
+    this.rig.pose(poseState, this._animPhase, this.facingAngle, extra);
+  }
+};
+
+/* =========================================================
+   13. GUARDA — fábrica de entidades (guarda principal + guardas extras)
+   ========================================================= */
+function createGuardEntity(spec){
+  const G = {
+    spec, label: spec.label||"Guarda",
+    x:0, y:0, facingAngle:0, routeIndex:0, state:"patrol", dormant:false,
+    reactionTimer:0, loseTimer:0, path:[], targetIndex:0, rig:null, _animPhase:0, _movingFlag:false, _repathTimer:0,
+    async init(){
+      const route = spec.route;
+      this.x = route[0].x; this.y = route[0].y;
+      this.dormant = spec.activationMode==="onEvent" && !State.guardEventTriggered;
+      if(spec.activationMode==="onEvent" && State.guardEventTriggered){
+        this.x = spec.eventSpawn.x; this.y = spec.eventSpawn.y; this.state="chase";
+      }
+      this.rig = await buildCharacterRig(CHAR_HEIGHT_WORLD, spec.palette, spec.model);
+      this.rig.addTo(scene3D);
+    },
+    resetToStart(){
+      this.routeIndex=0; this.state="patrol"; this.loseTimer=0; this.reactionTimer=0; this.path=[]; this.targetIndex=0; this.facingAngle=0;
+      if(spec.activationMode==="onEvent"){ this.dormant=true; }
+      else { this.dormant=false; this.x=spec.route[0].x; this.y=spec.route[0].y; }
+    },
+    activate(x,y){
+      this.dormant=false; this.x=x; this.y=y; this.state="chase"; this.loseTimer=0;
+      $("#guard-alert").classList.add("show");
+      AudioManager.play("alert"); AudioManager.loopStart("chase");
+    },
+    canSee(px,py){
+      const d=dist(this.x,this.y,px,py);
+      if(d>spec.visionRadius) return false;
+      if(lineBlocked(this.x,this.y,px,py)) return false;
+      return true;
+    },
+    update(dt){
+      if(this.dormant) return;
+      this._animPhase += dt;
+      if(this.state==="captured"){ return; }
+      const seesPlayer = !State.gameOver && this.canSee(Player.x,Player.y);
+
+      if(this.state==="patrol" || this.state==="alert"){
+        if(seesPlayer){
+          this.reactionTimer += dt; this.state="alert";
+          if(this.reactionTimer>=spec.reactionTime){
+            this.state="chase"; this.loseTimer=0;
+            $("#guard-alert").classList.add("show");
+            AudioManager.play("alert"); AudioManager.loopStart("chase");
+            toast(`${this.label} te avistou!`);
+          }
+        } else { this.reactionTimer=0; this.state="patrol"; this.patrolStep(dt); }
+      } else if(this.state==="chase"){
+        if(seesPlayer){ this.loseTimer=0; } else { this.loseTimer+=dt; }
+        if(this.loseTimer>spec.loseInterestTime){
+          this.state = spec.activationMode==="onEvent" ? "chase" : "patrol";
+          if(this.state==="patrol"){ $("#guard-alert").classList.remove("show"); AudioManager.loopStop("chase"); toast("Você escapou do guarda."); }
+        } else {
+          this.chaseStep(dt);
+          if(dist(this.x,this.y,Player.x,Player.y) <= spec.captureRadius) capturePlayer(this);
+        }
+      }
+    },
+    patrolStep(dt){
+      const route = spec.route;
+      const tgt = route[this.routeIndex];
+      const d = dist(this.x,this.y,tgt.x,tgt.y);
+      this._movingFlag = d>4;
+      if(d<=4){ this.routeIndex=(this.routeIndex+1)%route.length; }
+      else{
+        const nx=(tgt.x-this.x)/d, ny=(tgt.y-this.y)/d;
+        this.x += nx*spec.walkSpeed*dt; this.y += ny*spec.walkSpeed*dt;
+        this._applyDir(nx,ny);
+      }
+    },
+    chaseStep(dt){
+      this._repathTimer -= dt;
+      if(this._repathTimer<=0){ this.path=Nav.findPath(this.x,this.y,Player.x,Player.y); this.targetIndex=0; this._repathTimer=0.4; }
+      if(this.path.length>0 && this.targetIndex<this.path.length){
+        const tgt=this.path[this.targetIndex]; const d=dist(this.x,this.y,tgt.x,tgt.y);
+        if(d<=6){ this.targetIndex++; }
+        else{
+          const nx=(tgt.x-this.x)/d, ny=(tgt.y-this.y)/d;
+          this.x += nx*spec.chaseSpeed*dt; this.y += ny*spec.chaseSpeed*dt;
+          this._applyDir(nx,ny);
+        }
+      }
+    },
+    _applyDir(nx,ny){
+      this.facingAngle = Math.atan2(nx, ny); // guarda o rumo — mesma convenção do Player, some dir/facingLeft antigos
+    },
+    draw(){
+      if(!this.rig) return;
+      this.rig.setVisible(!this.dormant);
+      if(this.dormant) return;
+      const p = to3D(this.x, this.y);
+      this.rig.group.position.x = p.x; this.rig.group.position.z = p.z;
+      const moving = this.state==="chase" || (this.state==="patrol" && this._movingFlag);
+      const poseState = this.state==="captured" ? "captured" : (this.state==="chase" ? "run" : (moving?"walk":"idle"));
+      this.rig.pose(poseState, this._animPhase, this.facingAngle, null);
+    }
+  };
+  return G;
+}
+let Guard = null;       // guarda principal — criado no boot() depois que CONFIG está resolvido
+let ExtraGuards = [];   // guardas extras — criados no boot() a partir de CONFIG.guardsExtra
+
+function lineBlocked(x0,y0,x1,y1){
+  const steps=14;
+  for(let i=1;i<steps;i++){
+    const t=i/steps, px=lerp(x0,x1,t), py=lerp(y0,y1,t);
+    for(const o of CONFIG.map.objects){ if(o.collision!==false && px>o.x&&px<o.x+o.width&&py>o.y&&py<o.y+o.height) return true; }
+  }
+  return false;
+}
+
+function capturePlayer(guard){
+  if(State.gameOver) return;
+  State.gameOver=true; (guard||Guard).state="captured"; Player.interactingLock=true;
+  AudioManager.loopStop("chase"); AudioManager.play("capture");
+  $("#guard-alert").classList.remove("show");
+  VideoManager.playLose(()=>{ showScreen("lose-screen"); });
+}
+
+/* =========================================================
+   14. EVENTO ESPECIAL DO GUARDA (zona de gatilho -> vídeo -> guarda surge)
+   ========================================================= */
+function checkGuardTrigger(){
+  const ev = CONFIG.guardEvent;
+  if(!ev.enabled || State.guardEventTriggered || State.gameOver) return;
+  if(Player.x>=ev.x && Player.x<=ev.x+ev.width && Player.y>=ev.y && Player.y<=ev.y+ev.height){
+    State.guardEventTriggered = true;
+    Player.interactingLock = true;
+    AudioManager.loopStop("ambient");
+    VideoManager.playGuardEvent(()=>{
+      Guard.activate(ev.spawnX, ev.spawnY);
+      Player.interactingLock = false;
+      AudioManager.loopStart("ambient");
+      SaveManager.save();
+    });
+  }
+}
+
+/* =========================================================
+   15. ÁREAS DESCOBERTAS
+   ========================================================= */
+function checkAreaDiscovery(x,y){
+  CONFIG.map.areas.forEach(a=>{
+    if(State.areasDiscovered[a.id]) return;
+    if(x>=a.x&&x<=a.x+a.width&&y>=a.y&&y<=a.y+a.height){ State.areasDiscovered[a.id]=true; toast(`ÁREA DESCOBERTA: <b>${a.name}</b>`); }
+  });
+}
+
+/* =========================================================
+   16. SPRAYS
+   ========================================================= */
+const sprayIcons = {};
+async function initSprayIcons(){
+  for(const type in CONFIG.sprayTypes){
+    const key = (CONFIG.sprayIconKeys||{})[type];
+    const icon = key ? await AssetManager.resolveLiveGifElement(key) : null;
+    sprayIcons[type] = icon || makeSprayIcon(type,40);
+  }
+}
+/* ---- Marcadores 3D dos sprays: sprites "billboard" (sempre de frente pra câmera),
+   com um leve balanço vertical, iguais ao ícone 2D usado como textura. ---- */
+const sprayMarkers3D = {};
+function buildSprayMarkers3D(){
+  CONFIG.sprays.forEach(s=>{
+    const tex = new THREE.Texture(sprayIcons[s.type]); tex.needsUpdate = true;
+    const mat = new THREE.SpriteMaterial({ map:tex, transparent:true });
+    const sprite = new THREE.Sprite(mat);
+    sprite.scale.set(0.8,0.8,1);
+    scene3D.add(sprite);
+    sprayMarkers3D[s.id] = {sprite, tex, animated: sprayIcons[s.type] && sprayIcons[s.type].tagName==="IMG"};
+  });
+}
+function updateSprayMarkers3D(){
+  CONFIG.sprays.forEach(s=>{
+    const m = sprayMarkers3D[s.id]; if(!m) return;
+    if(State.sprayCollected[s.id]){ m.sprite.visible=false; return; }
+    m.sprite.visible = true;
+    if(m.animated) m.tex.needsUpdate = true; // GIF anima sozinho no <img>; textura precisa ser "cutucada" pra refletir isso
+    const bob = Math.sin(performance.now()/450+s.x)*0.06;
+    const p = to3D(s.x, s.y);
+    m.sprite.position.set(p.x, 0.9+bob, p.z);
+  });
+}
+function collectSpray(spray){
+  State.sprayCollected[spray.id]=true;
+  State.inventory[spray.type]=(State.inventory[spray.type]||0)+1;
+  AudioManager.play("collect");
+  toast(`+1 Spray <b>${CONFIG.sprayTypes[spray.type].label}</b>`);
+  updateInventoryUI(); updateSpotsUnlockState(); SaveManager.save();
+}
+
+/* =========================================================
+   17. SPOTS — objetos pintáveis
+   ========================================================= */
+const spotWallIcons = {locked:null,unlocked:null,done:null};
+const spotImageCache = {}; // id -> {wall:Image|null, painted:Image|null}
+function initSpotIcons(){
+  spotWallIcons.locked = makeStencilWallIcon("locked",60);
+  spotWallIcons.unlocked = makeStencilWallIcon("unlocked",60);
+  spotWallIcons.done = makeStencilWallIcon("done",60);
+}
+async function preloadSpotImages(){
+  for(const spot of CONFIG.spots){
+    const wallKey = spot.wallImageAssetKey || spot.imageAssetKey || null; // aceita o campo antigo (imageAssetKey) por compatibilidade
+    spotImageCache[spot.id] = {
+      wall: await AssetManager.resolveImageAsset(wallKey),
+      painted: await AssetManager.resolveImageAsset(spot.paintedImageAssetKey || null)
+    };
+  }
+}
+function spotMeetsRequirements(spot){
+  for(const type in spot.requirements){ if((State.inventory[type]||0) < spot.requirements[type]) return false; }
+  return true;
+}
+function updateSpotsUnlockState(){
+  let changed=false;
+  CONFIG.spots.forEach(spot=>{
+    const st = State.spots[spot.id];
+    if(st && st.state==="locked" && spotMeetsRequirements(spot)){ st.state="unlocked"; changed=true; toast(`<b>${spot.name}</b> DESBLOQUEADO`); refreshSpotMarker3D(spot.id); }
+  });
+  if(changed) renderSpotProgress();
+}
+/* ---- Marcadores 3D dos spots (paredes pintáveis): um plano vertical fixo
+   (não billboard — é uma "parede" de verdade, plantada no cenário) com a
+   textura correspondente ao estado atual (bloqueado/desbloqueado/concluído). ---- */
+const spotMarkers3D = {};
+function spotCanvasFor(spot, state){
+  const cache = spotImageCache[spot.id] || {};
+  const cvs = document.createElement("canvas"); cvs.width=128; cvs.height=128;
+  const c = cvs.getContext("2d");
+  let img = null;
+  if(state==="done" && cache.painted) img = cache.painted;
+  else if(cache.wall) img = cache.wall;
+  if(img) c.drawImage(img,0,0,128,128); else c.drawImage(spotWallIcons[state],0,0,128,128);
+  if(state==="locked" && cache.wall){ c.fillStyle="rgba(0,0,0,0.45)"; c.fillRect(0,0,128,128); c.font="52px sans-serif"; c.textAlign="center"; c.fillText("🔒",64,80); }
+  return cvs;
+}
+function buildSpotMarkers3D(){
+  CONFIG.spots.forEach(spot=>{
+    const st = State.spots[spot.id] ? State.spots[spot.id].state : "locked";
+    const tex = new THREE.CanvasTexture(spotCanvasFor(spot, st));
+    const mat = new THREE.SpriteMaterial({ map:tex, transparent:true });
+    const sprite = new THREE.Sprite(mat);
+    sprite.scale.set(1.5,1.5,1);
+    const p = to3D(spot.x, spot.y);
+    sprite.position.set(p.x, 0.9, p.z);
+    scene3D.add(sprite);
+    spotMarkers3D[spot.id] = {sprite, tex};
+  });
+}
+function refreshSpotMarker3D(spotId){
+  const spot = CONFIG.spots.find(s=>s.id===spotId); const m = spotMarkers3D[spotId];
+  if(!spot||!m) return;
+  const st = State.spots[spot.id] ? State.spots[spot.id].state : "locked";
+  m.tex.image = spotCanvasFor(spot, st); m.tex.needsUpdate = true;
+}
+/* ---- Animação de conclusão "no jogo" (sem vídeo): alternativa ao VideoManager pra spots
+   configurados com completionMode="anim". Toca um sprite billboard bem no local do spot,
+   com uma movimentação própria (cresce, sobe balançando e desvanece) — cada spot pode ter
+   sua própria arte (GIF/PNG) e duração, então cada lugar "pintado" pode ter uma animação
+   diferente das outras, tudo dentro da cena 3D, sem cobrir a tela com um vídeo. ---- */
+const SpotAnimManager = (function(){
+  return {
+    async play(spot, cb){
+      const duration = spot.animDurationSec || 3;
+      let img = null;
+      try{ img = spot.animAssetKey ? await AssetManager.resolveLiveGifElement(spot.animAssetKey) : null; }
+      catch(err){ console.warn(`[OGEID] Falha ao carregar a animação do spot ${spot.id}:`,err); }
+      if(!img){ setTimeout(cb, duration*1000); return; }
+      const tex = new THREE.Texture(img); tex.needsUpdate = true;
+      const mat = new THREE.SpriteMaterial({ map:tex, transparent:true });
+      const sprite = new THREE.Sprite(mat);
+      const p = to3D(spot.x, spot.y);
+      sprite.position.set(p.x, 0.9, p.z);
+      scene3D.add(sprite);
+      const start = performance.now();
+      function tick(){
+        const t = (performance.now()-start)/1000;
+        const k = Math.min(t/duration, 1);
+        tex.needsUpdate = true; // GIF anima sozinho no <img>; textura precisa ser "cutucada" a cada frame
+        const scale = 0.25 + Math.sin(k*Math.PI)*1.55; // cresce até o meio da duração, depois encolhe
+        sprite.scale.set(scale, scale, 1);
+        sprite.position.y = 0.9 + Math.sin(k*Math.PI*2)*0.15 + k*0.7; // balança e sobe aos poucos
+        mat.opacity = 1 - Math.max(0, k-0.75)*4; // só desvanece no último quarto
+        if(k<1) requestAnimationFrame(tick);
+        else { scene3D.remove(sprite); cb(); }
+      }
+      requestAnimationFrame(tick);
+    }
+  };
+})();
+
+async function startPainting(spot){
+  Player.interactingLock=true; Player.state="painting";
+  AudioManager.play("paint"); AudioManager.loopStop("ambient");
+  const onPaintDone = ()=>{
+    State.spots[spot.id].state="done";
+    AudioManager.play("complete");
+    Player.interactingLock=false;
+    renderSpotProgress(); SaveManager.save(); refreshSpotMarker3D(spot.id);
+    if(spot.linkedObjectId) swapBuildingToPaintedState(spot.linkedObjectId);
+    toast(`<b>${spot.name}</b> CONCLUÍDO!`);
+    AudioManager.loopStart("ambient");
+    const total = CONFIG.spots.length;
+    const done = CONFIG.spots.filter(s=>State.spots[s.id].state==="done").length;
+    if(done>=total){
+      State.gameOver=true;
+      VideoManager.playWin(()=>{ showScreen("win-screen"); });
+    }
+  };
+  if(spot.completionMode==="anim") SpotAnimManager.play(spot, onPaintDone);
+  else VideoManager.playSpotVideo(spot, onPaintDone);
+}
+
+/* =========================================================
+   18. INTERAÇÃO
+   ========================================================= */
+let currentInteractable=null;
+function updateInteraction(){
+  if(Player.interactingLock||State.gameOver){ hidePrompt(); return; }
+  let best=null, bestD=Infinity;
+  CONFIG.sprays.forEach(s=>{
+    if(State.sprayCollected[s.id]) return;
+    const d=dist(Player.x,Player.y,s.x,s.y);
+    if(d<=CONFIG.player.interactionRadius && d<bestD){ best={type:"spray",data:s}; bestD=d; }
+  });
+  CONFIG.spots.forEach(spot=>{
+    const st = State.spots[spot.id] ? State.spots[spot.id].state : "locked";
+    if(st==="done") return;
+    const d=dist(Player.x,Player.y,spot.x,spot.y);
+    if(d<=CONFIG.player.interactionRadius && d<bestD){ best={type:"spot",data:spot,locked:st==="locked"}; bestD=d; }
+  });
+  currentInteractable=best;
+  const promptEl = $("#interaction-prompt");
+  if(!best){ hidePrompt(); return; }
+  let label = best.type==="spray" ? "[ COLETAR ]" : (best.locked ? "[ REQUISITOS INCOMPLETOS ]" : "[ CLICAR ]");
+  promptEl.innerHTML=label; promptEl.classList.add("show");
+  const scr = project3DToScreen(best.data.x, best.data.y, 1.6);
+  promptEl.style.left = scr.x+"px"; promptEl.style.top = scr.y+"px";
+}
+function hidePrompt(){ $("#interaction-prompt").classList.remove("show"); currentInteractable=null; }
+function triggerInteraction(){
+  if(!currentInteractable) return;
+  if(currentInteractable.type==="spray"){ collectSpray(currentInteractable.data); hidePrompt(); }
+  else if(currentInteractable.type==="spot" && !currentInteractable.locked){ startPainting(currentInteractable.data); hidePrompt(); }
+}
+$("#interaction-prompt").addEventListener("click", triggerInteraction);
+
+/* =========================================================
+   19. VIDEO MANAGER
+   ========================================================= */
+const VideoManager = (function(){
+  const overlay=$("#cutscene-overlay"), videoEl=$("#cutscene-video"), placeholderEl=$("#cutscene-placeholder");
+  const titleEl=$("#cutscene-title"), dripFill=$("#cutscene-drip-fill"), skipBtn=$("#skip-video-btn");
+  let activeCallback=null, placeholderTimer=null;
+
+  function cleanupVideo(){
+    videoEl.pause(); videoEl.removeAttribute("src"); videoEl.load();
+    videoEl.style.display="none"; placeholderEl.style.display="none";
+    if(placeholderTimer){ clearTimeout(placeholderTimer); placeholderTimer=null; }
+  }
+  function finish(){
+    overlay.classList.remove("show"); cleanupVideo();
+    const cb=activeCallback; activeCallback=null; if(cb) cb();
+  }
+  function playPlaceholder(title, seconds){
+    placeholderEl.style.display="flex"; videoEl.style.display="none"; titleEl.textContent=title;
+    dripFill.style.transition="none"; dripFill.style.width="0%";
+    requestAnimationFrame(()=>{ dripFill.style.transition=`width ${seconds}s linear`; dripFill.style.width="100%"; });
+    placeholderTimer = setTimeout(finish, seconds*1000);
+  }
+  function play(src, title, fallbackSeconds, cb){
+    activeCallback=cb; overlay.classList.add("show"); AudioManager.loopStop("ambient");
+    if(!src){ playPlaceholder(title, fallbackSeconds); return; }
+    videoEl.style.display="block"; placeholderEl.style.display="none";
+    videoEl.src=src; videoEl.currentTime=0;
+    const onEnded=()=>{ videoEl.removeEventListener("ended",onEnded); finish(); };
+    const onError=()=>{ videoEl.removeEventListener("error",onError); videoEl.removeEventListener("ended",onEnded); playPlaceholder(title,fallbackSeconds); };
+    videoEl.addEventListener("ended", onEnded);
+    videoEl.addEventListener("error", onError, {once:true});
+    videoEl.play().catch(onError);
+  }
+  skipBtn.addEventListener("click", ()=>{ if(overlay.classList.contains("show")) finish(); });
+
+  return {
+    async playIntro(cb){ const url = await AssetManager.resolveVideoAssetURL(CONFIG.videos.introAssetKey); play(url||CONFIG.videos.intro, "INTRODUÇÃO", 3.2, cb); },
+    async playSpotVideo(spot, cb){ const url = await AssetManager.resolveVideoAssetURL(spot.videoAssetKey); play(url||spot.video, spot.name+" — PINTANDO", 3, cb); },
+    async playLose(cb){ const url = await AssetManager.resolveVideoAssetURL(CONFIG.videos.loseAssetKey); play(url||CONFIG.videos.lose, "VOCÊ FOI PEGO", 2.4, cb); },
+    async playWin(cb){ const url = await AssetManager.resolveVideoAssetURL(CONFIG.videos.winAssetKey); play(url||CONFIG.videos.win, "A CIDADE AGORA É OGEID", 3.6, cb); },
+    async playGuardEvent(cb){ const url = await AssetManager.resolveVideoAssetURL(CONFIG.guardEvent.cutsceneAssetKey); play(url||null, CONFIG.guardEvent.title||"O GUARDA APARECE", 3, cb); },
+    skip(){ if(overlay.classList.contains("show")) finish(); }
+  };
+})();
+
+/* =========================================================
+   20. UI: TOASTS, HUD, MINIMAPA
+   ========================================================= */
+function toast(html){
+  const stack=$("#toast-stack"); const el=document.createElement("div");
+  el.className="toast"; el.innerHTML=html; stack.appendChild(el);
+  setTimeout(()=>el.remove(),2600);
+}
+function updateInventoryUI(){
+  const bar=$("#inventory-bar"); bar.innerHTML="";
+  for(const type in CONFIG.sprayTypes){
+    const cfg=CONFIG.sprayTypes[type];
+    const chip=document.createElement("div"); chip.className="inv-chip";
+    chip.innerHTML=`<span class="inv-swatch" style="background:${cfg.swatch}"></span>${cfg.label} <span class="n">${State.inventory[type]||0}</span>`;
+    bar.appendChild(chip);
+  }
+}
+function renderSpotProgress(){
+  const wrap=$("#spot-progress"); wrap.innerHTML="";
+  CONFIG.spots.forEach((spot,i)=>{
+    const st = State.spots[spot.id] ? State.spots[spot.id].state : "locked";
+    const pip=document.createElement("div");
+    pip.className="spot-pip"+(st==="done"?" done":"")+(st==="unlocked"?" unlocked":"");
+    pip.textContent = st==="done" ? "✓" : String(i+1).padStart(2,"0");
+    wrap.appendChild(pip);
+  });
+  const done = CONFIG.spots.filter(s=>State.spots[s.id] && State.spots[s.id].state==="done").length;
+  $("#objective-count").textContent = `${done} / ${CONFIG.spots.length}`;
+}
+const minimapCanvas=$("#minimap-canvas"); const mctx=minimapCanvas.getContext("2d");
+function drawMinimap(){
+  const W=minimapCanvas.width, H=minimapCanvas.height;
+  mctx.clearRect(0,0,W,H); mctx.fillStyle="#101119"; mctx.fillRect(0,0,W,H);
+  const sx=W/CONFIG.map.width, sy=H/CONFIG.map.height;
+  mctx.fillStyle="#20222c";
+  CONFIG.map.objects.forEach(o=> mctx.fillRect(o.x*sx,o.y*sy,o.width*sx,o.height*sy));
+  const colors=CONFIG.interface.minimapColors;
+  mctx.fillStyle=colors.spray;
+  CONFIG.sprays.forEach(s=>{ if(State.sprayCollected[s.id]) return; mctx.beginPath(); mctx.arc(s.x*sx,s.y*sy,3,0,Math.PI*2); mctx.fill(); });
+  CONFIG.spots.forEach(spot=>{
+    const st = State.spots[spot.id] ? State.spots[spot.id].state : "locked";
+    mctx.fillStyle = st==="done" ? colors.spotDone : colors.spot;
+    mctx.beginPath(); mctx.arc(spot.x*sx,spot.y*sy,st==="done"?5:4,0,Math.PI*2); mctx.fill();
+  });
+  if(!Guard.dormant){
+    mctx.fillStyle=colors.guard;
+    mctx.beginPath(); mctx.arc(Guard.x*sx,Guard.y*sy,4,0,Math.PI*2); mctx.fill();
+  }
+  ExtraGuards.forEach(g=>{
+    if(g.dormant) return;
+    mctx.fillStyle=colors.guard;
+    mctx.beginPath(); mctx.arc(g.x*sx,g.y*sy,4,0,Math.PI*2); mctx.fill();
+  });
+  mctx.strokeStyle=colors.player; mctx.lineWidth=2;
+  mctx.beginPath(); mctx.arc(Player.x*sx,Player.y*sy,5,0,Math.PI*2); mctx.stroke();
+  mctx.fillStyle=colors.player;
+  mctx.beginPath(); mctx.arc(Player.x*sx,Player.y*sy,3,0,Math.PI*2); mctx.fill();
+}
+
+/* =========================================================
+   21. RENDER DO CENÁRIO (3D)
+   ========================================================= */
+let bgImageResolved = null;
+async function preloadBackground(){ bgImageResolved = await AssetManager.resolveImageAsset(CONFIG.map.backgroundAssetKey); }
+
+/* ---- Chão: usa a imagem de fundo do mapa (se enviada) como textura vista de cima,
+   ou uma grade neutra caso contrário. ---- */
+function buildGround3D(){
+  const w3 = CONFIG.map.width*SCALE_3D, d3 = CONFIG.map.height*SCALE_3D;
+  let mat;
+  if(bgImageResolved){
+    const tex = new THREE.Texture(bgImageResolved); tex.needsUpdate = true; tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
+    mat = new THREE.MeshStandardMaterial({ map:tex, roughness:1 });
+  } else {
+    mat = new THREE.MeshStandardMaterial({ color:0x171820, roughness:1 });
+  }
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(w3, d3), mat);
+  ground.rotation.x = -Math.PI/2; ground.position.set(w3/2, 0, d3/2); ground.receiveShadow = true;
+  scene3D.add(ground);
+  if(!bgImageResolved){
+    const grid = new THREE.GridHelper(Math.max(w3,d3), Math.round(Math.max(w3,d3)/2), 0x2a2d3f, 0x1c1e28);
+    grid.position.set(w3/2, 0.01, d3/2);
+    scene3D.add(grid);
+  }
+}
+
+/* ---- Decorações simples (árvore/poste/lixeira) como primitivas 3D, geradas uma vez. ---- */
+function buildDecorations3D(){
+  CONFIG.map.decorations.forEach(d=>{
+    const p = to3D(d.x, d.y);
+    const group = new THREE.Group();
+    if(d.type==="tree"){
+      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.08,0.5,6), new THREE.MeshStandardMaterial({color:0x3a2a1c}));
+      trunk.position.y = 0.25;
+      const leaves = new THREE.Mesh(new THREE.SphereGeometry(0.42,8,8), new THREE.MeshStandardMaterial({color:0x2f6b3a}));
+      leaves.position.y = 0.65;
+      group.add(trunk, leaves);
+    } else if(d.type==="post"){
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,1.1,6), new THREE.MeshStandardMaterial({color:0x4a4d5c}));
+      pole.position.y = 0.55;
+      const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.09,8,8), new THREE.MeshStandardMaterial({color:0xffe14d, emissive:0x554400}));
+      lamp.position.y = 1.12;
+      group.add(pole, lamp);
+    } else if(d.type==="trash"){
+      const box = new THREE.Mesh(new THREE.BoxGeometry(0.32,0.36,0.32), new THREE.MeshStandardMaterial({color:0x3d4050}));
+      box.position.y = 0.18;
+      group.add(box);
+    }
+    group.position.set(p.x, 0, p.z);
+    group.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+    scene3D.add(group);
+  });
+}
+
+const objectImageCache = {};
+async function preloadObjectImages(){
+  for(const o of CONFIG.map.objects){
+    // resolveLiveGifElement carrega um <img> real no DOM: GIFs animados tocam sozinhos
+    // (o navegador troca os frames) e imagens estáticas funcionam do mesmo jeito.
+    objectImageCache[o.id] = o.imageAssetKey ? await AssetManager.resolveLiveGifElement(o.imageAssetKey) : null;
+  }
+}
+
+/* ---- Prédios: usa o modelo .glb enviado no configurador quando existir; caso
+   contrário, monta uma caixa 3D do tamanho do lote, com a imagem 2D (a mesma
+   já usada no jogo) aplicada como textura do telhado — é o jeito mais fiel de
+   trazer uma arte pensada pra vista de cima (como era no jogo 2D) pro 3D. ---- */
+const buildingTextureUpdaters = [];
+/* buildingMeta3D/buildingRoots3D: guardam, por id de objeto do cenário, as dimensões usadas
+   pra encaixar o volume/modelo e a lista dos THREE.Object3D já adicionados à cena — é o que
+   permite trocar um prédio pela sua versão "pintada" (modelo 3D e/ou textura) em tempo real,
+   sem precisar reconstruir o mundo 3D inteiro. Ver swapBuildingToPaintedState(). */
+const buildingMeta3D = {};
+const buildingRoots3D = {};
+function makeBuildingLabelSprite(o, p, heightWorld){
+  const cvs = document.createElement("canvas"); cvs.width=256; cvs.height=64;
+  const c = cvs.getContext("2d");
+  c.fillStyle="rgba(11,12,16,0.72)"; c.fillRect(4,4,248,56);
+  c.strokeStyle="#7CFF3C"; c.lineWidth=2; c.strokeRect(4,4,248,56);
+  c.fillStyle="#f2f1ec"; c.font="bold 26px 'JetBrains Mono', monospace"; c.textAlign="center"; c.textBaseline="middle";
+  c.fillText(o.label, 128, 34);
+  const labelTex = new THREE.CanvasTexture(cvs);
+  const labelSprite = new THREE.Sprite(new THREE.SpriteMaterial({map:labelTex, transparent:true, depthTest:true}));
+  labelSprite.scale.set(3.2,0.8,1);
+  labelSprite.position.set(p.x, heightWorld+0.9, p.z);
+  return labelSprite;
+}
+async function buildBuildingsIn3D(){
+  for(const o of CONFIG.map.objects){
+    const footprintW = o.width*SCALE_3D, footprintD = o.height*SCALE_3D;
+    const heightWorld = o.heightMeters || 6;
+    const centerPx = o.x+o.width/2, centerPy = o.y+o.height/2;
+    const p = to3D(centerPx, centerPy);
+    buildingMeta3D[o.id] = {footprintW, footprintD, heightWorld, p};
+    const roots = buildingRoots3D[o.id] = [];
+
+    if(o.model3dAssetKey){
+      try{
+        const blob = await AssetManager.resolveBlob(o.model3dAssetKey);
+        if(blob){
+          const gltf = await loadGLTFFromBlob(blob); const group = gltf.scene;
+          fitModelToFootprint(group, footprintW, footprintD, heightWorld);
+          group.position.x += p.x; group.position.z += p.z;
+          scene3D.add(group);
+          roots.push(group);
+          if(o.label){ const ls=makeBuildingLabelSprite(o,p,heightWorld); scene3D.add(ls); roots.push(ls); }
+          continue;
+        }
+      }catch(err){ console.warn(`[OGEID] Falha ao carregar o modelo 3D de ${o.id}, usando caixa de placeholder:`, err); }
+    }
+
+    const sideMat = new THREE.MeshStandardMaterial({ color:o.color||0x26293a, roughness:0.88 });
+    let topMat = sideMat;
+    const img = objectImageCache[o.id];
+    if(img){
+      const tex = new THREE.Texture(img); tex.needsUpdate = true; tex.center.set(0.5,0.5); tex.rotation = Math.PI/2;
+      topMat = new THREE.MeshStandardMaterial({ map:tex, roughness:0.9 });
+      buildingTextureUpdaters.push(tex);
+    }
+    const box = new THREE.Mesh(
+      new THREE.BoxGeometry(footprintW, heightWorld, footprintD),
+      [sideMat, sideMat, topMat, sideMat, sideMat, sideMat] // +x,-x,+y(topo/telhado),-y,+z,-z
+    );
+    box.position.set(p.x, heightWorld/2, p.z);
+    box.castShadow = true; box.receiveShadow = true;
+    scene3D.add(box);
+    roots.push(box);
+
+    if(o.label){
+      const labelSprite = makeBuildingLabelSprite(o, p, heightWorld);
+      scene3D.add(labelSprite);
+      roots.push(labelSprite);
+    }
+  }
+}
+
+/* ---- Volta um objeto do cenário pro estado "antes" (usado ao reiniciar a partida, pra
+   desfazer trocas feitas por swapBuildingToPaintedState em uma partida anterior). ---- */
+async function revertBuildingToBaseState(objectId){
+  const obj = CONFIG.map.objects.find(o=>o.id===objectId);
+  const meta = buildingMeta3D[objectId];
+  if(!obj || !meta) return;
+  const {footprintW, footprintD, heightWorld, p} = meta;
+  (buildingRoots3D[objectId]||[]).forEach(o3=>scene3D.remove(o3));
+  const roots = buildingRoots3D[objectId] = [];
+
+  if(obj.model3dAssetKey){
+    try{
+      const blob = await AssetManager.resolveBlob(obj.model3dAssetKey);
+      if(blob){
+        const gltf = await loadGLTFFromBlob(blob); const group = gltf.scene;
+        fitModelToFootprint(group, footprintW, footprintD, heightWorld);
+        group.position.x += p.x; group.position.z += p.z;
+        scene3D.add(group);
+        roots.push(group);
+        if(obj.label){ const ls=makeBuildingLabelSprite(obj,p,heightWorld); scene3D.add(ls); roots.push(ls); }
+        return;
+      }
+    }catch(err){ console.warn(`[OGEID] Falha ao recarregar o modelo 3D base de ${objectId}:`,err); }
+  }
+
+  const sideMat = new THREE.MeshStandardMaterial({ color:obj.color||0x26293a, roughness:0.88 });
+  let topMat = sideMat;
+  const img = objectImageCache[objectId];
+  if(img){
+    const tex = new THREE.Texture(img); tex.needsUpdate = true; tex.center.set(0.5,0.5); tex.rotation = Math.PI/2;
+    topMat = new THREE.MeshStandardMaterial({ map:tex, roughness:0.9 });
+    buildingTextureUpdaters.push(tex);
+  }
+  const box = new THREE.Mesh(
+    new THREE.BoxGeometry(footprintW, heightWorld, footprintD),
+    [sideMat, sideMat, topMat, sideMat, sideMat, sideMat]
+  );
+  box.position.set(p.x, heightWorld/2, p.z);
+  box.castShadow = true; box.receiveShadow = true;
+  scene3D.add(box);
+  roots.push(box);
+  if(obj.label){ const ls=makeBuildingLabelSprite(obj,p,heightWorld); scene3D.add(ls); roots.push(ls); }
+}
+
+/* ---- Troca um objeto do cenário pela sua versão "pintada" (chamado quando um spot
+   vinculado a ele é concluído). Prioriza o modelo 3D pintado (paintedModel3dAssetKey);
+   se não houver, cai pra textura/GIF pintado (paintedImageAssetKey) no volume genérico;
+   se não houver nenhum dos dois, o prédio simplesmente continua como estava. ---- */
+async function swapBuildingToPaintedState(objectId){
+  const obj = CONFIG.map.objects.find(o=>o.id===objectId);
+  const meta = buildingMeta3D[objectId];
+  if(!obj || !meta) return;
+  if(!obj.paintedModel3dAssetKey && !obj.paintedImageAssetKey) return; // nada configurado pra "depois" — mantém como está
+  const {footprintW, footprintD, heightWorld, p} = meta;
+
+  (buildingRoots3D[objectId]||[]).forEach(o3=>scene3D.remove(o3));
+  const roots = buildingRoots3D[objectId] = [];
+
+  if(obj.paintedModel3dAssetKey){
+    try{
+      const blob = await AssetManager.resolveBlob(obj.paintedModel3dAssetKey);
+      if(blob){
+        const gltf = await loadGLTFFromBlob(blob); const group = gltf.scene;
+        fitModelToFootprint(group, footprintW, footprintD, heightWorld);
+        group.position.x += p.x; group.position.z += p.z;
+        scene3D.add(group);
+        roots.push(group);
+        if(obj.label){ const ls=makeBuildingLabelSprite(obj,p,heightWorld); scene3D.add(ls); roots.push(ls); }
+        return;
+      }
+    }catch(err){ console.warn(`[OGEID] Falha ao carregar o modelo 3D pintado de ${objectId}, usando textura pintada:`, err); }
+  }
+
+  const sideMat = new THREE.MeshStandardMaterial({ color:obj.color||0x26293a, roughness:0.88 });
+  let topMat = sideMat;
+  const paintedImg = obj.paintedImageAssetKey ? await AssetManager.resolveLiveGifElement(obj.paintedImageAssetKey) : null;
+  const img = paintedImg || objectImageCache[objectId];
+  if(img){
+    const tex = new THREE.Texture(img); tex.needsUpdate = true; tex.center.set(0.5,0.5); tex.rotation = Math.PI/2;
+    topMat = new THREE.MeshStandardMaterial({ map:tex, roughness:0.9 });
+    buildingTextureUpdaters.push(tex);
+  }
+  const box = new THREE.Mesh(
+    new THREE.BoxGeometry(footprintW, heightWorld, footprintD),
+    [sideMat, sideMat, topMat, sideMat, sideMat, sideMat]
+  );
+  box.position.set(p.x, heightWorld/2, p.z);
+  box.castShadow = true; box.receiveShadow = true;
+  scene3D.add(box);
+  roots.push(box);
+  if(obj.label){ const ls=makeBuildingLabelSprite(obj,p,heightWorld); scene3D.add(ls); roots.push(ls); }
+}
+
+/* ---- Monta o mundo 3D inteiro (chamado uma vez no boot, depois que as imagens/UserConfig já foram resolvidos) ---- */
+async function build3DWorld(){
+  buildGround3D();
+  buildDecorations3D();
+  await buildBuildingsIn3D();
+  buildSprayMarkers3D();
+  buildSpotMarkers3D();
+}
+
+/* =========================================================
+   22. NAV GRID GLOBAL
+   ========================================================= */
+let Nav = null;
+
+/* =========================================================
+   23. INPUT
+   (o raycast screenToWorld/camera orbital já foram definidos lá na seção 11B) ---- */
+canvas.addEventListener("pointerdown",(e)=>{
+  if(e.button!==0) return; // botão direito é usado só pra girar a câmera (ver seção 11B)
+  if(State.paused||State.gameOver) return;
+  const w = screenToWorld(e.clientX,e.clientY);
+  if(currentInteractable){
+    const d = dist(w.x,w.y,currentInteractable.data.x,currentInteractable.data.y);
+    if(d<40){ triggerInteraction(); return; }
+  }
+  Player.running = e.shiftKey||false;
+  Player.setDestination(clamp(w.x,0,CONFIG.map.width), clamp(w.y,0,CONFIG.map.height));
+});
+/* Teclas configuráveis (aba CONTROLES do configurador) — CONFIG.controls define qual
+   "code" de teclado dispara cada ação: mover (frente/trás/esq/dir), correr, interagir/pintar,
+   pular e 3 emotes com animação escolhível. Mantém Shift/Espaço como atalhos extras de sempre
+   além do que estiver configurado, pra não travar quem já está acostumado com o jogo original. */
+window.addEventListener("keydown",(e)=>{
+  if(e.code==="Escape"){ togglePause(); return; }
+  if(State.paused||State.gameOver) return;
+  const c = CONFIG.controls;
+  if(isMoveKeyCode(e.code)) pressedMoveKeys.add(e.code);
+  if(e.code===c.run || e.code==="ShiftLeft" || e.code==="ShiftRight") Player.running=true;
+  if(e.code===c.interact && currentInteractable) triggerInteraction();
+  if(e.code===c.jump) Player.doAction("jump", 0.55);
+  if(e.code===c.emote1) Player.doAction(c.emote1Type||"wave", 1.3);
+  if(e.code===c.emote2) Player.doAction(c.emote2Type||"dance", 1.5);
+  if(e.code===c.emote3) Player.doAction(c.emote3Type||"point", 1.1);
+});
+window.addEventListener("keyup",(e)=>{
+  const c = CONFIG.controls;
+  if(isMoveKeyCode(e.code)) pressedMoveKeys.delete(e.code);
+  if(e.code===c.run || e.code==="ShiftLeft" || e.code==="ShiftRight") Player.running=false;
+});
+function isMoveKeyCode(code){
+  const c = CONFIG.controls;
+  return code===c.forward || code===c.backward || code===c.left || code===c.right;
+}
+
+/* =========================================================
+   24. TELAS / MENU / PAUSA
+   ========================================================= */
+function showScreen(id){ document.querySelectorAll(".screen").forEach(s=>s.classList.remove("show")); $("#"+id).classList.add("show"); }
+function hideAllScreens(){ document.querySelectorAll(".screen").forEach(s=>s.classList.remove("show")); }
+
+/* ---- Aplica textos/imagens personalizados do menu, derrota e vitória (definidos no CONFIGURADOR) ---- */
+async function applyUIScreens(){
+  const map = {
+    menu:{ bg:"#menu-bg-img", title:"#menu-title-text", subtitle:"#menu-subtitle-text",
+      buttons:{ newGame:"#btn-new-game", continueGame:"#btn-continue", reset:"#btn-reset" } },
+    lose:{ bg:"#lose-bg-img", title:"#lose-title-text", subtitle:"#lose-sub",
+      buttons:{ retry:"#btn-retry", menu:"#btn-menu-from-lose" } },
+    win:{ bg:"#win-bg-img", title:"#win-title-text", subtitle:"#win-subtitle-text",
+      buttons:{ playAgain:"#btn-play-again", menu:"#btn-menu-from-win" } }
+  };
+  for(const screen in map){
+    const cfg = CONFIG.ui[screen], m = map[screen];
+    const titleEl = $(m.title); if(titleEl && cfg.title) titleEl.textContent = cfg.title;
+    const subEl = $(m.subtitle); if(subEl && cfg.subtitle) subEl.textContent = cfg.subtitle;
+    for(const bk in m.buttons){ const el = $(m.buttons[bk]); if(el && cfg.buttons[bk]) el.textContent = cfg.buttons[bk]; }
+    const bgEl = $(m.bg);
+    if(bgEl && cfg.backgroundAssetKey){
+      const img = await AssetManager.resolveImageAsset(cfg.backgroundAssetKey);
+      if(img){ bgEl.style.backgroundImage = `url(${img.src})`; bgEl.classList.add("show"); }
+    }
+  }
+}
+function togglePause(){
+  if(State.gameOver) return;
+  State.paused=!State.paused;
+  if(State.paused){ showScreen("pause-screen"); AudioManager.loopStop("ambient"); }
+  else{ hideAllScreens(); AudioManager.loopStart("ambient"); }
+}
+$("#pause-btn").addEventListener("click", togglePause);
+$("#btn-resume").addEventListener("click", togglePause);
+
+function resetRunState(){
+  State.inventory={}; for(const t in CONFIG.sprayTypes) State.inventory[t]=0;
+  initSpotsState();
+  State.areasDiscovered={}; State.sprayCollected={}; State.guardEventTriggered=false;
+  State.paused=false; State.gameOver=false;
+  Player.x=CONFIG.player.startX; Player.y=CONFIG.player.startY; Player.path=[]; Player.interactingLock=false; Player.facingAngle=0; Player.action=null;
+  pressedMoveKeys.clear();
+  Guard.resetToStart();
+  ExtraGuards.forEach(g=>g.resetToStart());
+  $("#guard-alert").classList.remove("show");
+  CONFIG.spots.forEach(s=>{
+    refreshSpotMarker3D(s.id);
+    if(s.linkedObjectId) revertBuildingToBaseState(s.linkedObjectId); // desfaz troca por modelo/textura "pintada" de uma partida anterior
+  });
+  updateInventoryUI(); renderSpotProgress();
+}
+function startNewGame(){ resetRunState(); hideAllScreens(); VideoManager.playIntro(()=>{ AudioManager.loopStart("ambient"); }); }
+function continueGame(){
+  const ok = SaveManager.load();
+  if(!ok){ startNewGame(); return; }
+  if(CONFIG.guard.activationMode==="onEvent"){
+    Guard.dormant = !State.guardEventTriggered;
+    if(State.guardEventTriggered){ Guard.x=CONFIG.guardEvent.spawnX; Guard.y=CONFIG.guardEvent.spawnY; Guard.state="chase"; }
+  }
+  hideAllScreens(); updateInventoryUI(); renderSpotProgress(); AudioManager.loopStart("ambient");
+}
+$("#btn-new-game").addEventListener("click", startNewGame);
+$("#btn-continue").addEventListener("click", continueGame);
+$("#btn-reset").addEventListener("click", ()=>{ SaveManager.reset(); toast("Progresso resetado."); });
+$("#btn-menu-from-pause").addEventListener("click", ()=>{ State.paused=false; showScreen("menu-screen"); });
+$("#btn-retry").addEventListener("click", ()=>{ resetRunState(); hideAllScreens(); AudioManager.loopStart("ambient"); });
+$("#btn-menu-from-lose").addEventListener("click", ()=>{ showScreen("menu-screen"); });
+$("#btn-play-again").addEventListener("click", ()=>{ resetRunState(); hideAllScreens(); AudioManager.loopStart("ambient"); });
+$("#btn-menu-from-win").addEventListener("click", ()=>{ showScreen("menu-screen"); });
+
+/* =========================================================
+   25. LOOP PRINCIPAL
+   ========================================================= */
+let lastTime=performance.now();
+function loop(now){
+  const dt=Math.min(0.05,(now-lastTime)/1000); lastTime=now;
+  if(!State.paused && !State.gameOver){
+    Player.update(dt); Guard.update(dt); ExtraGuards.forEach(g=>g.update(dt));
+    updateCamera(); updateInteraction();
+  }
+  updateSprayMarkers3D();
+  buildingTextureUpdaters.forEach(tex=>{ tex.needsUpdate = true; }); // reflete GIFs animados nos telhados
+  Player.draw(); Guard.draw(); ExtraGuards.forEach(g=>g.draw());
+  renderer3D.render(scene3D, camera3D);
+  drawMinimap();
+  requestAnimationFrame(loop);
+}
+
+/* =========================================================
+   26. BOOT
+   ========================================================= */
+async function boot(){
+  const fill = $("#loading-fill");
+  // Rede de segurança: se por qualquer motivo o carregamento travar,
+  // força a tela de loading a sumir depois de 15s em vez de ficar presa pra sempre.
+  const watchdog = setTimeout(()=>{
+    const ls = $("#loading-screen");
+    if(ls && ls.style.display!=="none"){
+      console.warn("[OGEID] Boot demorou demais (>15s) — liberando a tela mesmo assim. Veja os erros acima no console.");
+      ls.style.display="none"; showScreen("menu-screen");
+      requestAnimationFrame(loop);
+    }
+  }, 15000);
+
+  try{
+    fill.style.width="15%";
+    applyUserConfigToCONFIG();
+    fill.style.width="25%";
+    Nav = new NavGrid(CONFIG.map.width, CONFIG.map.height, CONFIG.map.gridSize, CONFIG.map.objects.filter(o=>o.collision!==false));
+    fill.style.width="35%";
+    await initSprayIcons(); initSpotIcons();
+    fill.style.width="45%";
+    AudioManager.init();
+    fill.style.width="55%";
+    await preloadBackground();
+    await preloadObjectImages();
+    await preloadSpotImages();
+    fill.style.width="65%";
+    await build3DWorld(); // monta o cenário 3D (prédios/telhados/decorações/sprays/spots)
+    fill.style.width="70%";
+    Guard = createGuardEntity({
+      label:"O guarda",
+      route: CONFIG.guard.patrolRoute,
+      palette: CONFIG.guard.palette,
+      model: CONFIG.guard.model,
+      walkSpeed: CONFIG.guard.walkSpeed, chaseSpeed: CONFIG.guard.chaseSpeed, visionRadius: CONFIG.guard.visionRadius,
+      reactionTime: CONFIG.guard.reactionTime, captureRadius: CONFIG.guard.captureRadius, loseInterestTime: CONFIG.guard.loseInterestTime,
+      activationMode: CONFIG.guard.activationMode, eventSpawn: {x:CONFIG.guardEvent.spawnX, y:CONFIG.guardEvent.spawnY}
+    });
+    ExtraGuards = CONFIG.guardsExtra.map(spec=>createGuardEntity(spec));
+    fill.style.width="75%";
+    await Promise.all([ Player.init(), Guard.init(), ...ExtraGuards.map(g=>g.init()) ]);
+    await applyUIScreens();
+    fill.style.width="100%";
+    updateInventoryUI(); renderSpotProgress();
+
+    clearTimeout(watchdog);
+    setTimeout(()=>{ $("#loading-screen").style.display="none"; showScreen("menu-screen"); }, 300);
+
+    requestAnimationFrame(loop);
+    setInterval(()=>{ if(!State.paused && !State.gameOver) SaveManager.save(); }, 8000);
+  }catch(err){
+    clearTimeout(watchdog);
+    console.error("[OGEID] Erro durante o carregamento do jogo:", err);
+    $("#loading-screen").style.display="none";
+    showScreen("menu-screen");
+    requestAnimationFrame(loop);
+  }
+}
+boot();
+
+})();
+</script>
+</body>
+</html>
