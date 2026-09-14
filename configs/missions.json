@@ -1,16 +1,16 @@
 {
-  "_comment": "Formato alvo do Mission Editor (Fase 6). Cada objetivo terá tipo GO_TO | COLLECT | PAINT | ESCAPE | RETURN | INTERACT | SURVIVE | AVOID_DETECTION. Vazio por enquanto — a Fase 1 não implementa missões ainda.",
+  "_comment": "Exemplo de missao (Fase 6). Estrutura consumida por MissionSystem.js / MissionEditor.js.",
   "missions": [
     {
       "id": "mission_01",
-      "name": "Pinte o depósito",
-      "introVideo": "mission_01_intro.mp4",
-      "completeVideo": "mission_01_complete.mp4",
+      "name": "Pinte o deposito",
+      "videoIntro": null,
       "objectives": [
-        { "id": "obj_1", "type": "GO_TO", "description": "Entrar na área", "position": [0, 0, 0] },
-        { "id": "obj_2", "type": "PAINT", "description": "Pintar o muro", "targetId": "graffiti_spot_1" },
-        { "id": "obj_3", "type": "ESCAPE", "description": "Escapar da área" },
-        { "id": "obj_4", "type": "RETURN", "description": "Voltar para a base" }
+        { "id": "obj_01", "name": "Entrar na area", "type": "GO_TO", "position": [4, 0, -4], "condition": null, "reward": null },
+        { "id": "obj_02", "name": "Encontrar o muro", "type": "GO_TO", "position": [4, 0, -6], "condition": null, "reward": null },
+        { "id": "obj_03", "name": "Pintar o muro", "type": "PAINT", "position": [4, 0, -6], "condition": null, "reward": { "xp": 100 } },
+        { "id": "obj_04", "name": "Escapar", "type": "ESCAPE", "position": null, "condition": "AVOID_DETECTION", "reward": null },
+        { "id": "obj_05", "name": "Voltar para a base", "type": "RETURN", "position": [0, 0, 0], "condition": null, "reward": null }
       ]
     }
   ]

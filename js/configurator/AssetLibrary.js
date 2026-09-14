@@ -1,117 +1,85 @@
-/**
- * AssetLibrary.js
- * Painel visual da biblioteca de assets GLB. Permite importar novos
- * arquivos, ver a lista de assets já importados, renomear, excluir, e
- * "colocar no mapa" (cria uma instância via AssetManager + SceneManager
- * no centro da cena, pronta para o usuário mover com o gizmo).
- */
+// AssetLibrary.js
+// Renderiza a biblioteca de assets no painel esquerdo, cuida do botão
+// "+ IMPORTAR GLB" e do clique-para-colocar no cenário (o pedido original
+// fala em arrastar; aqui entregamos clique-para-colocar na Fase 1, que é
+// mais simples e confiável em qualquer navegador — drag real pode entrar
+// depois sem quebrar nada).
 
-import { el, formatBytes } from '../core/Utils.js';
-import { bus } from '../core/EventBus.js';
-import { AssetManager } from '../systems/AssetManager.js';
-import { SceneManager } from '../systems/SceneManager.js';
+import { placeAssetInstance } from './SceneObjectFactory.js';
 
 export class AssetLibrary {
-  constructor(root) {
-    this.root = root;
+  constructor({ container, assetManager, sceneManager, projectManager, onChange }) {
+    this.container = container;
+    this.assetManager = assetManager;
+    this.sceneManager = sceneManager;
+    this.projectManager = projectManager;
+    this.onChange = onChange || (() => {});
     this._build();
-
-    bus.on('asset:imported', () => this._renderList());
-    bus.on('asset:removed', () => this._renderList());
-    bus.on('asset:renamed', () => this._renderList());
   }
 
   _build() {
-    this.root.innerHTML = '';
+    this.container.innerHTML = `
+      <div class="asset-lib-head">
+        <span class="section-title" style="padding:0;">ASSET LIBRARY</span>
+        <button class="btn icon" id="btn-import-glb" title="Importar GLB">+ GLB</button>
+      </div>
+      <input type="file" id="glb-input" accept=".glb,.gltf" style="display:none" multiple />
+      <div class="asset-grid" id="asset-grid"></div>
+    `;
 
-    const importInput = el('input', {
-      type: 'file',
-      accept: '.glb,.gltf',
-      multiple: 'multiple',
-      style: 'display:none',
-      onChange: async (e) => {
-        const files = [...e.target.files];
-        for (const file of files) {
-          try {
-            await AssetManager.importFromFile(file);
-          } catch (err) {
-            console.error(err);
-            alert(`Falha ao importar "${file.name}": modelo GLB inválido ou corrompido.`);
-          }
+    this.grid = this.container.querySelector('#asset-grid');
+    this.input = this.container.querySelector('#glb-input');
+
+    this.container.querySelector('#btn-import-glb').addEventListener('click', () => this.input.click());
+    this.input.addEventListener('change', async (e) => {
+      const files = [...e.target.files];
+      for (const file of files) {
+        try {
+          await this.assetManager.importFile(file, this._currentCategory || 'PROPS');
+        } catch (err) {
+          console.error('Falha ao importar GLB', file.name, err);
+          alert(`Não consegui importar "${file.name}". Verifique se é um .glb/.gltf válido.`);
         }
-        e.target.value = '';
-      },
+      }
+      this.input.value = '';
+      this.render();
+      this.onChange();
     });
 
-    const importBtn = el(
-      'button',
-      { class: 'btn btn-accent btn-block', onClick: () => importInput.click() },
-      '+ IMPORTAR GLB'
-    );
-
-    this.listEl = el('div', { class: 'asset-list' });
-
-    this.root.append(
-      el('div', { class: 'panel-block' }, [importBtn, importInput]),
-      el('div', { class: 'panel-block' }, [el('h4', { class: 'group-title' }, 'BIBLIOTECA DE ASSETS'), this.listEl])
-    );
-
-    this._renderList();
+    this.render();
   }
 
-  _renderList() {
-    this.listEl.innerHTML = '';
-    const assets = AssetManager.getAll();
+  setCategory(category) {
+    this._currentCategory = category;
+  }
 
+  render() {
+    const assets = this.assetManager.list();
     if (!assets.length) {
-      this.listEl.append(el('p', { class: 'muted small' }, 'Nenhum asset importado ainda.'));
+      this.grid.innerHTML = `<div class="asset-empty">Nenhum asset importado ainda.<br/>Use "+ GLB" para trazer seus modelos.</div>`;
       return;
     }
+    this.grid.innerHTML = assets
+      .map(
+        (a) => `
+      <div class="asset-card" draggable="true" data-id="${a.id}" title="Clique para colocar na cena">
+        <div class="thumb">▣</div>
+        <div>${a.name}</div>
+        ${a.animations.length ? `<div class="anims">${a.animations.length} anim(s)</div>` : ''}
+      </div>`
+      )
+      .join('');
 
-    for (const asset of assets) {
-      const nameInput = el('input', {
-        type: 'text',
-        value: asset.name,
-        class: 'asset-name-input',
-        onChange: (e) => AssetManager.rename(asset.id, e.target.value),
+    this.grid.querySelectorAll('.asset-card').forEach((card) => {
+      card.addEventListener('click', () => {
+        const id = card.dataset.id;
+        placeAssetInstance({
+          assetManager: this.assetManager,
+          sceneManager: this.sceneManager,
+          assetId: id,
+        });
+        this.onChange();
       });
-
-      const meta = el('div', { class: 'asset-meta' }, [
-        `${formatBytes(asset.sizeBytes)}`,
-        asset.animations.length ? ` · ${asset.animations.length} anim.` : '',
-      ]);
-
-      const placeBtn = el(
-        'button',
-        {
-          class: 'btn btn-mini',
-          title: 'Colocar no mapa',
-          onClick: () => bus.emit('assetLibrary:placeRequested', asset.id),
-        },
-        '+ MAPA'
-      );
-
-      const removeBtn = el(
-        'button',
-        {
-          class: 'btn btn-mini btn-danger',
-          title: 'Excluir asset',
-          onClick: async () => {
-            if (confirm(`Excluir "${asset.name}" da biblioteca? Isso não remove instâncias já colocadas no mapa.`)) {
-              await AssetManager.remove(asset.id);
-            }
-          },
-        },
-        '✕'
-      );
-
-      const card = el('div', { class: 'asset-card' }, [
-        el('div', { class: 'asset-card-icon' }, '▣'),
-        el('div', { class: 'asset-card-body' }, [nameInput, meta]),
-        el('div', { class: 'asset-card-actions' }, [placeBtn, removeBtn]),
-      ]);
-
-      this.listEl.append(card);
-    }
+    });
   }
 }

@@ -1,12 +1,6 @@
 {
-  "_comment": "Formato alvo do UI Editor (Fase 8). Cada elemento do HUD do jogo (game.html) será lido daqui em vez de ficar fixo no HTML/CSS, permitindo ligar/desligar, reposicionar e redimensionar pelo configurador.",
-  "elements": {
-    "hp": { "enabled": true, "position": "top-left", "scale": 1 },
-    "energy": { "enabled": true, "position": "top-left", "scale": 1 },
-    "xp": { "enabled": true, "position": "top-left", "scale": 1 },
-    "missionPanel": { "enabled": true, "position": "left", "opacity": 0.9 },
-    "minimap": { "enabled": true, "position": "top-right", "scale": 1 },
-    "inventory": { "enabled": true, "position": "bottom", "opacity": 1 },
-    "cameraFeed": { "enabled": true, "position": "right" }
-  }
+  "_comment": "Template de referencia pro UIEditor.js (Fase 8). Consumido por UIManager.js.",
+  "hp": true, "energy": true, "xp": true,
+  "missionPanel": true, "minimap": true, "inventory": true, "cameraFeed": true,
+  "layout": {}
 }

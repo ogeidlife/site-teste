@@ -1,36 +1,7 @@
 {
-  "_comment": "Este arquivo é apenas uma REFERÊNCIA do formato usado pelo ProjectManager (js/configurator/ProjectManager.js). O projeto real fica salvo no IndexedDB do navegador e é exportado via botão EXPORT JSON no topo do configurador — o arquivo baixado terá exatamente esta estrutura, com os campos scene/assets/npcs/guards/cameras/walls/graffitiSpots/items/missions/lights/ui preenchidos pelas fases correspondentes.",
-  "version": 1,
-  "id": "exemplo-uuid",
-  "name": "Demo Map",
-  "updatedAt": 0,
-  "scene": {
-    "objects": [
-      {
-        "id": "obj-uuid",
-        "name": "WALL_01",
-        "layer": "PROPS",
-        "assetId": "asset-uuid",
-        "assetName": "wall_empty",
-        "collision": true,
-        "position": [4, 0, -2],
-        "rotation": [0, 0, 0],
-        "scale": [1, 1, 1]
-      }
-    ]
-  },
-  "assets": [
-    { "id": "asset-uuid", "name": "wall_empty", "sizeBytes": 512000 }
-  ],
-  "player": {},
-  "npcs": [],
-  "guards": [],
-  "cameras": [],
-  "walls": [],
-  "graffitiSpots": [],
-  "items": [],
-  "missions": [],
-  "lights": [],
-  "ui": {},
-  "gameplay": {}
+  "_comment": "Template de referência — o projeto real vive no localStorage/IndexedDB do navegador (ver ProjectManager.js). Use IMPORT PROJECT no configurador para carregar um arquivo como este.",
+  "grid": { "size": 60, "divisions": 60, "snap": true, "snapSize": 1 },
+  "fog": { "color": 658445, "density": 0.018 },
+  "ambient": { "color": 3689562, "intensity": 0.55 },
+  "directional": { "color": 7305471, "intensity": 0.5, "position": [-10, 20, -6] }
 }

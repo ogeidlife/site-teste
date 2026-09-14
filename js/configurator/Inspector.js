@@ -1,193 +1,119 @@
-/**
- * Inspector.js
- * Painel direito do configurador. Mostra e edita as propriedades do
- * objeto atualmente selecionado: nome, transform (position/rotation/scale),
- * layer, collision e — se o GLB tiver animações — uma lista para pré-visualizar
- * cada clip (Idle, Walk, Run, Spray, etc).
- */
+// Inspector.js
+// Painel direito. Mostra e edita Transform (Position/Rotation/Scale em X/Y/Z),
+// nome, categoria e colisão do objeto selecionado. Campos específicos por
+// categoria (guarda, câmera, missão...) entram nas próximas fases — a UI já
+// deixa um slot ("propriedades específicas") pronto pra isso.
 
 import * as THREE from 'three';
-import { el, radToDeg, degToRad, round } from '../core/Utils.js';
 import { bus } from '../core/EventBus.js';
-import { LAYERS } from '../core/Constants.js';
+
+const RAD2DEG = 180 / Math.PI;
+const DEG2RAD = Math.PI / 180;
 
 export class Inspector {
-  constructor(root) {
-    this.root = root;
-    this.entry = null;
-    this._activeAction = null;
-    this.render();
+  constructor({ container, sceneManager, onChange }) {
+    this.container = container;
+    this.sceneManager = sceneManager;
+    this.onChange = onChange || (() => {});
+    this.current = null;
 
-    bus.on('selection:changed', (entry) => this.setEntry(entry));
-    bus.on('transform:changed', () => this._syncFieldsFromObject());
+    bus.on('scene:selectionChanged', (obj) => this.setTarget(obj));
+    bus.on('scene:tick', () => this._syncFromObject());
+
+    this.renderEmpty();
   }
 
-  setEntry(entry) {
-    this.entry = entry;
-    this.render();
+  renderEmpty() {
+    this.container.innerHTML = `<div class="inspector-empty">Nenhum objeto selecionado.<br/><br/>Clique em um objeto na viewport ou coloque um novo asset a partir da biblioteca à esquerda.</div>`;
   }
 
-  render() {
-    this.root.innerHTML = '';
+  setTarget(object3D) {
+    this.current = object3D;
+    if (!object3D) return this.renderEmpty();
+    this._render();
+  }
 
-    if (!this.entry) {
-      this.root.append(
-        el('div', { class: 'inspector-empty' }, [
-          el('p', {}, 'Nenhum objeto selecionado.'),
-          el('p', { class: 'muted' }, 'Clique em um objeto no viewport ou na Asset Library para posicioná-lo.'),
-        ])
-      );
-      return;
-    }
+  _data() {
+    return this.current?.userData.ogeidData || {};
+  }
 
-    const { entry } = this;
-    const obj = entry.object3D;
+  _render() {
+    const data = this._data();
+    const p = this.current.position;
+    const r = this.current.rotation;
+    const s = this.current.scale;
 
-    // ---- Nome ----
-    const nameInput = el('input', {
-      type: 'text',
-      value: entry.name,
-      class: 'field-input',
-      onChange: (e) => {
-        entry.name = e.target.value;
-        bus.emit('scene:objectRenamed', entry);
-      },
+    this.container.innerHTML = `
+      <div class="section-title">INSPECTOR</div>
+      <div class="field-group">
+        <div class="field-row"><label>NAME</label><input type="text" id="insp-name" value="${data.name || ''}" /></div>
+        <div class="field-row"><label>CATEGORY</label>
+          <select id="insp-category">
+            ${['CENARIO','PERSONAGEM','NPC','SEGURANCA','CAMERAS','OBJETOS','MUROS','GRAFFITI','ITENS']
+              .map((c) => `<option value="${c}" ${data.category === c ? 'selected' : ''}>${c}</option>`)
+              .join('')}
+          </select>
+        </div>
+        <div class="checkbox-row"><input type="checkbox" id="insp-collision" ${data.collision ? 'checked' : ''}/> COLLISION</div>
+      </div>
+
+      <div class="field-group">
+        <div class="section-title" style="padding:0 0 6px;">POSITION</div>
+        <div class="vec3">
+          ${['x','y','z'].map((ax) => `<div class="axis"><span>${ax.toUpperCase()}</span><input type="number" step="0.1" id="pos-${ax}" value="${p[ax].toFixed(2)}"/></div>`).join('')}
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="section-title" style="padding:0 0 6px;">ROTATION (°)</div>
+        <div class="vec3">
+          ${['x','y','z'].map((ax) => `<div class="axis"><span>${ax.toUpperCase()}</span><input type="number" step="1" id="rot-${ax}" value="${(r[ax]*RAD2DEG).toFixed(1)}"/></div>`).join('')}
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="section-title" style="padding:0 0 6px;">SCALE</div>
+        <div class="vec3">
+          ${['x','y','z'].map((ax) => `<div class="axis"><span>${ax.toUpperCase()}</span><input type="number" step="0.1" id="scl-${ax}" value="${s[ax].toFixed(2)}"/></div>`).join('')}
+        </div>
+      </div>
+
+      <div class="mini-btn-row">
+        <button class="btn" id="insp-duplicate">DUPLICATE</button>
+        <button class="btn" id="insp-delete" style="color:var(--danger);">DELETE</button>
+      </div>
+    `;
+
+    const bind = (id, fn) => this.container.querySelector(id).addEventListener('input', fn);
+
+    bind('#insp-name', (e) => { data.name = e.target.value; this.onChange(); });
+    this.container.querySelector('#insp-category').addEventListener('change', (e) => { data.category = e.target.value; this.onChange(); });
+    this.container.querySelector('#insp-collision').addEventListener('change', (e) => { data.collision = e.target.checked; this.onChange(); });
+
+    ['x','y','z'].forEach((ax) => {
+      bind(`#pos-${ax}`, (e) => { this.current.position[ax] = parseFloat(e.target.value) || 0; this.onChange(); });
+      bind(`#rot-${ax}`, (e) => { this.current.rotation[ax] = (parseFloat(e.target.value) || 0) * DEG2RAD; this.onChange(); });
+      bind(`#scl-${ax}`, (e) => { this.current.scale[ax] = parseFloat(e.target.value) || 0.01; this.onChange(); });
     });
 
-    // ---- Layer ----
-    const layerSelect = el(
-      'select',
-      {
-        class: 'field-input',
-        onChange: (e) => bus.emit('inspector:layerChangeRequested', { entry, layer: e.target.value }),
-      },
-      LAYERS.map((l) => el('option', { value: l, selected: l === entry.layer ? 'selected' : undefined }, l))
-    );
-
-    // ---- Collision ----
-    const collisionCheckbox = el('input', {
-      type: 'checkbox',
-      checked: entry.collision ? 'checked' : undefined,
-      onChange: (e) => {
-        entry.collision = e.target.checked;
-        obj.userData.collision = e.target.checked;
-      },
+    this.container.querySelector('#insp-duplicate').addEventListener('click', () => {
+      bus.emit('inspector:duplicateRequested', this.current);
     });
-
-    this.root.append(
-      el('div', { class: 'inspector-section' }, [
-        el('label', { class: 'field-label' }, 'NOME'),
-        nameInput,
-      ]),
-      el('div', { class: 'inspector-row' }, [
-        el('div', { class: 'inspector-section half' }, [el('label', { class: 'field-label' }, 'LAYER'), layerSelect]),
-        el('div', { class: 'inspector-section half' }, [
-          el('label', { class: 'field-label checkbox-label' }, [collisionCheckbox, ' COLLISION']),
-        ]),
-      ])
-    );
-
-    this._buildTransformSection(obj);
-    this._buildAnimationSection(obj);
-
-    // ---- Ações ----
-    this.root.append(
-      el('div', { class: 'inspector-actions' }, [
-        el('button', { class: 'btn btn-ghost', onClick: () => bus.emit('selection:duplicateRequested') }, 'DUPLICAR'),
-        el('button', { class: 'btn btn-danger', onClick: () => bus.emit('selection:deleteRequested') }, 'EXCLUIR'),
-      ])
-    );
+    this.container.querySelector('#insp-delete').addEventListener('click', () => {
+      bus.emit('inspector:deleteRequested', this.current);
+    });
   }
 
-  _buildTransformSection(obj) {
-    const makeVector3Row = (label, getVec, onInput, isRotation = false) => {
-      const vec = getVec();
-      const toDisplay = (v) => (isRotation ? radToDeg(v) : round(v, 3));
-      const fromDisplay = (v) => (isRotation ? degToRad(v) : parseFloat(v));
-
-      const inputs = ['x', 'y', 'z'].map((axis) =>
-        el('input', {
-          type: 'number',
-          step: isRotation ? '1' : '0.1',
-          value: toDisplay(vec[axis]),
-          class: 'field-input field-number',
-          dataset: { axis },
-          onChange: (e) => {
-            const v = fromDisplay(e.target.value || 0);
-            onInput(axis, v);
-            bus.emit('transform:changed');
-          },
-        })
-      );
-
-      return el('div', { class: 'inspector-section' }, [
-        el('label', { class: 'field-label' }, label),
-        el('div', { class: 'vector3-row' }, inputs),
-      ]);
+  /** Mantém os campos de transform sincronizados quando o gizmo move o objeto. */
+  _syncFromObject() {
+    if (!this.current) return;
+    const p = this.current.position, r = this.current.rotation, s = this.current.scale;
+    const set = (id, val) => {
+      const el = this.container.querySelector(id);
+      if (el && document.activeElement !== el) el.value = val;
     };
-
-    this._transformWrap = el('div', { class: 'inspector-group' }, [
-      el('h4', { class: 'group-title' }, 'TRANSFORM'),
-      makeVector3Row('POSITION', () => obj.position, (axis, v) => (obj.position[axis] = v)),
-      makeVector3Row('ROTATION (°)', () => obj.rotation, (axis, v) => (obj.rotation[axis] = v), true),
-      makeVector3Row('SCALE', () => obj.scale, (axis, v) => (obj.scale[axis] = v)),
-    ]);
-
-    this.root.append(this._transformWrap);
-  }
-
-  /** Reescreve os valores numéricos do transform sem recriar o DOM (usado durante o drag do gizmo). */
-  _syncFieldsFromObject() {
-    if (!this.entry || !this._transformWrap) return;
-    const obj = this.entry.object3D;
-    const rows = this._transformWrap.querySelectorAll('.vector3-row');
-    const [posRow, rotRow, scaleRow] = rows;
-    const apply = (row, vec, isRotation) => {
-      row.querySelectorAll('input').forEach((input) => {
-        const axis = input.dataset.axis;
-        const raw = vec[axis];
-        input.value = isRotation ? radToDeg(raw) : round(raw, 3);
-      });
-    };
-    if (posRow) apply(posRow, obj.position, false);
-    if (rotRow) apply(rotRow, obj.rotation, true);
-    if (scaleRow) apply(scaleRow, obj.scale, false);
-  }
-
-  _buildAnimationSection(obj) {
-    const clips = obj.userData.animationClips;
-    if (!clips || !clips.length) return;
-
-    const mixer = obj.userData.mixer;
-
-    const select = el(
-      'select',
-      { class: 'field-input' },
-      clips.map((clip, i) => el('option', { value: i }, clip.name || `Clip ${i}`))
-    );
-
-    const playBtn = el('button', { class: 'btn btn-ghost' }, '▶ PLAY');
-    const stopBtn = el('button', { class: 'btn btn-ghost' }, '■ STOP');
-
-    playBtn.addEventListener('click', () => {
-      this._activeAction?.stop();
-      const clip = clips[select.value];
-      const action = mixer.clipAction(clip);
-      action.reset().setLoop(THREE.LoopRepeat, Infinity).play();
-      this._activeAction = action;
-    });
-
-    stopBtn.addEventListener('click', () => {
-      this._activeAction?.stop();
-      this._activeAction = null;
-    });
-
-    this.root.append(
-      el('div', { class: 'inspector-group' }, [
-        el('h4', { class: 'group-title' }, `ANIMAÇÕES (${clips.length})`),
-        el('div', { class: 'inspector-section' }, [select]),
-        el('div', { class: 'inspector-row' }, [playBtn, stopBtn]),
-      ])
-    );
+    set('#pos-x', p.x.toFixed(2)); set('#pos-y', p.y.toFixed(2)); set('#pos-z', p.z.toFixed(2));
+    set('#rot-x', (r.x*RAD2DEG).toFixed(1)); set('#rot-y', (r.y*RAD2DEG).toFixed(1)); set('#rot-z', (r.z*RAD2DEG).toFixed(1));
+    set('#scl-x', s.x.toFixed(2)); set('#scl-y', s.y.toFixed(2)); set('#scl-z', s.z.toFixed(2));
   }
 }

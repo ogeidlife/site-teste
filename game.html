@@ -2,24 +2,21 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>OGEID — Game (preview)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>OGEID — Tag the City</title>
+  <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@800&family=Archivo:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/game.css" />
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
 </head>
 <body>
-  <div id="game-root">
-    <div class="stub-card">
-      <h1>PLAY MODE</h1>
-      <p>
-        O modo de jogo ainda não foi implementado — ele chega na <strong>Fase 2</strong>
-        (Player + Câmera) e evolui nas fases seguintes (Guard AI, Câmeras de
-        Segurança, Graffiti, Missões, UI, Save/Load).
-      </p>
-      <p class="muted">
-        Por enquanto, monte seu mapa e importe seus modelos GLB no Configurador.
-      </p>
-      <a class="btn" href="configurador.html">← VOLTAR AO CONFIGURADOR</a>
-    </div>
-  </div>
+  <div id="game-root"></div>
+  <script type="module" src="js/game/main.js"></script>
 </body>
 </html>
