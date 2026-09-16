@@ -1,0 +1,311 @@
+{
+  "backgroundAssetKey": "map_background",
+  "objects": [
+    {
+      "id": "building_15",
+      "x": 2050,
+      "y": 1050,
+      "width": 250,
+      "height": 230,
+      "label": "BLOCO O"
+    },
+    {
+      "id": "object_mu4770ajnjblp",
+      "label": "teste",
+      "x": 1228,
+      "y": 809,
+      "width": 200,
+      "height": 150,
+      "collision": true,
+      "color": "#26293a",
+      "imageAssetKey": null,
+      "imageFps": 8,
+      "paintable": true,
+      "paintedImageAssetKey": null,
+      "paintedImageFps": 8,
+      "model3dAssetKey": "object_object_mu4770ajnjblp_glb",
+      "modelFileName": "allBuildings.glb",
+      "modelUseBoundsAsCollision": false,
+      "paintedModel3dAssetKey": null,
+      "paintedModelFileName": null
+    }
+  ],
+  "spots": [
+    {
+      "id": "spot05",
+      "name": "SPOT 05",
+      "x": 1500,
+      "y": 1300,
+      "requirements": {
+        "special": 5
+      }
+    },
+    {
+      "id": "spot_mu2rtnl985f6z",
+      "name": "parede beco",
+      "x": 529,
+      "y": 518,
+      "requirements": {},
+      "video": null,
+      "videoAssetKey": null,
+      "linkedObjectId": null,
+      "completionMode": "video",
+      "animAssetKey": null,
+      "animFps": 8,
+      "animDurationSec": 3
+    },
+    {
+      "id": "spot_mu477r351yrej",
+      "name": "testepintura",
+      "x": 1224,
+      "y": 890,
+      "requirements": {},
+      "video": null,
+      "videoAssetKey": null,
+      "linkedObjectId": "object_mu4770ajnjblp",
+      "completionMode": "anim",
+      "animModelAssetKey": null,
+      "animModelFileName": null,
+      "animDurationSec": 3
+    }
+  ],
+  "sprays": [],
+  "sprayIcons": {
+    "red": null,
+    "blue": null,
+    "yellow": null,
+    "black": null,
+    "special": null
+  },
+  "sprayModels": {
+    "red": null,
+    "blue": null,
+    "yellow": null,
+    "black": null,
+    "special": null
+  },
+  "playerPalette": {
+    "body": "#1c1c22",
+    "accent": "#ff2f92",
+    "legs": "#111114",
+    "arms": "#1c1c22",
+    "skin": "#e8b48a"
+  },
+  "guardPalette": {
+    "body": "#1e2b4d",
+    "accent": "#ffe14d",
+    "legs": "#12131a",
+    "arms": "#1e2b4d",
+    "skin": "#d9a878"
+  },
+  "playerModel": {
+    "scaleMultiplier": 15,
+    "verticalOffset": 0,
+    "base": "playerModel_base_glb",
+    "baseFileName": "idle.glb",
+    "idle": "playerModel_idle_glb",
+    "idleFileName": "idle.glb",
+    "walk": "playerModel_walk_glb",
+    "walkFileName": "andando.glb",
+    "run": "playerModel_run_glb",
+    "runFileName": "correndo2.glb",
+    "painting": null,
+    "paintingFileName": null,
+    "captured": null,
+    "capturedFileName": null,
+    "jump": "playerModel_jump_glb",
+    "jumpFileName": "pulando3.glb",
+    "wave": null,
+    "waveFileName": null,
+    "dance": null,
+    "danceFileName": null,
+    "point": null,
+    "pointFileName": null
+  },
+  "guardModel": {
+    "scaleMultiplier": 1,
+    "verticalOffset": 0,
+    "base": null,
+    "baseFileName": null,
+    "idle": null,
+    "idleFileName": null,
+    "walk": null,
+    "walkFileName": null,
+    "run": null,
+    "runFileName": null,
+    "painting": null,
+    "paintingFileName": null,
+    "captured": null,
+    "capturedFileName": null,
+    "jump": null,
+    "jumpFileName": null,
+    "wave": null,
+    "waveFileName": null,
+    "dance": null,
+    "danceFileName": null,
+    "point": null,
+    "pointFileName": null
+  },
+  "controls": {
+    "forward": "KeyW",
+    "backward": "KeyS",
+    "left": "KeyD",
+    "right": "KeyA",
+    "run": "ShiftLeft",
+    "interact": "KeyE",
+    "jump": "Space",
+    "emote1": "Digit1",
+    "emote1Type": "wave",
+    "emote2": "Digit2",
+    "emote2Type": "dance",
+    "emote3": "Digit3",
+    "emote3Type": "point"
+  },
+  "guards": [],
+  "bots": [],
+  "videos": {
+    "intro": null,
+    "lose": null,
+    "win": null
+  },
+  "guardEvent": {
+    "enabled": false,
+    "x": 1000,
+    "y": 1000,
+    "width": 300,
+    "height": 250,
+    "title": "O GUARDA APARECE",
+    "cutsceneAssetKey": null,
+    "spawnX": 1050,
+    "spawnY": 1050
+  },
+  "ui": {
+    "menu": {
+      "backgroundAssetKey": null,
+      "title": null,
+      "subtitle": null,
+      "buttons": {
+        "newGame": null,
+        "continueGame": null,
+        "reset": null
+      }
+    },
+    "lose": {
+      "backgroundAssetKey": null,
+      "title": null,
+      "subtitle": null,
+      "buttons": {
+        "retry": null,
+        "menu": null
+      }
+    },
+    "win": {
+      "backgroundAssetKey": null,
+      "title": null,
+      "subtitle": null,
+      "buttons": {
+        "playAgain": null,
+        "menu": null
+      }
+    }
+  },
+  "hud": {
+    "layout": {
+      "objective": "bottom-right",
+      "spots": "top-center",
+      "inventory": "bottom-center",
+      "minimap": "top-right",
+      "mission": "top-left",
+      "xp": "bottom-right"
+    },
+    "theme": {
+      "accent": "#7cff3c",
+      "panelOpacity": 0.7,
+      "radius": 10
+    }
+  },
+  "items": [],
+  "playerScale": 0.2,
+  "guardScale": 1,
+  "playerAnim": {
+    "idle": {
+      "0": "p",
+      "1": "l",
+      "2": "a",
+      "3": "y",
+      "4": "e",
+      "5": "r",
+      "6": "_",
+      "7": "i",
+      "8": "d",
+      "9": "l",
+      "10": "e",
+      "11": "_",
+      "12": "a",
+      "13": "n",
+      "14": "i",
+      "15": "m",
+      "down": null,
+      "up": null,
+      "side": null,
+      "frontDiag": null,
+      "backDiag": null
+    },
+    "walk": {
+      "0": "p",
+      "1": "l",
+      "2": "a",
+      "3": "y",
+      "4": "e",
+      "5": "r",
+      "6": "_",
+      "7": "w",
+      "8": "a",
+      "9": "l",
+      "10": "k",
+      "11": "_",
+      "12": "a",
+      "13": "n",
+      "14": "i",
+      "15": "m",
+      "down": null,
+      "up": null,
+      "side": null,
+      "frontDiag": null,
+      "backDiag": null
+    },
+    "run": {
+      "down": null,
+      "up": null,
+      "side": null,
+      "frontDiag": null,
+      "backDiag": null
+    },
+    "painting": null,
+    "captured": null
+  },
+  "guardAnim": {
+    "idle": {
+      "down": null,
+      "up": null,
+      "side": null,
+      "frontDiag": null,
+      "backDiag": null
+    },
+    "walk": {
+      "down": null,
+      "up": null,
+      "side": null,
+      "frontDiag": null,
+      "backDiag": null
+    },
+    "run": {
+      "down": null,
+      "up": null,
+      "side": null,
+      "frontDiag": null,
+      "backDiag": null
+    },
+    "captured": null
+  }
+}

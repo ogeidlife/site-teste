@@ -1,0 +1,13 @@
+{
+  "generatedAt": "2026-09-16T16:24:48.575Z",
+  "count": 7,
+  "files": {
+    "map_background": "map_background.png",
+    "object_object_mu4770ajnjblp_glb": "object_object_mu4770ajnjblp_glb.glb",
+    "playerModel_base_glb": "playerModel_base_glb.glb",
+    "playerModel_idle_glb": "playerModel_idle_glb.glb",
+    "playerModel_walk_glb": "playerModel_walk_glb.glb",
+    "playerModel_run_glb": "playerModel_run_glb.glb",
+    "playerModel_jump_glb": "playerModel_jump_glb.glb"
+  }
+}

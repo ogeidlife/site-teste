@@ -1,0 +1,31 @@
+OGEID — build pronto pra publicar
+=================================
+
+Conteudo deste zip:
+  ogeid-config.json    -> toda a configuracao feita no configurador
+  assets/manifest.json -> de-para: chave de asset  ->  nome do arquivo
+  assets/*             -> os arquivos enviados (.glb, .png, .mp4 ...)
+
+COMO PUBLICAR NO GITHUB
+1. Crie um repositorio novo (pode ser publico).
+2. Coloque na raiz do repositorio:
+     ogeid-game.html        (copie do seu projeto)
+     ogeid-config.json      (deste zip)
+     assets/                (desta zip, pasta inteira)
+   Opcional: ogeid-configurador.html, se quiser editar direto pelo site.
+3. Renomeie ogeid-game.html para index.html (ou deixe o nome e acesse .../ogeid-game.html).
+4. No GitHub: Settings -> Pages -> Source: Deploy from a branch -> main / (root) -> Save.
+5. Em ~1 minuto o jogo estara no ar em https://SEU-USUARIO.github.io/SEU-REPO/
+
+COMO O JOGO DECIDE O QUE CARREGAR
+- Visitante comum (navegador sem nada salvo): usa ogeid-config.json + assets/.
+- Voce, na maquina onde usa o configurador: continua vendo a SUA configuracao salva,
+  pra nao atropelar o que voce esta editando.
+- Para conferir exatamente o que o publico ve, abra a URL com ?published=1
+  Ex.: https://SEU-USUARIO.github.io/SEU-REPO/?published=1
+
+AVISOS
+- O GitHub recusa arquivos acima de 100 MB. Se algum .glb estourar isso,
+  comprima a malha (Draco/gltf-pack) antes de exportar.
+- Abrir o arquivo por file:// nao funciona (modulos ES + fetch). Use o GitHub Pages
+  ou um servidor local (ex.: python3 -m http.server).
