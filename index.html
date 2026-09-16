@@ -280,7 +280,12 @@ const CONFIG = {
   },
 
   player:{
-    startX: 400, startY: 200, walkSpeed: 100, runSpeed: 150, arriveDistance: 6, interactionRadius: 62,
+    // startX/startY: precisa cair FORA do retângulo de qualquer prédio com colisão — 400,200
+    // caía dentro do "BLOCO A" (x:250-550, y:150-370), o que travava o WASD (o jogador nascia
+    // já dentro de uma célula bloqueada; só o clique com o mouse conseguia tirar ele dali, via
+    // o "nearestFree" do pathfinding — ver NavGrid.nearestFree). 400,480 fica na faixa livre
+    // entre a 1ª e a 2ª fileira de prédios do mapa padrão.
+    startX: 400, startY: 480, walkSpeed: 100, runSpeed: 150, arriveDistance: 6, interactionRadius: 62,
     /* personagem 100% 3D (malha proceduralmente construída em three.js, sem sprites/imagens) —
        a "arte" dele agora é só um conjunto de cores. Ver Humanoid3D mais abaixo. */
     palette:{body:"#1c1c22", accent:"#ff2f92", legs:"#111114", arms:"#1c1c22", skin:"#e8b48a"},
@@ -1522,7 +1527,14 @@ function computeKeyboardMoveVector(){
   return { x:dx/len, y:dy/len };
 }
 /* Colisão simples pra movimento livre (WASD): consulta a mesma grade do pathfinding
-   e desliza ao longo da parede em vez de travar (testa cada eixo separado). */
+   e desliza ao longo da parede em vez de travar (testa cada eixo separado).
+   IMPORTANTE: não relaxar essa checagem pra "liberar" o jogador quando a posição atual já
+   está numa célula bloqueada — isso já foi tentado e quebrou a visão do guarda (canSee/
+   lineBlocked usa essa mesma grade; se o jogador consegue ficar dentro da margem bloqueada
+   ao redor de um prédio, a linha de visão até ele sempre bate num pedaço bloqueado e o
+   guarda nunca mais enxerga ninguém). A forma certa de evitar o jogador nascer/ficar preso
+   dentro de um obstáculo é garantir que CONFIG.player.startX/startY (e qualquer reposição
+   manual) caiam fora do retângulo de prédios com colisão — não afrouxar a colisão aqui. */
 function tryMoveFree(x,y,dx,dy,dt,speed){
   let nx=x, ny=y;
   const cx = clamp(x+dx*speed*dt, 0, CONFIG.map.width);
