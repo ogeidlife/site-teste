@@ -27,7 +27,8 @@
       "modelFileName": "allBuildings.glb",
       "modelUseBoundsAsCollision": false,
       "paintedModel3dAssetKey": null,
-      "paintedModelFileName": null
+      "paintedModelFileName": null,
+      "scaleMultiplier": 8
     }
   ],
   "spots": [
@@ -99,7 +100,7 @@
     "skin": "#d9a878"
   },
   "playerModel": {
-    "scaleMultiplier": 15,
+    "scaleMultiplier": 1.5,
     "verticalOffset": 0,
     "base": "playerModel_base_glb",
     "baseFileName": "idle.glb",
@@ -123,7 +124,7 @@
     "pointFileName": null
   },
   "guardModel": {
-    "scaleMultiplier": 1,
+    "scaleMultiplier": 1.5,
     "verticalOffset": 0,
     "base": null,
     "baseFileName": null,

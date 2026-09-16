@@ -456,67 +456,6 @@ const IDB = (function(){
 })();
 
 /* =========================================================
-   3b. MODO PUBLICADO — assets servidos como ARQUIVOS na pasta assets/
-   ---------------------------------------------------------
-   O configurador (botão "EXPORTAR PRO SITE") gera uma pasta assets/ com todos
-   os arquivos enviados + um assets/manifest.json no formato:
-       { "files": { "map_background": "map_background.png", ... } }
-   Assim o jogo publicado (GitHub Pages etc.) não depende do IndexedDB do
-   navegador de quem abre a página.
-
-   Regras de prioridade:
-     - arquivo no IndexedDB (uploads feitos no configurador neste navegador)
-     - senão, arquivo da pasta assets/ (build publicado)
-     - com ?published=1 na URL, a ordem inverte: só vale o build publicado
-       (serve pra você conferir exatamente o que o público vai ver).
-   ========================================================= */
-const PUBLISHED_ONLY = (()=>{ try{ return new URLSearchParams(location.search).get("published")==="1"; }catch(e){ return false; } })();
-
-const PublishedAssets = {
-  base:"assets/", manifest:null, active:false,
-  async init(){
-    try{
-      const res = await fetch(this.base+"manifest.json", {cache:"no-cache"});
-      if(!res.ok) return false;
-      const data = await res.json();
-      this.manifest = data.files || data;
-      this.active = !!this.manifest;
-      if(this.active) console.log("[OGEID] Build publicado detectado —", Object.keys(this.manifest).length, "assets em assets/");
-      return this.active;
-    }catch(e){
-      /* sem pasta assets/ (rodando local, ou file://) — segue só com o IndexedDB */
-      return false;
-    }
-  },
-  urlFor(key){
-    if(!this.active || !this.manifest) return null;
-    const file = this.manifest[key];
-    return file ? this.base + file : null;
-  },
-  async getBlob(key){
-    const url = this.urlFor(key);
-    if(!url) return null;
-    try{
-      const res = await fetch(url);
-      if(!res.ok) return null;
-      return await res.blob();
-    }catch(e){
-      console.warn("[OGEID] Falha ao baixar asset publicado:", key, e);
-      return null;
-    }
-  }
-};
-
-/* Ponto único de leitura de asset usado por todo o AssetManager. */
-async function getAssetBlob(key){
-  if(!key) return null;
-  if(PUBLISHED_ONLY) return await PublishedAssets.getBlob(key);
-  const local = await getAssetBlob(key);
-  if(local) return local;
-  return await PublishedAssets.getBlob(key);
-}
-
-/* =========================================================
    4. ASSET MANAGER
    Prioridade: arquivo enviado (IndexedDB) > sequência 001.png/002.png... na pasta
    configurada > placeholder vetorial gerado automaticamente.
@@ -557,7 +496,7 @@ const AssetManager = {
   async resolveImageAsset(key){
     if(!key) return null;
     if(this.imgCache[key]!==undefined) return this.imgCache[key];
-    const blob = await getAssetBlob(key);
+    const blob = await IDB.get(key);
     if(!blob){ this.imgCache[key]=null; return null; }
     const url = URL.createObjectURL(blob);
     const img = await new Promise(res=>{ const im=new Image(); im.onload=()=>res(im); im.onerror=()=>res(null); im.src=url; });
@@ -568,7 +507,7 @@ const AssetManager = {
   async resolveVideoAssetURL(key){
     if(!key) return null;
     if(this.videoUrlCache[key]!==undefined) return this.videoUrlCache[key];
-    const blob = await getAssetBlob(key);
+    const blob = await IDB.get(key);
     if(!blob){ this.videoUrlCache[key]=null; return null; }
     const url = URL.createObjectURL(blob);
     this.videoUrlCache[key]=url;
@@ -578,7 +517,7 @@ const AssetManager = {
   async resolveLiveGifElement(key){
     if(!key) return null;
     if(this.liveGifCache[key]!==undefined) return this.liveGifCache[key];
-    const blob = await getAssetBlob(key);
+    const blob = await IDB.get(key);
     if(!blob){ this.liveGifCache[key]=null; return null; }
     const url = URL.createObjectURL(blob);
     const img = document.createElement("img");
@@ -594,7 +533,7 @@ const AssetManager = {
   async resolveBlob(key){
     if(!key) return null;
     if(this.blobCache[key]!==undefined) return this.blobCache[key];
-    const blob = await getAssetBlob(key);
+    const blob = await IDB.get(key);
     this.blobCache[key] = blob || null;
     return this.blobCache[key];
   }
@@ -838,6 +777,7 @@ class AnimatedCharacter3D{
     this._modelRef = null;
     this._groundBox = new THREE.Box3();
     this._groundClampAccum = 0;
+    this._groundOffset = 0; // ajuste vertical manual (modelSpec.verticalOffset) — ver load()
   }
   async load(modelSpec, baseBlob){
     const baseGltf = await loadGLTFFromBlob(baseBlob);
@@ -847,12 +787,17 @@ class AnimatedCharacter3D{
     // (o "true" pede caixa PRECISA, considerando esqueleto/skinning — sem isso o cálculo
     // usa a pose de bind e ignora deformação, o que é a causa mais comum do personagem
     // "afundar no chão": a animação de andar baixa o quadril/pé além da caixa calculada aqui)
+    // modelSpec.scaleMultiplier/verticalOffset vêm do ajuste fino do CONFIGURADOR — antes eram
+    // salvos mas nunca lidos aqui, então o campo "Escala extra" não tinha efeito nenhum no jogo.
+    const extraScale = (modelSpec && Number(modelSpec.scaleMultiplier)) || 1;
+    this._groundOffset = (modelSpec && Number(modelSpec.verticalOffset)) || 0;
     const box = new THREE.Box3().setFromObject(model, true);
     const size = new THREE.Vector3(); box.getSize(size);
-    if(size.y>0.0001){ model.scale.setScalar(this.height/size.y); }
+    if(size.y>0.0001){ model.scale.setScalar((this.height/size.y)*extraScale); }
     const box2 = new THREE.Box3().setFromObject(model, true);
     const center2 = new THREE.Vector3(); box2.getCenter(center2);
     model.position.x -= center2.x; model.position.z -= center2.z; model.position.y -= box2.min.y;
+    model.position.y += this._groundOffset;
     model.traverse(o=>{ if(o.isMesh){ o.castShadow=true; o.receiveShadow=true; } });
     this.group.add(model);
     this._modelRef = model;
@@ -914,7 +859,9 @@ class AnimatedCharacter3D{
     if(!this._modelRef) return;
     this._groundBox.setFromObject(this._modelRef, true);
     if(!isFinite(this._groundBox.min.y)) return;
-    const delta = -this._groundBox.min.y; // distância que falta pra encostar exatamente em y=0
+    // alvo é this._groundOffset (não sempre 0), pra respeitar o "Ajuste vertical (m)" do
+    // CONFIGURADOR em vez de sempre replantar o modelo exatamente em y=0.
+    const delta = this._groundOffset - this._groundBox.min.y;
     if(Math.abs(delta) > 0.0008) this._modelRef.position.y += delta;
   }
 }
@@ -1197,10 +1144,9 @@ function defaultUserConfig(){
     }
   };
 }
+let UserConfig = loadUserConfig() || defaultUserConfig();
 /* garante que configurações salvas antes desta versão não quebrem o boot (preenche campos que faltarem) */
-function normalizeUserConfig(UserConfig){
-  UserConfig = UserConfig || defaultUserConfig();
-  return Object.assign(defaultUserConfig(), UserConfig, {
+UserConfig = Object.assign(defaultUserConfig(), UserConfig, {
   sprayIcons: Object.assign({red:null,blue:null,yellow:null,black:null,special:null}, UserConfig.sprayIcons||{}),
   playerPalette: Object.assign({body:"#1c1c22",accent:"#ff2f92",legs:"#111114",arms:"#1c1c22",skin:"#e8b48a"}, UserConfig.playerPalette||{}),
   guardPalette: Object.assign({body:"#1e2b4d",accent:"#ffe14d",legs:"#12131a",arms:"#1e2b4d",skin:"#d9a878"}, UserConfig.guardPalette||{}),
@@ -1216,37 +1162,7 @@ function normalizeUserConfig(UserConfig){
     lose: Object.assign(defaultUserConfig().ui.lose, (UserConfig.ui||{}).lose||{}, { buttons: Object.assign({retry:null,menu:null}, ((UserConfig.ui||{}).lose||{}).buttons||{}) }),
     win:  Object.assign(defaultUserConfig().ui.win,  (UserConfig.ui||{}).win||{},  { buttons: Object.assign({playAgain:null,menu:null}, ((UserConfig.ui||{}).win||{}).buttons||{}) })
   })
-  });
-}
-
-const localUserConfigRaw = loadUserConfig();
-let UserConfig = normalizeUserConfig(localUserConfigRaw || defaultUserConfig());
-
-/* ---------------------------------------------------------
-   Configuração publicada (ogeid-config.json ao lado do HTML).
-   Quem vale:
-     - ?published=1 na URL  -> sempre o arquivo (modo conferência);
-     - navegador SEM config salva (qualquer visitante do site) -> o arquivo;
-     - navegador COM config salva (você, com o configurador aberto) -> a sua,
-       pra não atropelar o que você está editando localmente.
-   --------------------------------------------------------- */
-async function loadPublishedConfig(){
-  const published = await PublishedAssets.init();
-  const hasLocal = !!localUserConfigRaw;
-  if(hasLocal && !PUBLISHED_ONLY){
-    if(published) console.log("[OGEID] Usando a configuração salva neste navegador. Abra com ?published=1 pra ver o build publicado.");
-    return;
-  }
-  try{
-    const res = await fetch("ogeid-config.json", {cache:"no-cache"});
-    if(!res.ok) return;
-    const data = await res.json();
-    UserConfig = normalizeUserConfig(Object.assign(defaultUserConfig(), data));
-    console.log("[OGEID] Configuração publicada carregada de ogeid-config.json");
-  }catch(e){
-    /* sem arquivo publicado (rodando via file:// ou pasta sem o json) — segue com o padrão */
-  }
-}
+});
 
 function applyUserConfigToCONFIG(){
   CONFIG.map.backgroundAssetKey = UserConfig.backgroundAssetKey || null;
@@ -1403,10 +1319,11 @@ function loadGLTFFromBlob(blob){
 }
 
 /* ---- Ajusta um modelo carregado para caber no "lote" (footprint) e altura do prédio ---- */
-function fitModelToFootprint(group, footprintW, footprintD, heightWorld){
+function fitModelToFootprint(group, footprintW, footprintD, heightWorld, extraScale){
+  const scaleMul = Number(extraScale)||1;
   const box = new THREE.Box3().setFromObject(group);
   const size = new THREE.Vector3(); box.getSize(size);
-  if(size.y>0.0001){ const s = heightWorld/size.y; group.scale.setScalar(s); }
+  if(size.y>0.0001){ const s = (heightWorld/size.y)*scaleMul; group.scale.setScalar(s); }
   const box2 = new THREE.Box3().setFromObject(group);
   const size2 = new THREE.Vector3(); box2.getSize(size2);
   const center2 = new THREE.Vector3(); box2.getCenter(center2);
@@ -1943,70 +1860,64 @@ function refreshSpotMarker3D(spotId){
   m.tex.image = spotCanvasFor(spot, st); m.tex.needsUpdate = true;
 }
 /* ---- Animação de conclusão "no jogo" (sem vídeo): alternativa ao VideoManager pra spots
-   configurados com completionMode="anim". Carrega o .glb enviado no CONFIGURADOR (aba
-   OBJETOS PINTÁVEIS) pra esse spot — um modelo com uma animação embutida (ex.: Mixamo/Blender,
-   igual ao esquema usado pro personagem/guarda em CHAR_ANIM_STATES) — e toca essa animação
-   plantada bem no local pintado, como se alguém estivesse ali pintando a parede. Cada spot
-   tem seu próprio .glb e sua própria duração (spot.animDurationSec), então cada local pode
-   ter uma movimentação e um tempo diferentes dos outros, tudo dentro da cena 3D, sem cobrir
-   a tela com um vídeo. Se o .glb não carregar ou não tiver clipe de animação, o jogo só
-   espera a duração configurada antes de seguir em frente. ---- */
+   configurados com completionMode="anim". Toca um sprite billboard bem no local do spot,
+   com uma movimentação própria (cresce, sobe balançando e desvanece) — cada spot pode ter
+   sua própria arte (GIF/PNG) e duração, então cada lugar "pintado" pode ter uma animação
+   diferente das outras, tudo dentro da cena 3D, sem cobrir a tela com um vídeo. ---- */
 const SpotAnimManager = (function(){
   return {
     async play(spot, cb){
       const duration = spot.animDurationSec || 3;
-      let gltf = null;
-      try{
-        const blob = spot.animModelAssetKey ? await AssetManager.resolveBlob(spot.animModelAssetKey) : null;
-        if(blob) gltf = await loadGLTFFromBlob(blob);
-      }catch(err){ console.warn(`[OGEID] Falha ao carregar a animação de pintura (.glb) do spot ${spot.id}:`,err); }
-      if(!gltf || !gltf.scene){ setTimeout(cb, duration*1000); return; }
-
-      const model = gltf.scene;
-      // escala em altura humana e apoia no chão (mesma lógica de AnimatedCharacter3D.load) —
-      // assim a movimentação de pintar fica em escala parecida com a do personagem, seja
-      // qual for a escala original do arquivo exportado
-      const TARGET_HEIGHT = 1.7;
-      const box = new THREE.Box3().setFromObject(model, true);
-      const size = new THREE.Vector3(); box.getSize(size);
-      if(size.y>0.0001) model.scale.setScalar(TARGET_HEIGHT/size.y);
-      const box2 = new THREE.Box3().setFromObject(model, true);
-      const center2 = new THREE.Vector3(); box2.getCenter(center2);
-      model.position.x -= center2.x; model.position.z -= center2.z; model.position.y -= box2.min.y;
-      model.traverse(o=>{ if(o.isMesh){ o.castShadow=true; o.receiveShadow=true; } });
-
-      const group = new THREE.Group();
-      group.add(model);
+      let img = null;
+      try{ img = spot.animAssetKey ? await AssetManager.resolveLiveGifElement(spot.animAssetKey) : null; }
+      catch(err){ console.warn(`[OGEID] Falha ao carregar a animação do spot ${spot.id}:`,err); }
+      if(!img){ setTimeout(cb, duration*1000); return; }
+      const tex = new THREE.Texture(img); tex.needsUpdate = true;
+      const mat = new THREE.SpriteMaterial({ map:tex, transparent:true });
+      const sprite = new THREE.Sprite(mat);
       const p = to3D(spot.x, spot.y);
-      group.position.set(p.x, 0, p.z);
-      group.rotation.y = Player.facingAngle||0; // encara na mesma direção que o jogador estava olhando ao interagir
-      scene3D.add(group);
-
-      let mixer = null;
-      if(gltf.animations && gltf.animations.length){
-        mixer = new THREE.AnimationMixer(model);
-        const clip = normalizeAnimationClip(gltf.animations[0]);
-        const action = mixer.clipAction(clip);
-        action.setLoop(THREE.LoopRepeat); // repete o clipe até a duração configurada do spot se esgotar
-        action.play();
-      }
-
+      sprite.position.set(p.x, 0.9, p.z);
+      scene3D.add(sprite);
       const start = performance.now();
-      let lastT = start;
-      function tick(now){
-        const dt = Math.max(0, (now-lastT)/1000); lastT = now;
-        if(mixer) mixer.update(dt);
-        const elapsed = (now-start)/1000;
-        if(elapsed < duration) requestAnimationFrame(tick);
-        else { scene3D.remove(group); cb(); }
+      function tick(){
+        const t = (performance.now()-start)/1000;
+        const k = Math.min(t/duration, 1);
+        tex.needsUpdate = true; // GIF anima sozinho no <img>; textura precisa ser "cutucada" a cada frame
+        const scale = 0.25 + Math.sin(k*Math.PI)*1.55; // cresce até o meio da duração, depois encolhe
+        sprite.scale.set(scale, scale, 1);
+        sprite.position.y = 0.9 + Math.sin(k*Math.PI*2)*0.15 + k*0.7; // balança e sobe aos poucos
+        mat.opacity = 1 - Math.max(0, k-0.75)*4; // só desvanece no último quarto
+        if(k<1) requestAnimationFrame(tick);
+        else { scene3D.remove(sprite); cb(); }
       }
       requestAnimationFrame(tick);
     }
   };
 })();
 
+/* ---- Calcula o ângulo (mesma convenção de facingAngle usada no resto do jogo:
+   atan2(dx,dy)) pra virar o personagem em direção ao ponto mais próximo da parede/prédio
+   vinculado ao spot — em vez de deixar o jogador "pintando" virado pro lado que ele
+   por acaso estava andando antes de chegar ali. ---- */
+function computeFacingTowardObject(px, py, obj){
+  const cx = clamp(px, obj.x, obj.x+obj.width);
+  const cy = clamp(py, obj.y, obj.y+obj.height);
+  let dx = cx-px, dy = cy-py;
+  if(Math.abs(dx)<0.001 && Math.abs(dy)<0.001){
+    // jogador exatamente sobre a borda/dentro do retângulo (raro): aponta pro centro do objeto
+    dx = (obj.x+obj.width/2)-px; dy = (obj.y+obj.height/2)-py;
+  }
+  return Math.atan2(dx, dy);
+}
 async function startPainting(spot){
   Player.interactingLock=true; Player.state="painting";
+  // Só reorienta o personagem no modo "animação dentro do jogo": é aí que ele fica parado
+  // no lugar tempo suficiente pra a direção errada ficar visível; no modo vídeo em tela
+  // cheia isso não é perceptível, então não vale mexer no comportamento de lá.
+  if(spot.completionMode==="anim" && spot.linkedObjectId){
+    const linkedObj = CONFIG.map.objects.find(o=>o.id===spot.linkedObjectId);
+    if(linkedObj) Player.facingAngle = computeFacingTowardObject(Player.x, Player.y, linkedObj);
+  }
   AudioManager.play("paint"); AudioManager.loopStop("ambient");
   const onPaintDone = ()=>{
     State.spots[spot.id].state="done";
@@ -2281,6 +2192,7 @@ async function buildBuildingsIn3D(){
   for(const o of CONFIG.map.objects){
     const footprintW = o.width*SCALE_3D, footprintD = o.height*SCALE_3D;
     const heightWorld = o.heightMeters || 6;
+    const scaleMul = Number(o.scaleMultiplier)||1; // "Escala (×)" do CONFIGURADOR, aba CENÁRIO
     const centerPx = o.x+o.width/2, centerPy = o.y+o.height/2;
     const p = to3D(centerPx, centerPy);
     buildingMeta3D[o.id] = {footprintW, footprintD, heightWorld, p};
@@ -2291,11 +2203,11 @@ async function buildBuildingsIn3D(){
         const blob = await AssetManager.resolveBlob(o.model3dAssetKey);
         if(blob){
           const gltf = await loadGLTFFromBlob(blob); const group = gltf.scene;
-          fitModelToFootprint(group, footprintW, footprintD, heightWorld);
+          fitModelToFootprint(group, footprintW, footprintD, heightWorld, scaleMul);
           group.position.x += p.x; group.position.z += p.z;
           scene3D.add(group);
           roots.push(group);
-          if(o.label){ const ls=makeBuildingLabelSprite(o,p,heightWorld); scene3D.add(ls); roots.push(ls); }
+          if(o.label){ const ls=makeBuildingLabelSprite(o,p,heightWorld*scaleMul); scene3D.add(ls); roots.push(ls); }
           continue;
         }
       }catch(err){ console.warn(`[OGEID] Falha ao carregar o modelo 3D de ${o.id}, usando caixa de placeholder:`, err); }
@@ -2309,17 +2221,18 @@ async function buildBuildingsIn3D(){
       topMat = new THREE.MeshStandardMaterial({ map:tex, roughness:0.9 });
       registerBuildingTexture(tex, img);
     }
+    const scaledHeight = heightWorld*scaleMul;
     const box = new THREE.Mesh(
-      new THREE.BoxGeometry(footprintW, heightWorld, footprintD),
+      new THREE.BoxGeometry(footprintW*scaleMul, scaledHeight, footprintD*scaleMul),
       [sideMat, sideMat, topMat, sideMat, sideMat, sideMat] // +x,-x,+y(topo/telhado),-y,+z,-z
     );
-    box.position.set(p.x, heightWorld/2, p.z);
+    box.position.set(p.x, scaledHeight/2, p.z);
     box.castShadow = true; box.receiveShadow = true;
     scene3D.add(box);
     roots.push(box);
 
     if(o.label){
-      const labelSprite = makeBuildingLabelSprite(o, p, heightWorld);
+      const labelSprite = makeBuildingLabelSprite(o, p, scaledHeight);
       scene3D.add(labelSprite);
       roots.push(labelSprite);
     }
@@ -2392,6 +2305,7 @@ async function revertBuildingToBaseState(objectId){
   const meta = buildingMeta3D[objectId];
   if(!obj || !meta) return;
   const {footprintW, footprintD, heightWorld, p} = meta;
+  const scaleMul = Number(obj.scaleMultiplier)||1;
   (buildingRoots3D[objectId]||[]).forEach(o3=>scene3D.remove(o3));
   const roots = buildingRoots3D[objectId] = [];
 
@@ -2400,11 +2314,11 @@ async function revertBuildingToBaseState(objectId){
       const blob = await AssetManager.resolveBlob(obj.model3dAssetKey);
       if(blob){
         const gltf = await loadGLTFFromBlob(blob); const group = gltf.scene;
-        fitModelToFootprint(group, footprintW, footprintD, heightWorld);
+        fitModelToFootprint(group, footprintW, footprintD, heightWorld, scaleMul);
         group.position.x += p.x; group.position.z += p.z;
         scene3D.add(group);
         roots.push(group);
-        if(obj.label){ const ls=makeBuildingLabelSprite(obj,p,heightWorld); scene3D.add(ls); roots.push(ls); }
+        if(obj.label){ const ls=makeBuildingLabelSprite(obj,p,heightWorld*scaleMul); scene3D.add(ls); roots.push(ls); }
         recomputeMeshCollisionForObject(obj);
         return;
       }
@@ -2419,15 +2333,16 @@ async function revertBuildingToBaseState(objectId){
     topMat = new THREE.MeshStandardMaterial({ map:tex, roughness:0.9 });
     registerBuildingTexture(tex, img);
   }
+  const scaledHeight = heightWorld*scaleMul;
   const box = new THREE.Mesh(
-    new THREE.BoxGeometry(footprintW, heightWorld, footprintD),
+    new THREE.BoxGeometry(footprintW*scaleMul, scaledHeight, footprintD*scaleMul),
     [sideMat, sideMat, topMat, sideMat, sideMat, sideMat]
   );
-  box.position.set(p.x, heightWorld/2, p.z);
+  box.position.set(p.x, scaledHeight/2, p.z);
   box.castShadow = true; box.receiveShadow = true;
   scene3D.add(box);
   roots.push(box);
-  if(obj.label){ const ls=makeBuildingLabelSprite(obj,p,heightWorld); scene3D.add(ls); roots.push(ls); }
+  if(obj.label){ const ls=makeBuildingLabelSprite(obj,p,scaledHeight); scene3D.add(ls); roots.push(ls); }
   recomputeMeshCollisionForObject(obj);
 }
 
@@ -2441,6 +2356,7 @@ async function swapBuildingToPaintedState(objectId){
   if(!obj || !meta) return;
   if(!obj.paintedModel3dAssetKey && !obj.paintedImageAssetKey) return; // nada configurado pra "depois" — mantém como está
   const {footprintW, footprintD, heightWorld, p} = meta;
+  const scaleMul = Number(obj.scaleMultiplier)||1;
 
   (buildingRoots3D[objectId]||[]).forEach(o3=>scene3D.remove(o3));
   const roots = buildingRoots3D[objectId] = [];
@@ -2450,11 +2366,11 @@ async function swapBuildingToPaintedState(objectId){
       const blob = await AssetManager.resolveBlob(obj.paintedModel3dAssetKey);
       if(blob){
         const gltf = await loadGLTFFromBlob(blob); const group = gltf.scene;
-        fitModelToFootprint(group, footprintW, footprintD, heightWorld);
+        fitModelToFootprint(group, footprintW, footprintD, heightWorld, scaleMul);
         group.position.x += p.x; group.position.z += p.z;
         scene3D.add(group);
         roots.push(group);
-        if(obj.label){ const ls=makeBuildingLabelSprite(obj,p,heightWorld); scene3D.add(ls); roots.push(ls); }
+        if(obj.label){ const ls=makeBuildingLabelSprite(obj,p,heightWorld*scaleMul); scene3D.add(ls); roots.push(ls); }
         recomputeMeshCollisionForObject(obj);
         return;
       }
@@ -2470,15 +2386,16 @@ async function swapBuildingToPaintedState(objectId){
     topMat = new THREE.MeshStandardMaterial({ map:tex, roughness:0.9 });
     registerBuildingTexture(tex, img);
   }
+  const scaledHeight = heightWorld*scaleMul;
   const box = new THREE.Mesh(
-    new THREE.BoxGeometry(footprintW, heightWorld, footprintD),
+    new THREE.BoxGeometry(footprintW*scaleMul, scaledHeight, footprintD*scaleMul),
     [sideMat, sideMat, topMat, sideMat, sideMat, sideMat]
   );
-  box.position.set(p.x, heightWorld/2, p.z);
+  box.position.set(p.x, scaledHeight/2, p.z);
   box.castShadow = true; box.receiveShadow = true;
   scene3D.add(box);
   roots.push(box);
-  if(obj.label){ const ls=makeBuildingLabelSprite(obj,p,heightWorld); scene3D.add(ls); roots.push(ls); }
+  if(obj.label){ const ls=makeBuildingLabelSprite(obj,p,scaledHeight); scene3D.add(ls); roots.push(ls); }
   recomputeMeshCollisionForObject(obj);
 }
 
@@ -2689,7 +2606,6 @@ async function boot(){
 
   try{
     fill.style.width="15%";
-    await loadPublishedConfig(); // build publicado (ogeid-config.json + assets/) tem que ser lido antes de tudo
     applyUserConfigToCONFIG();
     fill.style.width="25%";
     // objetos com colisão por malha real do .glb ficam de FORA dessa primeira passada (retângulo
