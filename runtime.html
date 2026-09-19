@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8" />
+<title>OGEID STUDIO — Runtime (Fase 1)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  html, body { margin:0; height:100%; background:#0c0d12; overflow:hidden; font-family: system-ui, sans-serif; }
+  #app { position:relative; width:100%; height:100%; }
+  canvas { display:block; }
+  #hud { position:fixed; top:12px; left:12px; color:#fff; background:rgba(0,0,0,.55); padding:10px 14px; border-radius:8px; font-size:13px; line-height:1.6; pointer-events:none; }
+  #prompt { position:fixed; left:50%; bottom:14%; transform:translateX(-50%); background:#ff2f92; color:#fff; font-weight:700; padding:8px 16px; border-radius:20px; display:none; box-shadow:0 4px 18px rgba(255,47,146,.5); }
+  #prompt.show { display:block; }
+  #log { position:fixed; bottom:8px; left:12px; right:12px; max-height:110px; overflow:auto; color:#9df; font-size:11px; background:rgba(0,0,0,.4); padding:6px 8px; border-radius:6px; font-family: monospace; }
+  #help { position:fixed; top:12px; right:12px; color:#ccc; background:rgba(0,0,0,.4); padding:8px 12px; border-radius:8px; font-size:12px; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="hud">Sprays: <span id="hud-sprays">-</span> | Pontos: <span id="hud-score">0</span></div>
+<div id="prompt">[E] PINTAR</div>
+<div id="help">WASD/setas: mover · E: interagir</div>
+<div id="log"></div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.1/build/three.module.js"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from "three";
+import { EventBus } from "./core/EventBus.js";
+import { EntityRegistry } from "./core/EntityRegistry.js";
+import { ProjectLoader } from "./project/ProjectLoader.js";
+import { validateProject } from "./project/Validator.js";
+import { InteractionSystem } from "./interaction/InteractionSystem.js";
+import { PaintInteractionHandler } from "./interaction/types/PaintInteraction.js";
+import { AssetManager } from "./assets/AssetManager.js";
+
+const logEl = document.getElementById("log");
+function logLine(msg) {
+  const div = document.createElement("div");
+  div.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+  logEl.appendChild(div);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+async function boot() {
+  // ---- Core ----
+  const eventBus = new EventBus();
+  const entities = new EntityRegistry(eventBus);
+  const assetManager = new AssetManager();
+
+  // ---- Projeto ----
+  const project = await ProjectLoader.loadFromURL("./data/sample-project.json");
+  const report = validateProject(project, { assetManager });
+  report.errors.forEach((e) => logLine("ERRO DE VALIDAÇÃO: " + e.message));
+  report.warnings.forEach((w) => logLine("aviso: " + w.message));
+  if (!report.ok) logLine("Projeto tem erros — em um BUILD real o export seria bloqueado (ver seção 34).");
+
+  // ---- Interaction System ----
+  const interactionSystem = new InteractionSystem({ eventBus, assetManager });
+  interactionSystem.registerHandler("PAINT", new PaintInteractionHandler());
+  interactionSystem.loadFromProject(project);
+
+  // ---- World state (fase 1: só o essencial pra PAINT funcionar) ----
+  const worldState = {
+    inventory: { sprays: 5 },
+    paintedWalls: {},
+    score: 0,
+  };
+  document.getElementById("hud-sprays").textContent = worldState.inventory.sprays;
+
+  eventBus.on("ON_PLAYER_PAINT_START", (p) => logLine(`ON_PLAYER_PAINT_START ${p.interactionId} (anim: ${p.animation})`));
+  eventBus.on("ON_PLAYER_PAINT", (p) => {
+    logLine(`ON_PLAYER_PAINT ${p.interactionId} (+${p.score} pontos)`);
+    document.getElementById("hud-score").textContent = worldState.score;
+    document.getElementById("hud-sprays").textContent = worldState.inventory.sprays;
+  });
+
+  // ---- Cena three.js ----
+  const app = document.getElementById("app");
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x11121a);
+
+  const camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 200);
+  camera.position.set(0, 9, 12);
+  camera.lookAt(0, 0, 0);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(innerWidth, innerHeight);
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  app.appendChild(renderer.domElement);
+
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x223344, 1.1));
+  const sun = new THREE.DirectionalLight(0xffffff, 0.8);
+  sun.position.set(6, 10, 4);
+  scene.add(sun);
+
+  const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(project.world.map.width, project.world.map.height),
+    new THREE.MeshStandardMaterial({ color: 0x1c1e28 })
+  );
+  ground.rotation.x = -Math.PI / 2;
+  scene.add(ground);
+
+  // Entidades do projeto -> meshes (fase 1: WALL vira uma caixa cinza/rosa)
+  const wallMeshes = new Map(); // entityId -> mesh
+  project.entities.forEach((entity) => {
+    if (entity.type !== "WALL") return;
+    const mesh = new THREE.Mesh(
+      new THREE.BoxGeometry(2, 3, 0.4),
+      new THREE.MeshStandardMaterial({ color: 0x5a5d6b })
+    );
+    mesh.position.set(entity.transform.x, 1.5, entity.transform.z);
+    mesh.rotation.y = entity.transform.rotY || 0;
+    scene.add(mesh);
+    wallMeshes.set(entity.id, mesh);
+  });
+
+  // Player simples (cápsula) — navegação livre por WASD, sem NavGrid ainda
+  // (o A* do jogo atual entra na Fase 2, junto do TraversalSystem).
+  const player = new THREE.Mesh(
+    new THREE.CapsuleGeometry(0.4, 1.0, 4, 8),
+    new THREE.MeshStandardMaterial({ color: 0xff2f92 })
+  );
+  player.position.set(0, 0.9, 0);
+  scene.add(player);
+  const playerState = { x: 0, y: 0 }; // espaço "de jogo" (X,Y) — Z da cena = Y do jogo
+
+  const keys = new Set();
+  addEventListener("keydown", (e) => keys.add(e.code));
+  addEventListener("keyup", (e) => keys.delete(e.code));
+
+  const promptEl = document.getElementById("prompt");
+  let currentNearbyId = null;
+
+  addEventListener("keydown", (e) => {
+    if (e.code === "KeyE" && currentNearbyId) {
+      const ok = interactionSystem.trigger(currentNearbyId, worldState);
+      if (!ok) logLine(`Não foi possível interagir com "${currentNearbyId}" (sprays insuficientes ou já concluída).`);
+    }
+  });
+
+  addEventListener("resize", () => {
+    camera.aspect = innerWidth / innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth, innerHeight);
+  });
+
+  let last = performance.now();
+  function loop(now) {
+    const dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
+
+    // movimento
+    const speed = 4.5;
+    let dx = 0, dy = 0;
+    if (keys.has("KeyW") || keys.has("ArrowUp")) dy -= 1;
+    if (keys.has("KeyS") || keys.has("ArrowDown")) dy += 1;
+    if (keys.has("KeyA") || keys.has("ArrowLeft")) dx -= 1;
+    if (keys.has("KeyD") || keys.has("ArrowRight")) dx += 1;
+    const len = Math.hypot(dx, dy) || 1;
+    playerState.x += (dx / len) * speed * dt;
+    playerState.y += (dy / len) * speed * dt;
+    player.position.set(playerState.x, 0.9, playerState.y);
+    camera.position.set(playerState.x, 9, playerState.y + 12);
+    camera.lookAt(playerState.x, 0, playerState.y);
+
+    // interação: acha a interação mais próxima habilitada
+    const nearby = interactionSystem.findNearby(playerState);
+    currentNearbyId = nearby.length ? nearby[0].id : null;
+    promptEl.classList.toggle("show", !!currentNearbyId && interactionSystem.canTrigger(currentNearbyId, worldState));
+
+    interactionSystem.update(dt, worldState);
+
+    // reflete estado "pintada" na mesh
+    project.entities.forEach((entity) => {
+      if (worldState.paintedWalls[entity.interactions?.[0]]) {
+        const mesh = wallMeshes.get(entity.id);
+        if (mesh) mesh.material.color.set(0x7cff3c);
+      }
+    });
+
+    renderer.render(scene, camera);
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  logLine("Runtime Fase 1 iniciado. Ande até a parede rosa clara e pressione E por 3s pra pintar.");
+}
+
+boot().catch((err) => {
+  console.error(err);
+  logLine("ERRO FATAL: " + err.message);
+});
+</script>
+</body>
+</html>
