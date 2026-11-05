@@ -1,0 +1,35 @@
+{
+  "meta": { "version": 1, "name": "OGEID STUDIO - Sample Fase 1" },
+  "assets": {},
+  "world": {
+    "map": { "width": 40, "height": 40, "backgroundAssetKey": null },
+    "areas": []
+  },
+  "entities": [
+    { "id": "wall_017", "type": "WALL", "transform": { "x": 4, "y": 0, "z": 4, "rotY": 0 }, "interactions": ["paint_wall_017"] }
+  ],
+  "interactions": [
+    {
+      "id": "paint_wall_017",
+      "type": "PAINT",
+      "position": { "x": 4, "y": 4 },
+      "radius": 2.5,
+      "requiredSprays": 3,
+      "paintDuration": 3,
+      "animation": "painting",
+      "before": { "assetKey": null },
+      "after": { "assetKey": null },
+      "score": 100,
+      "missionObjective": null,
+      "events": { "onComplete": [] },
+      "requiredPlayer": "ANY_PLAYER",
+      "enabled": true
+    }
+  ],
+  "traversal": { "nodes": [], "edges": [] },
+  "guards": [],
+  "missions": [],
+  "rules": [],
+  "players": { "count": 1, "controls": {} },
+  "minigames": []
+}
