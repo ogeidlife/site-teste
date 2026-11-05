@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OGEID Studio — Tatuagem & Flash Tattoo</title>
+<meta name="description" content="Flash tattoo e tatuagem autoral. Escolha seu flash, peça orçamento e agende sua sessão.">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Permanent+Marker&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#ece6d6;--ink:#101010;--asp:#141414;--acid:#d4ff1a;--red:#ff3b2f;--mute:#6d675a}
+*{box-sizing:border-box;margin:0}
+html{scroll-behavior:smooth}
+body{background:var(--paper);color:var(--ink);font:400 16px/1.6 Inter,system-ui,sans-serif;overflow-x:hidden;
+background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.09'/%3E%3C/svg%3E")}
+h1,h2,h3{font-family:'Archivo Black',Impact,sans-serif;font-weight:400;line-height:.95;text-transform:uppercase}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+section{padding:88px 0}
+.dark{background:var(--asp);color:#f4efe3}
+.tag{font-family:'Permanent Marker',cursive;color:var(--red);font-size:22px;transform:rotate(-2deg);display:inline-block;margin-bottom:8px}
+.dark .tag{color:var(--acid)}
+h2{font-size:clamp(40px,7vw,84px);margin-bottom:14px}
+.sub{color:var(--mute);max-width:560px;margin-bottom:34px}.dark .sub{color:#a9a393}
+.btn{display:inline-block;background:var(--acid);color:var(--ink);padding:15px 26px;border:3px solid var(--ink);font:400 15px 'Archivo Black';text-transform:uppercase;cursor:pointer;box-shadow:5px 5px 0 var(--ink);transition:.15s}
+.btn:hover{transform:translate(-3px,-3px);box-shadow:8px 8px 0 var(--ink)}
+.btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+.btn.red{background:var(--red);color:#fff}.btn.ghost{background:#fff}
+nav{position:sticky;top:0;z-index:20;background:var(--ink);color:#f4efe3;border-bottom:4px solid var(--acid)}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;height:62px}
+.logo{font:400 26px 'Permanent Marker';letter-spacing:.03em}.logo b{color:var(--acid);font-weight:400}
+nav ul{display:flex;gap:24px;list-style:none;font:400 13px 'Archivo Black';text-transform:uppercase}
+nav ul a:hover{color:var(--acid)}
+nav .btn{padding:8px 14px;box-shadow:3px 3px 0 var(--acid);border-color:var(--acid);font-size:12px}
+@media(max-width:780px){nav ul{display:none}}
+/* hero */
+.hero{position:relative;background:#111 url(https://ogeidstudio.wordpress.com/wp-content/uploads/2023/03/cropped-papeldeparedeogeid.jpg) center/cover;color:#f4efe3;padding:70px 0 90px;overflow:hidden}
+.hero:before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,10,10,.82),rgba(10,10,10,.72))}
+.hero .wrap{position:relative;display:grid;grid-template-columns:1.15fr .85fr;gap:30px;align-items:center}
+.hero h1{font-size:clamp(58px,11vw,150px);position:relative;animation:glitch 4s infinite}
+.hero h1 em{font-style:normal;color:var(--acid);display:block;-webkit-text-stroke:0}
+.hero h1 u{text-decoration:none;color:transparent;-webkit-text-stroke:2px #f4efe3}
+@keyframes glitch{0%,92%,100%{text-shadow:none;transform:none}93%{text-shadow:4px 0 var(--red),-4px 0 #00e5ff;transform:translateX(-3px)}95%{text-shadow:-4px 0 var(--red),4px 0 #00e5ff;transform:translateX(3px)}97%{text-shadow:none;transform:skewX(-4deg)}}
+.hero p{font-size:18px;max-width:480px;margin:22px 0 30px;color:#d8d2c2}
+.cta{display:flex;gap:16px;flex-wrap:wrap}
+.hero-img{position:relative;height:430px}
+.hero-img img{position:absolute;width:55%;aspect-ratio:1;object-fit:contain;background:#fff;border:7px solid #fff;box-shadow:8px 10px 0 rgba(0,0,0,.6);animation:float 6s ease-in-out infinite}
+.hero-img img:nth-child(1){left:0;top:0;--r:-7deg}
+.hero-img img:nth-child(2){right:0;top:50px;--r:6deg;animation-delay:-1.5s}
+.hero-img img:nth-child(3){left:6%;bottom:0;--r:4deg;animation-delay:-3s}
+.hero-img img:nth-child(4){right:4%;bottom:-10px;--r:-5deg;width:42%;animation-delay:-4.5s}
+.hero-img:after{content:"";position:absolute;width:90px;height:26px;background:rgba(212,255,26,.8);top:-8px;left:22%;transform:rotate(-8deg)}
+@keyframes float{0%,100%{transform:rotate(var(--r)) translateY(0)}50%{transform:rotate(calc(var(--r)*-.5)) translateY(-14px)}}
+@media(max-width:880px){.hero .wrap{grid-template-columns:1fr}.hero-img{height:340px}}
+/* banner + marquee */
+.banner{background:var(--ink);padding:0;display:flex;justify-content:center;border-block:4px solid var(--acid)}
+.banner img{width:100%;max-width:1180px;display:block;max-height:260px;object-fit:cover}
+.mq{background:var(--acid);border-block:4px solid var(--ink);overflow:hidden;white-space:nowrap;transform:rotate(-1.2deg);margin:-6px -10px;position:relative;z-index:3}
+.mq div{display:inline-block;padding:12px 0;font:400 22px 'Archivo Black';text-transform:uppercase;animation:mq 22s linear infinite}
+.mq span{margin:0 22px}.mq span:nth-child(even){color:var(--red)}
+@keyframes mq{to{transform:translateX(-50%)}}
+/* trust */
+.trust{padding:70px 0 40px}
+.trust .wrap{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px}
+.t{background:#fff;border:3px solid var(--ink);padding:20px;box-shadow:6px 6px 0 var(--ink);transition:.2s}
+.t:nth-child(odd){transform:rotate(-1deg)}.t:nth-child(even){transform:rotate(1deg)}
+.t:hover{transform:rotate(0) translateY(-4px)}
+.t i{font:400 36px 'Permanent Marker';color:var(--red);display:block;font-style:normal}
+.t b{font:400 16px 'Archivo Black';text-transform:uppercase}.t span{display:block;color:var(--mute);font-size:14px;margin-top:4px}
+/* flash */
+.filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:30px}
+.chip{background:#fff;border:3px solid var(--ink);color:var(--ink);padding:8px 16px;cursor:pointer;font:400 13px 'Archivo Black';text-transform:uppercase;transition:.15s}
+.chip:hover{background:var(--acid)}.chip.on{background:var(--ink);color:var(--acid)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(235px,1fr));gap:30px 22px}
+.f{background:#fff;border:3px solid var(--ink);padding:10px 10px 12px;box-shadow:6px 6px 0 var(--ink);transition:.25s;animation:pop .5s both;position:relative}
+.f:nth-child(3n+1){transform:rotate(-1.4deg)}.f:nth-child(3n+2){transform:rotate(1deg)}.f:nth-child(3n){transform:rotate(-.4deg)}
+.f:nth-child(n){animation-delay:calc(var(--d,0)*60ms)}
+.f:hover{transform:rotate(0) scale(1.04);z-index:2;box-shadow:10px 10px 0 var(--red)}
+@keyframes pop{from{opacity:0;transform:translateY(30px) scale(.9) rotate(4deg)}}
+.f .im{aspect-ratio:1;cursor:zoom-in;overflow:hidden}
+.f img{width:100%;height:100%;object-fit:contain;transition:.4s}.f:hover img{transform:scale(1.08) rotate(-2deg)}
+.f .in{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+.f .p{background:var(--acid);border:2px solid var(--ink);padding:2px 10px;font:400 18px 'Archivo Black';transform:rotate(-3deg)}
+.f button{background:var(--ink);color:#fff;border:0;padding:9px 13px;cursor:pointer;font:400 12px 'Archivo Black';text-transform:uppercase}
+.f button:hover{background:var(--red)}
+.more{text-align:center;margin-top:44px}
+.note{font-size:13px;color:var(--mute);margin-top:12px}
+/* processo */
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:22px;margin-top:18px}
+.s{position:relative;padding:26px 20px;border:3px dashed #555}
+.s h3{font-size:28px;color:var(--acid);margin-bottom:8px}.s p{color:#c9c3b3;font-size:15px}
+.s:before{content:attr(data-n);position:absolute;right:12px;top:-6px;font:400 70px 'Permanent Marker';color:rgba(255,255,255,.1)}
+/* forms */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:34px}
+@media(max-width:880px){.two{grid-template-columns:1fr}}
+.box{background:#fff;border:3px solid var(--ink);padding:28px;box-shadow:9px 9px 0 var(--ink)}
+.box h3{font-size:38px}.box>p{color:var(--mute);font-size:14.5px;margin:6px 0 14px}
+label{display:block;font:400 12px 'Archivo Black';text-transform:uppercase;margin:14px 0 6px}
+input,select,textarea{width:100%;background:var(--paper);border:3px solid var(--ink);color:var(--ink);padding:11px;font:500 15px Inter;border-radius:0}
+input:focus,select:focus,textarea:focus{outline:0;background:#fff;box-shadow:4px 4px 0 var(--acid)}
+textarea{min-height:92px;resize:vertical}
+.slots{display:flex;gap:8px;flex-wrap:wrap}.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pick{background:var(--acid);border:3px dashed var(--ink);padding:10px 14px;font-weight:600;font-size:14px;display:none;margin-bottom:6px;animation:pop .4s}
+/* faq */
+.faq details{border-bottom:3px solid var(--ink);padding:18px 0}
+.faq summary{cursor:pointer;font:400 18px 'Archivo Black';text-transform:uppercase;list-style:none}
+.faq summary:after{content:"+";float:right;color:var(--red);font-size:26px;line-height:1}.faq details[open] summary:after{content:"–"}
+.faq p{color:var(--mute);margin-top:10px}
+footer{background:var(--ink);color:#bdb7a6;padding:40px 0;border-top:4px solid var(--acid);font-size:14px}
+footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:16px}footer a:hover{color:var(--acid)}
+.wa{position:fixed;right:18px;bottom:18px;z-index:30;background:#25d366;color:var(--ink);border:3px solid var(--ink);padding:12px 18px;font:400 13px 'Archivo Black';text-transform:uppercase;box-shadow:5px 5px 0 var(--ink);animation:pulse 2.4s infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+#lb{position:fixed;inset:0;background:rgba(10,10,10,.92);display:none;align-items:center;justify-content:center;z-index:50;padding:20px;flex-direction:column;gap:18px}
+#lb img{max-width:92vw;max-height:74vh;background:#fff;border:8px solid #fff;transform:rotate(-1deg);animation:pop .3s}
+.rv{opacity:0;transform:translateY(40px);transition:.7s cubic-bezier(.2,.7,.2,1)}.rv.in{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.rv{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<nav><div class="wrap"><a class="logo" href="#top"><img src="https://ogeidstudio.wordpress.com/wp-content/uploads/2024/01/logoogeid.png" alt="OGEID Studio" style="height:42px;display:block" onerror="this.outerHTML='OGEID<b>*</b>STUDIO'"></a>
+<ul><li><a href="#flash">Flash</a></li><li><a href="#processo">Processo</a></li><li><a href="#orcamento">Orçamento</a></li><li><a href="#agendar">Agendar</a></li><li><a href="#faq">Dúvidas</a></li></ul>
+<a class="btn" href="#agendar">Agendar</a></div></nav>
+
+<header class="hero" id="top"><div class="wrap"><div>
+<span class="tag">tatuagem autoral &amp; flash tattoo</span>
+<h1>OGEID <u>STUDIO</u><em>na pele.</em></h1>
+<p>Flash exclusivo e projeto autoral. Cada desenho é tatuado uma vez só. Escolhe o teu, pede orçamento e garante o horário.</p>
+<div class="cta"><a class="btn" href="#flash">Ver flashes</a><a class="btn red" href="#orcamento">Pedir orçamento</a></div>
+</div><div class="hero-img" id="heroImgs"></div></div></header>
+
+<div class="banner"><img src="https://ogeidstudio.wordpress.com/wp-content/uploads/2024/01/banner-1.gif" alt="OGEID Studio" onerror="this.parentNode.style.display='none'"></div>
+<div class="mq"><div><span>Flash tattoo</span><span>Desenho exclusivo</span><span>Tatuagem autoral</span><span>Sessão sob agenda</span><span>Agende já</span><span>Flash tattoo</span><span>Desenho exclusivo</span><span>Tatuagem autoral</span><span>Sessão sob agenda</span><span>Agende já</span><span>Flash tattoo</span><span>Desenho exclusivo</span><span>Tatuagem autoral</span><span>Sessão sob agenda</span><span>Agende já</span><span>Flash tattoo</span><span>Desenho exclusivo</span><span>Tatuagem autoral</span><span>Sessão sob agenda</span><span>Agende já</span></div></div>
+
+<div class="trust"><div class="wrap rv">
+<div class="t"><i>01</i><b>Biossegurança</b><span>Material descartável e esterilizado em toda sessão.</span></div>
+<div class="t"><i>02</i><b>Peça única</b><span>Cada flash é tatuado apenas uma vez.</span></div>
+<div class="t"><i>03</i><b>Preço na mão</b><span>Valor à vista e orçamento antes de começar.</span></div>
+<div class="t"><i>04</i><b>Papo direto</b><span>Você fala direto com o tatuador, sem intermediário.</span></div>
+</div></div>
+
+<section id="flash"><div class="wrap">
+<div class="rv"><span class="tag">catálogo</span><h2>Flash disponíveis</h2>
+<p class="sub">Desenho pronto, preço fechado. Curtiu? Toca em “Quero esse” e o pedido já vai preenchido.</p></div>
+<div class="filters" id="filters"></div>
+<div class="grid" id="grid"></div>
+<div class="more"><button class="btn" id="moreBtn">Carregar mais</button></div>
+<p class="note" style="text-align:center">O catálogo completo (todos os drops) continua em <a href="https://ogeidstudio.wordpress.com/flash-tattoo-disponiveis/" target="_blank" rel="noopener" style="text-decoration:underline">ogeidstudio.wordpress.com</a>.</p>
+</div></section>
+
+<section id="processo" class="dark"><div class="wrap">
+<div class="rv"><span class="tag">como funciona</span><h2>Do rabisco à pele</h2></div>
+<div class="steps rv">
+<div class="s" data-n="1"><h3>Escolha</h3><p>Pega um flash ou conta tua ideia pra um projeto exclusivo.</p></div>
+<div class="s" data-n="2"><h3>Orçamento</h3><p>Mandamos valor e tempo estimado pelo WhatsApp.</p></div>
+<div class="s" data-n="3"><h3>Agende</h3><p>Reserva data e horário. O sinal garante teu lugar.</p></div>
+<div class="s" data-n="4"><h3>Tatue</h3><p>Sessão limpa, material novo e cuidados pós-tattoo explicados.</p></div>
+</div></div></section>
+
+<section id="orcamento"><div class="wrap two rv">
+<div class="box" id="quote"><h3>Orçamento</h3><p>Conta a ideia e a gente responde com valor e prazo.</p><div class="pick" style="display:block;background:var(--acid)">✦ Toda ideia é criada do zero no <b>estilo autoral do estúdio</b>, desenhada exclusivamente pra você. Não reproduzimos trabalhos de outros tatuadores.</div>
+<label>Seu nome</label><input id="qn" placeholder="Nome completo">
+<label>Sua ideia</label><textarea id="qd" placeholder="Ex.: um dragão no antebraço, algo que lembre minha família… Você conta o conceito, a gente cria o desenho."></textarea>
+<div class="row"><div><label>Local do corpo</label><select id="qa"><option>Braço</option><option>Antebraço</option><option>Perna</option><option>Costas</option><option>Peito</option><option>Mão / Pé</option><option>Pescoço</option><option>Outro</option></select></div>
+<div><label>Tamanho</label><select id="qs"><option>Até 5 cm</option><option>5 a 10 cm</option><option>10 a 20 cm</option><option>Acima de 20 cm</option></select></div></div>
+<label>Primeira tattoo?</label><select id="qf"><option>Sim</option><option>Não</option></select>
+<br><button class="btn red" id="qsend" style="width:100%">Enviar pelo WhatsApp</button>
+<p class="note">Dica: manda referências de tema e sensação na conversa pra gente criar a ideia com você.</p></div>
+
+<div class="box" id="agendar"><h3>Agendar sessão</h3><p>Escolhe dia e horário. Confirmamos pelo WhatsApp.</p>
+<div class="pick" id="pick"></div>
+<label>Seu nome</label><input id="bn" placeholder="Nome completo">
+<div class="row"><div><label>WhatsApp</label><input id="bp" inputmode="tel" placeholder="(11) 90000-0000"></div>
+<div><label>Data</label><input type="date" id="bd"></div></div>
+<label>Horário</label><div class="slots" id="slots"></div>
+<label>Observações (opcional)</label><textarea id="bo" placeholder="Alergias, dúvidas, local do corpo…"></textarea>
+<br><button class="btn" id="bsend" style="width:100%">Solicitar agendamento</button>
+<p class="note">Horário confirmado só após nossa resposta. Apenas maiores de 18 anos.</p></div>
+</div></section>
+
+<section id="faq" class="dark"><div class="wrap faq rv" style="max-width:800px">
+<span class="tag">tira-dúvidas</span><h2>Perguntas</h2>
+<details><summary>O flash pode ser alterado?</summary><p>Ajustes pequenos de tamanho e posição são de boa. Mudança grande vira orçamento de projeto.</p></details>
+<details><summary>Como funciona o pagamento?</summary><p>O preço do flash é fechado. Um sinal reserva o horário e o resto é pago no dia.</p></details>
+<details><summary>Dói muito?</summary><p>Depende do local e da tua tolerância. Come bem antes e avisa se precisar de pausa.</p></details>
+<details><summary>Quais os cuidados depois?</summary><p>Explicamos tudo no fim da sessão: higienização, pomada e proteção solar.</p></details>
+</div></section>
+
+<footer><div class="wrap"><div><span class="logo" style="color:#f4efe3"><img src="https://ogeidstudio.wordpress.com/wp-content/uploads/2024/01/logoogeid.png" alt="OGEID Studio" style="height:54px;display:block;margin-bottom:8px" onerror="this.outerHTML='OGEID<b>*</b>STUDIO'"></span><br>© <span id="yr"></span> Todos os direitos reservados.</div>
+<div><a href="https://ogeidstudio.wordpress.com" target="_blank" rel="noopener">Site anterior</a> · <a id="ig" target="_blank" rel="noopener" href="#">Instagram</a> · <a id="wl" target="_blank" rel="noopener" href="#">WhatsApp</a></div></div></footer>
+
+<a class="wa" id="wa" target="_blank" rel="noopener" href="#">WhatsApp</a>
+<div id="lb"><img id="lbi" alt=""><button class="btn" id="lbb">Quero esse</button></div>
+
+<script>
+/* ===== CONFIGURE AQUI ===== */
+const WHATSAPP="5511999999999";            // DDI+DDD+número, só dígitos
+const INSTAGRAM="https://instagram.com/";  // link do seu Instagram
+const SLOTS=["10:00","13:00","15:00","17:00"];
+/* ========================== */
+const B="https://ogeidstudio.wordpress.com/wp-content/uploads/";
+const F=[["2026/03/prancheta-2",250],["2026/03/prancheta-3",300],["2026/03/prancheta-4",300],["2026/03/prancheta-5",300],["2026/03/prancheta-7",250],["2026/03/prancheta-9",200],["2026/03/prancheta-11",200],["2026/03/prancheta-12",250],["2026/03/prancheta-14",250],["2026/03/prancheta-15",250],["2026/03/prancheta-16",250],["2026/03/prancheta-1",250],["2026/03/prancheta-2-1",200],["2026/03/prancheta-3-1",300],["2026/03/prancheta-4-1",250],["2026/03/prancheta-5-1",300],["2026/03/prancheta-6",350],["2026/02/prancheta-9",800],["2026/02/prancheta-10",200],["2026/02/prancheta-11",180],["2026/02/prancheta-13",180],["2026/02/prancheta-14",400],["2026/02/prancheta-15",300],["2026/02/prancheta-16",400],["2026/01/prancheta-3",200],["2026/01/prancheta-4",180],["2026/01/prancheta-6",200],["2026/01/prancheta-8",200],["2026/01/prancheta-9",200],["2026/01/prancheta-10",350],["2026/01/prancheta-12",500],["2026/01/prancheta-13",700],["2025/09/prancheta-6",700],["2025/09/prancheta-7",400],["2025/09/prancheta-8",1000],["2025/09/prancheta-11",200],["2025/08/prancheta-7",400],["2025/08/prancheta-8",300],["2025/08/prancheta-9",200],["2025/08/prancheta-10",200],["2025/08/prancheta-12",300],["2025/08/prancheta-13",250],["2025/08/prancheta-14",250],["2025/08/prancheta-15",200],["2025/08/prancheta-16",250],["2025/08/prancheta-17",400],["2025/08/prancheta-18",450],["2025/08/prancheta-19",450]]
+.map(([p,v],i)=>({id:i+1,src:B+p+".jpg?w=700",price:v}));
+const R={all:[0,1e9],"Até R$ 200":[0,200],"R$ 201–300":[201,300],"Acima de R$ 300":[301,1e9]};
+let flt="all",shown=12,sel=null,slot=null;
+const $=s=>document.querySelector(s),wa=t=>"https://wa.me/"+WHATSAPP+"?text="+encodeURIComponent(t);
+const brl=v=>"R$ "+v.toLocaleString("pt-BR");
+function render(){
+ const L=F.filter(f=>f.price>=R[flt][0]&&f.price<=R[flt][1]);
+ $("#grid").innerHTML=L.slice(0,shown).map(f=>`<div class="f" style="--d:${F.indexOf(f)%12}"><div class="im" data-i="${f.id}"><img loading="lazy" src="${f.src}" alt="Flash tattoo ${f.id}"></div><div class="in"><span class="p">${brl(f.price)}</span><button data-i="${f.id}">Quero esse</button></div></div>`).join("");
+ $("#moreBtn").style.display=L.length>shown?"inline-block":"none";
+}
+$("#filters").innerHTML=Object.keys(R).map(k=>`<button class="chip${k=="all"?" on":""}" data-k="${k}">${k=="all"?"Todos":k}</button>`).join("");
+$("#filters").onclick=e=>{const k=e.target.dataset.k;if(!k)return;flt=k;shown=12;document.querySelectorAll(".chip").forEach(c=>c.classList.toggle("on",c.dataset.k==k));render()};
+$("#moreBtn").onclick=()=>{shown+=12;render()};
+function choose(id){sel=F.find(f=>f.id==id);const p=$("#pick");p.style.display="block";p.textContent="Flash escolhido: nº "+sel.id+" — "+brl(sel.price);$("#lb").style.display="none";location.hash="agendar"}
+$("#grid").onclick=e=>{const i=e.target.closest("[data-i]");if(!i)return;const f=F.find(x=>x.id==i.dataset.i);
+ if(e.target.tagName=="BUTTON")return choose(f.id);
+ $("#lbi").src=f.src;$("#lbb").onclick=()=>choose(f.id);$("#lb").style.display="flex"};
+$("#lb").onclick=e=>{if(e.target.id!="lbb")$("#lb").style.display="none"};
+$("#slots").innerHTML=SLOTS.map(s=>`<button type="button" class="chip" data-s="${s}">${s}</button>`).join("");
+$("#slots").onclick=e=>{const s=e.target.dataset.s;if(!s)return;slot=s;document.querySelectorAll("#slots .chip").forEach(c=>c.classList.toggle("on",c.dataset.s==s))};
+const d=new Date();d.setDate(d.getDate()+1);$("#bd").min=d.toISOString().slice(0,10);
+$("#qsend").onclick=()=>{const n=$("#qn").value.trim(),t=$("#qd").value.trim();if(!n||!t)return alert("Preencha seu nome e a ideia da tatuagem.");
+ window.open(wa(`Olá! Quero um orçamento.\nNome: ${n}\nIdeia: ${t}\nLocal: ${$("#qa").value}\nTamanho: ${$("#qs").value}\nPrimeira tattoo: ${$("#qf").value}\nObs: entendo que o desenho será criado no estilo autoral do estúdio.`),"_blank")};
+$("#bsend").onclick=()=>{const n=$("#bn").value.trim(),p=$("#bp").value.trim(),dt=$("#bd").value;if(!n||!p||!dt||!slot)return alert("Preencha nome, WhatsApp, data e horário.");
+ const [y,m,dd]=dt.split("-");
+ window.open(wa(`Olá! Quero agendar uma sessão.\nNome: ${n}\nWhatsApp: ${p}\nData: ${dd}/${m}/${y} às ${slot}\n${sel?"Flash nº "+sel.id+" ("+brl(sel.price)+")":"Projeto sob orçamento"}\nObs: ${$("#bo").value||"—"}`),"_blank")};
+$("#wa").href=$("#wl").href=wa("Olá! Vim pelo site do OGEID Studio.");$("#ig").href=INSTAGRAM;$("#yr").textContent=new Date().getFullYear();
+$("#heroImgs").innerHTML=[0,4,8,16].map(i=>`<img src="${F[i].src}" alt="Flash tattoo">`).join("");
+render();
+
+/* animações de entrada */
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.15});
+document.querySelectorAll('.rv').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>
