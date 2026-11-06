@@ -1,1 +1,0 @@
-Coloque aqui os arquivos ORIGINAIS desta categoria (rode tools/import-originals.py).

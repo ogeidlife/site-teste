@@ -1,8 +1,0 @@
-node_modules/
-.env
-data/ogeid.db*
-data/uploads/
-data/.secret
-data/outbox.log
-media/*/*
-!media/*/LEIAME.txt
