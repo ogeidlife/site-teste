@@ -1,0 +1,248 @@
+{
+ "ignorados_pdf": [
+  "2024/03/portfoliodiegoogeid2023.pdf"
+ ],
+ "ignorados_cropped": [
+  "2020/01/cropped-brisanophotoshop.jpg",
+  "2020/02/cropped-dsc08004.jpg",
+  "2020/02/cropped-novoposte.jpg",
+  "2020/06/cropped-adesivo2-1.jpg",
+  "2020/06/cropped-thechronic-1.jpg",
+  "2022/12/cropped-printdezembro.jpg"
+ ],
+ "duplicatas": [
+  {
+   "arquivo": "2020/06/thechronic-1.jpg",
+   "igual_a": "2020/06/thechronic.jpg"
+  },
+  {
+   "arquivo": "2020/07/1.jpg",
+   "igual_a": "2020/06/1.jpg"
+  },
+  {
+   "arquivo": "2020/07/2.jpg",
+   "igual_a": "2020/06/2.jpg"
+  },
+  {
+   "arquivo": "2020/07/3.jpg",
+   "igual_a": "2020/06/3.jpg"
+  },
+  {
+   "arquivo": "2020/07/5.jpg",
+   "igual_a": "2020/06/5.jpg"
+  },
+  {
+   "arquivo": "2020/07/10.jpg",
+   "igual_a": "2020/06/10.jpg"
+  },
+  {
+   "arquivo": "2020/10/2-1.jpg",
+   "igual_a": "2020/10/2.jpg"
+  },
+  {
+   "arquivo": "2021/01/qual-1.jpg",
+   "igual_a": "2021/01/qual.jpg"
+  },
+  {
+   "arquivo": "2021/01/fuckyou-1.jpg",
+   "igual_a": "2021/01/fuckyou.jpg"
+  },
+  {
+   "arquivo": "2021/01/dontstoppp-1.jpg",
+   "igual_a": "2021/01/dontstoppp.jpg"
+  },
+  {
+   "arquivo": "2021/01/seusamigosstar-1.jpg",
+   "igual_a": "2021/01/seusamigosstar.jpg"
+  },
+  {
+   "arquivo": "2021/01/youraboutmymama-1.jpg",
+   "igual_a": "2021/01/youraboutmymama.jpg"
+  },
+  {
+   "arquivo": "2021/01/youraboutmymama-2.jpg",
+   "igual_a": "2021/01/youraboutmymama.jpg"
+  },
+  {
+   "arquivo": "2021/11/wutangclan-1.jpg",
+   "igual_a": "2021/11/wutangclan.jpg"
+  },
+  {
+   "arquivo": "2022/01/2de2022-1.jpg",
+   "igual_a": "2022/01/2de2022.jpg"
+  },
+  {
+   "arquivo": "2022/07/cruela-1.jpg",
+   "igual_a": "2022/07/cruela.jpg"
+  },
+  {
+   "arquivo": "2022/07/fiatlux-1.jpg",
+   "igual_a": "2022/07/fiatlux.jpg"
+  },
+  {
+   "arquivo": "2022/07/maceneta-1.jpg",
+   "igual_a": "2022/07/maceneta.jpg"
+  },
+  {
+   "arquivo": "2022/07/leaoehater-1.jpg",
+   "igual_a": "2022/07/leaoehater.jpg"
+  },
+  {
+   "arquivo": "2022/07/paixaorato-1.jpg",
+   "igual_a": "2022/07/paixaorato.jpg"
+  },
+  {
+   "arquivo": "2022/07/pernalonga-1.jpg",
+   "igual_a": "2022/07/pernalonga.jpg"
+  },
+  {
+   "arquivo": "2022/07/donaldbravo-1.jpg",
+   "igual_a": "2022/07/donaldbravo.jpg"
+  },
+  {
+   "arquivo": "2022/07/nofakefriend-1.jpg",
+   "igual_a": "2022/07/nofakefriend.jpg"
+  },
+  {
+   "arquivo": "2022/10/quadro1-1.jpg",
+   "igual_a": "2022/10/quadro1.jpg"
+  },
+  {
+   "arquivo": "2022/10/quadro2-1.jpg",
+   "igual_a": "2022/10/quadro2.jpg"
+  },
+  {
+   "arquivo": "2022/10/sedacapa1-1.jpg",
+   "igual_a": "2022/10/sedacapa1.jpg"
+  },
+  {
+   "arquivo": "2022/10/venecirapper-1.jpg",
+   "igual_a": "2022/10/venecirapper.jpg"
+  },
+  {
+   "arquivo": "2022/10/academicworld-1.jpg",
+   "igual_a": "2022/10/academicworld.jpg"
+  },
+  {
+   "arquivo": "2022/10/imasdegeladeira-1.jpg",
+   "igual_a": "2022/10/imasdegeladeira.jpg"
+  },
+  {
+   "arquivo": "2022/10/brincovicthoiaart-1.jpg",
+   "igual_a": "2022/10/brincovicthoiaart.jpg"
+  },
+  {
+   "arquivo": "2022/10/biscuitvicthoriart-1.jpg",
+   "igual_a": "2022/10/biscuitvicthoriart.jpg"
+  },
+  {
+   "arquivo": "2022/10/biscuitvicthoriart-2.jpg",
+   "igual_a": "2022/10/biscuitvicthoriart.jpg"
+  },
+  {
+   "arquivo": "2024/01/giflogooo-1.gif",
+   "igual_a": "2024/01/giflogooo.gif"
+  },
+  {
+   "arquivo": "2024/01/animacaooutubro-2.gif",
+   "igual_a": "2024/01/animacaooutubro.gif"
+  },
+  {
+   "arquivo": "2024/01/animacaooutubro-3.gif",
+   "igual_a": "2024/01/animacaooutubro-1.gif"
+  },
+  {
+   "arquivo": "2024/01/animacaooutubro-4.gif",
+   "igual_a": "2024/01/animacaooutubro-1.gif"
+  },
+  {
+   "arquivo": "2024/03/sem-titulo-1_01-2.jpg",
+   "igual_a": "2024/03/sem-titulo-1_01.jpg"
+  },
+  {
+   "arquivo": "2024/07/13-1.jpg",
+   "igual_a": "2024/07/13.jpg"
+  },
+  {
+   "arquivo": "2024/07/14-1.jpg",
+   "igual_a": "2024/07/14.jpg"
+  },
+  {
+   "arquivo": "2024/07/15-1.jpg",
+   "igual_a": "2024/07/15.jpg"
+  },
+  {
+   "arquivo": "2024/07/16-1.jpg",
+   "igual_a": "2024/07/16.jpg"
+  },
+  {
+   "arquivo": "2024/07/17-1.jpg",
+   "igual_a": "2024/07/17.jpg"
+  },
+  {
+   "arquivo": "2024/07/18-1.jpg",
+   "igual_a": "2024/07/18.jpg"
+  },
+  {
+   "arquivo": "2024/07/19-1.jpg",
+   "igual_a": "2024/07/19.jpg"
+  },
+  {
+   "arquivo": "2024/07/20-1.jpg",
+   "igual_a": "2024/07/20.jpg"
+  },
+  {
+   "arquivo": "2024/07/21-1.jpg",
+   "igual_a": "2024/07/21.jpg"
+  },
+  {
+   "arquivo": "2024/07/22-1.jpg",
+   "igual_a": "2024/07/22.jpg"
+  },
+  {
+   "arquivo": "2024/07/23-1.jpg",
+   "igual_a": "2024/07/23.jpg"
+  },
+  {
+   "arquivo": "2024/07/24-1.jpg",
+   "igual_a": "2024/07/24.jpg"
+  },
+  {
+   "arquivo": "2024/07/25-1.jpg",
+   "igual_a": "2024/07/25.jpg"
+  },
+  {
+   "arquivo": "2024/07/26-1.jpg",
+   "igual_a": "2024/07/26.jpg"
+  },
+  {
+   "arquivo": "2024/07/27-1.jpg",
+   "igual_a": "2024/07/27.jpg"
+  },
+  {
+   "arquivo": "2024/07/28-1.jpg",
+   "igual_a": "2024/07/28.jpg"
+  },
+  {
+   "arquivo": "2024/07/29-1.jpg",
+   "igual_a": "2024/07/29.jpg"
+  },
+  {
+   "arquivo": "2024/07/30-1.jpg",
+   "igual_a": "2024/07/30.jpg"
+  },
+  {
+   "arquivo": "2024/07/31-1.jpg",
+   "igual_a": "2024/07/31.jpg"
+  },
+  {
+   "arquivo": "2024/07/32-1.jpg",
+   "igual_a": "2024/07/32.jpg"
+  },
+  {
+   "arquivo": "2024/07/34-1.jpg",
+   "igual_a": "2024/07/34.jpg"
+  }
+ ],
+ "erros": []
+}

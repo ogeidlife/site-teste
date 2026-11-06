@@ -66,6 +66,11 @@
     "show": true
    },
    {
+    "key": "arquivo",
+    "label": "Arquivo",
+    "show": true
+   },
+   {
     "key": "sobre",
     "label": "Sobre",
     "show": true

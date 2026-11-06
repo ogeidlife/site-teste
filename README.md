@@ -26,3 +26,12 @@ O zip era de um sistema com servidor Node + painel (`/painel`), mas `server.js`,
 - o site agora é gerado estaticamente a partir do `content.json`;
 - o painel de edição e as estatísticas de visitas foram removidos (edite o JSON);
 - o formulário monta a mensagem e abre WhatsApp, e-mail ou Instagram em vez de gravar pedidos no servidor.
+
+## Arquivo 2020–2024
+Seção nova (menu **Arquivo**) com 348 obras de 2020, 2021, 2022 e 2024, organizada por ano e por mês.
+
+- Páginas: `arquivo.html` (visão geral + linha do tempo + animações) e `arquivo-2020.html`, `arquivo-2021.html`, `arquivo-2022.html`, `arquivo-2024.html` (galeria mês a mês, filtro por tipo, lightbox com setas/teclado/deslizar).
+- Imagens: `media/archive-AAAA/web/` (grande) e `media/archive-AAAA/thumb/` (miniatura), em `.webp`. GIFs animados viram `.webp` animado.
+- Dados: `archive.json` — edite **títulos** (`title`) de cada obra, o **texto e a capa de cada ano** (`years`) e a introdução (`intro`). Depois rode `python3 build.py`.
+- Para importar novas pastas (ex.: 2023 ou 2025): `python3 tools/ingest_archive.py CAMINHO` (a pasta que contém `2023/`, `2025/`...). Seus títulos já editados são preservados.
+- `tools/archive_manifest.json` lista o que ficou de fora: duplicatas idênticas, cópias `cropped-*` do WordPress e o PDF do portfólio (161 MB — acima do limite de 100 MB por arquivo do GitHub).
