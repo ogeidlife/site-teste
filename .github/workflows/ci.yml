@@ -1,0 +1,20 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Teste de ponta a ponta (banco temporário)
+        env:
+          DATA_DIR: ${{ runner.temp }}/ogeid-data
+          TRUST_PROXY: "1"
+          ADMIN_EMAIL: ci@ogeid.test
+          ADMIN_PASSWORD: ci-password-123
+          PORT: "3111"
+        run: |
+          node --no-warnings server.js &
+          for i in $(seq 1 20); do curl -fs localhost:3111/ >/dev/null && break; sleep 1; done
+          BASE=http://localhost:3111 node tools/smoke-test.js

@@ -1,0 +1,12 @@
+{
+  "name": "OGEID",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:22",
+  "forwardPorts": [3000],
+  "portsAttributes": { "3000": { "label": "OGEID (site e /painel)", "onAutoForward": "openBrowser" } },
+  "containerEnv": { "TRUST_PROXY": "1", "PORT": "3000" },
+  "secrets": {
+    "ADMIN_EMAIL": { "description": "E-mail do administrador do painel (/painel)" },
+    "ADMIN_PASSWORD": { "description": "Senha do administrador (mínimo 10 caracteres)" }
+  },
+  "postStartCommand": "nohup node --no-warnings server.js > /tmp/ogeid.log 2>&1 &"
+}
