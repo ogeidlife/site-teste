@@ -27,11 +27,10 @@ O zip era de um sistema com servidor Node + painel (`/painel`), mas `server.js`,
 - o painel de edição e as estatísticas de visitas foram removidos (edite o JSON);
 - o formulário monta a mensagem e abre WhatsApp, e-mail ou Instagram em vez de gravar pedidos no servidor.
 
-## Arquivo 2020–2024
-Seção nova (menu **Arquivo**) com 348 obras de 2020, 2021, 2022 e 2024, organizada por ano e por mês.
-
-- Páginas: `arquivo.html` (visão geral + linha do tempo + animações) e `arquivo-2020.html`, `arquivo-2021.html`, `arquivo-2022.html`, `arquivo-2024.html` (galeria mês a mês, filtro por tipo, lightbox com setas/teclado/deslizar).
-- Imagens: `media/archive-AAAA/web/` (grande) e `media/archive-AAAA/thumb/` (miniatura), em `.webp`. GIFs animados viram `.webp` animado.
-- Dados: `archive.json` — edite **títulos** (`title`) de cada obra, o **texto e a capa de cada ano** (`years`) e a introdução (`intro`). Depois rode `python3 build.py`.
-- Para importar novas pastas (ex.: 2023 ou 2025): `python3 tools/ingest_archive.py CAMINHO` (a pasta que contém `2023/`, `2025/`...). Seus títulos já editados são preservados.
-- `tools/archive_manifest.json` lista o que ficou de fora: duplicatas idênticas, cópias `cropped-*` do WordPress e o PDF do portfólio (161 MB — acima do limite de 100 MB por arquivo do GitHub).
+## Arquivo (banco de imagens 2020–2024)
+O zip `2020.zip` (413 arquivos, 477 MB) foi processado: cópias repetidas removidas, imagens convertidas para `.webp` (miniatura + versão grande) e GIFs pesados convertidos para `.mp4`. Resultado: 341 imagens únicas, cerca de 33 MB.
+Elas ficam em `media/arquivo/` e estão registradas em `content.json → archive` (ano, mês, tipo). Para recategorizar uma imagem, edite o campo `cat` (`flash`, `cartaz`, `quadro`, `mural`, `logo`, `animacao`) e rode `python3 build.py`.
+- **Arquivo** (`arquivo.html`): filtros por ano e tipo, mosaico e visualizador. Link direto: `arquivo.html#2022-flash`.
+- **Flash tattoo**: enquanto a pasta `flash-tattoo` não existir, mostra os desenhos de flash do arquivo (códigos `ARQ-ANO-NNN`).
+- **Início, Portfólio e Sobre** usam imagens do arquivo como capas e linha do tempo quando faltam as originais.
+- O PDF `portfoliodiegoogeid2023.pdf` (157 MB) **não** foi incluído: o GitHub recusa arquivos acima de 100 MB. Comprima-o antes de enviar.
