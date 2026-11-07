@@ -120,3 +120,14 @@ html.js .rv{opacity:0;transform:translateY(16px);transition:opacity .5s,transfor
 @media(max-width:900px){.stats{grid-template-columns:repeat(2,1fr);row-gap:20px}.archbar{top:60px}.masonry,.masonry.mini{columns:2 140px}.masonry.flashm{columns:2 140px}.masonry{column-gap:10px}.mi,.masonry .fcard{margin-bottom:10px}}
 @media(prefers-reduced-motion:reduce){.marquee div{animation:none}html.js .rv{opacity:1;transform:none;transition:none}}
 @media(max-width:900px){.archbar{position:static}.chips{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}.chip{white-space:nowrap}}
+
+/* ===== v3 ===== */
+.fimg{position:relative}.refbadge{position:absolute;left:8px;bottom:8px;background:var(--pop);color:#000;font:700 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;padding:4px 7px}
+.ph.tall{min-height:320px}
+.srch{display:inline-flex;align-items:center;gap:8px;font:600 12px var(--mono);letter-spacing:.06em;text-transform:uppercase}.srch input{padding:8px 10px;border:2px solid var(--fg);font:14px var(--sans);width:130px;background:#fff}
+.h-sm small{font:600 13px var(--mono);color:var(--dim);margin-left:6px}
+.pgrid .pcard[hidden],.masonry [hidden]{display:none}
+.pimg{aspect-ratio:4/3;background:var(--soft)}.pimg img{width:100%;height:100%;object-fit:cover}
+.proj-text+.masonry,.proj-text+.h-sm{margin-top:32px}.masonry.mini+.h-sm{margin-top:48px}
+.years .ycard b{font-size:clamp(28px,3.6vw,52px)}
+.ycard.ar b{font-size:clamp(20px,2.2vw,30px);line-height:1.05;letter-spacing:-.03em}.ycard.ar{aspect-ratio:3/4}

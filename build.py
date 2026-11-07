@@ -92,15 +92,6 @@ def fcard(f):
         zoom(f['img'], t or f['code'], f['code'], 'data-code="%s"' % e(f['code'])),
         e(f['code']), badge(f['status']), ('<div class="ftitle">%s</div>' % e(t)) if t else '', quote(f['code']))
 
-def pcard(p):
-    return '''<a class="pcard" href="projeto-%s.html"><div class="pimg">%s</div><div class="pmeta"><span>%s</span><span>%s</span></div><h3>%s</h3></a>''' % (
-        e(p['slug']), pic(p['images'][0], p['title'], p['title']) if p['images'] else '', e(p['cat']), e(p['year']), e(p['title']))
-
-def prodcard(p):
-    price = '<span class="fprice">%s</span>' % e(p['price']) if p.get('price') else ''
-    return '''<a class="fcard" href="produto-%s.html"><div class="fimg">%s</div><div class="fmeta"><span class="code">%s</span>%s</div><div class="ftitle">%s</div>%s</a>''' % (
-        e(p['slug']), pic(p['images'][0], p['title'], p['code']) if p['images'] else '', e(p['code']), badge(p['status']), e(p['title']), price)
-
 def order_form(tipo=None, ref='', extra_tipo=False):
     """tipo fixo (tattoo|produto) ou None para escolher."""
     radios = ''
@@ -160,48 +151,6 @@ def mini_flash(a):
     return '<div class="fcard rv"><div class="fimg"><a class="zoom" href="%s" data-full="%s" data-code="%s" data-cap="%s">%s</a></div><div class="fmeta"><span class="code">%s</span><span class="badge s-disponivel">Disponível</span></div><a class="link small" href="contato.html?tipo=tattoo&ref=%s">Quero este</a></div>' % (
         aurl(a, 'web'), aurl(a, 'web'), acode(a), e(acap(a) + ' · ' + acode(a)), aimg(a), acode(a), quote(acode(a)))
 
-def pcard(p):
-    img = pic(p['images'][0], p['title'], p['title']) if p['images'] and has(p['images'][0]) else ''
-    if not img:
-        c = cover_for(p); img = aimg(c, p['title']) if c else '<span class="ph">%s</span>' % e(p['title'])
-    return '<a class="pcard rv" href="projeto-%s.html"><div class="pimg">%s</div><div class="pmeta"><span>%s</span><span>%s</span></div><h3>%s</h3></a>' % (e(p['slug']), img, e(p['cat']), e(p['year']), e(p['title']))
-
-def page_index():
-    imgs = [r for r in S.get('heroImages', []) if has(r)]
-    art = ''.join('<img class="h%d" src="%s" alt="">' % (i, img_path(r, 'web')) for i, r in enumerate(imgs[:4]))
-    extra = apick(['quadro', 'cartaz'], None, 8, portrait=True)
-    for i, a in enumerate(extra[:max(0, 4 - len(imgs))]):
-        art += '<img class="h%d" src="%s" alt="" width="%d" height="%d">' % (len(imgs) + i, aurl(a, 'web'), a['w'], a['h'])
-    words = ['Pintura', 'Desenho', 'Tatuagem', 'Escultura', 'Animação', 'Design', 'Flash tattoo', 'Cultura de rua']
-    mq = ''.join('<span>%s</span><i>✦</i>' % w for w in words) * 2
-    stats = [(len(A), 'imagens no arquivo'), (len(YEARS), 'anos de produção'), (len(D['flash']), 'flashes catalogados'), (len(D['projects']), 'projetos')]
-    st = ''.join('<div class="stat rv"><b>%s</b><span>%s</span></div>' % (n, e(l)) for n, l in stats)
-    yrs = ''
-    for y in YEARS[::-1]:
-        L = [a for a in A if a['year'] == y and aexists(a)]
-        cv = (apick(['cartaz', 'quadro', 'mural'], y, 1) or L[:1])
-        yrs += '<a class="ycard rv" href="arquivo.html#%d"><div class="yimg">%s</div><div class="ytxt"><b>%d</b><span>%d imagens</span></div></a>' % (y, aimg(cv[0]) if cv else '', y, len(L))
-    if use_archive_flash():
-        fl = ''.join(mini_flash(a) for a in flash_from_archive()[:8]); total = len(flash_from_archive())
-    else:
-        fl = ''.join(fcard(f) for f in D['flash'][:8]); total = len(D['flash'])
-    feat_p = [p for p in D['projects'] if p.get('featured')][:6]
-    mosaic = ''.join(acard(a) for a in apick(None, None, 12, offset=3))
-    steps = ''.join('<li class="rv"><b>0%d</b><h3>%s</h3><p>%s</p></li>' % (i + 1, e(s_['t']), e(s_['d'])) for i, s_ in enumerate(S['steps']))
-    b = f"""<section class="hero"><div class="hero-title"><p class="eyebrow">@{e(S['handle'])} · 2020 — 2026</p><h1 class="mega">{e(S['name'])}</h1><p class="lead">{e(S['tagline'])}</p>
-<div class="row"><a class="btn" href="flash.html">Ver flashes</a><a class="btn ghost" href="arquivo.html">Explorar o arquivo</a></div></div>{'<div class="hero-art">%s</div>' % art if art else ''}</section>
-<div class="marquee" aria-hidden="true"><div>{mq}</div></div>
-<section class="wrap stats">{st}</section>
-<section class="wrap intro"><p class="eyebrow">01 — Sobre</p><p class="big">{e(S['bio'][0])}</p><a class="link" href="sobre.html">Ler mais</a></section>
-<section class="wrap"><div class="sec-head"><p class="eyebrow">02 — Linha do tempo</p><h2 class="display">Arquivo por ano</h2><a class="link" href="arquivo.html">Ver tudo ({len(A)})</a></div><div class="years">{yrs}</div></section>
-<section class="wrap"><div class="sec-head"><p class="eyebrow">03 — Flash tattoo</p><h2 class="display">Flashes</h2><a class="link" href="flash.html">Ver todos ({total})</a></div><div class="fgrid">{fl}</div></section>
-<section class="wrap"><div class="sec-head"><p class="eyebrow">04 — Portfólio</p><h2 class="display">Projetos</h2><a class="link" href="portfolio.html">Ver todos</a></div><div class="pgrid">{''.join(pcard(p) for p in feat_p)}</div></section>
-<section class="wrap"><div class="sec-head"><p class="eyebrow">05 — Do arquivo</p><h2 class="display">Seleção</h2><a class="link" href="arquivo.html">Abrir arquivo</a></div><div class="masonry mini">{mosaic}</div></section>
-<section class="wrap"><div class="sec-head"><p class="eyebrow">06 — Catálogo</p><h2 class="display">Obras e objetos</h2><a class="link" href="catalogo.html">Ver catálogo</a></div><div class="fgrid four">{''.join(prodcard(p) for p in D['products'][:4])}</div></section>
-<section class="wrap steps"><div class="sec-head"><p class="eyebrow">Como funciona</p><h2 class="display">Em 3 passos</h2></div><ol>{steps}</ol></section>
-<section class="wrap band"><p class="eyebrow">Contato</p><h2 class="display">{e(S['ctaTitle'])}</h2><p class="lead">{e(S['contactIntro'])}</p><div class="row"><a class="btn" href="contato.html">Enviar solicitação</a><a class="btn ghost" href="{e(ig_url())}" target="_blank" rel="noopener">Instagram</a></div></section>"""
-    write('index.html', layout('', S['title'], b))
-
 def page_arquivo():
     yc = ''.join('<button class="chip" data-y="%d">%d <small>%d</small></button>' % (y, y, sum(1 for a in A if a['year'] == y)) for y in YEARS)
     kc = ''.join('<button class="chip" data-k="%s">%s <small>%d</small></button>' % (k, e(v), sum(1 for a in A if a['cat'] == k)) for k, v in ACATS.items() if any(a['cat'] == k for a in A))
@@ -212,46 +161,6 @@ def page_arquivo():
 <div class="masonry" data-archive>{items}</div><p data-empty hidden>Nada encontrado com esse filtro.</p>
 <div class="more-wrap"><button class="btn ghost" data-amore hidden>Mostrar mais</button></div></section>"""
     write('arquivo.html', layout('arquivo', 'Arquivo', b, S.get('archiveIntro')))
-
-def page_flash():
-    cats = []
-    if use_archive_flash():
-        L = flash_from_archive(); grid = ''.join(mini_flash(a).replace('class="fcard rv"', 'class="fcard rv" data-c="%s" data-k="%d" data-s="disponivel"' % (acode(a), a['year'])) for a in L)
-        opts = ''.join('<option>%d</option>' % y for y in sorted({a['year'] for a in L}, reverse=True)); label = 'Ano'
-        note = '<p class="small dim">Desenhos do arquivo (%d–%d). Cada um tem um código — use-o ao solicitar.</p>' % (min(a['year'] for a in L), max(a['year'] for a in L))
-    else:
-        for f in D['flash']:
-            if f['cat'] not in cats: cats.append(f['cat'])
-        grid = ''.join(fcard(f) for f in D['flash']); opts = ''.join('<option>%s</option>' % e(c) for c in cats); label = 'Coleção'; note = ''
-    b = f"""<section class="wrap"><p class="eyebrow">Flash tattoo</p><h1 class="display">Flashes</h1><p class="lead">{e(S['flashIntro'])}</p>{note}
-<form class="filters" data-filters onsubmit="return false"><label>Buscar código<input name="q" type="search" placeholder="ex.: 045"></label>
-<label>{label}<select name="cat"><option value="">Todos</option>{opts}</select></label><a class="link small" href="#" data-clear>Limpar</a><span class="count"></span></form>
-<div class="masonry flashm" data-grid>{grid}</div><p data-empty hidden>Nenhum desenho encontrado. <a class="link" href="#" data-clear>Limpar filtros</a></p>
-<div class="more-wrap"><button class="btn ghost" data-more hidden>Mostrar mais</button></div></section>"""
-    write('flash.html', layout('flash', 'Flash tattoo', b, S['flashIntro']))
-
-def page_portfolio():
-    b = '<section class="wrap"><p class="eyebrow">Portfólio</p><h1 class="display">Portfólio</h1><p class="lead">%s</p><div class="pgrid">%s</div></section>' % (e(S['portfolioIntro']), ''.join(pcard(p) for p in D['projects']))
-    write('portfolio.html', layout('portfolio', 'Portfólio', b, S['portfolioIntro']))
-
-def page_project(i, p):
-    prev_ = D['projects'][i - 1]; next_ = D['projects'][(i + 1) % len(D['projects'])]
-    real = [r for r in p['images'] if has(r)]
-    if real:
-        gal = '<div class="gallery">%s</div>' % ''.join(zoom(r, p['title'], p['title']) for r in real)
-    else:
-        rel = apick(POOL.get(p['cat'], ['cartaz']), None, 12)
-        gal = '<h2 class="h-sm">Do arquivo</h2><div class="masonry mini">%s</div>' % ''.join(acard(a) for a in rel)
-    concept = p.get('concept', ''); link = ''
-    if p.get('link'):
-        href = p['link']; href = PAGES.get(href.strip('/'), href) if href.startswith('/') else href
-        link = '<p><a class="btn" href="%s">%s</a></p>' % (e(href), e(p.get('linkLabel') or 'Ver mais'))
-        concept = concept.replace('Ver flash tattoos disponíveis', '').strip()
-    b = f"""<section class="wrap"><p class="eyebrow"><a href="portfolio.html">← Portfólio</a></p><h1 class="display sm">{e(p['title'])}</h1>
-<div class="proj-text"><dl class="specs"><dt>Categoria</dt><dd>{e(p['cat'])}</dd><dt>Ano</dt><dd>{e(p['year'])}</dd></dl>
-<div class="prose big">{paras(p['text'])}<h3>Conceito</h3>{paras(concept)}{link}</div></div>{gal}
-<div class="prevnext"><a href="projeto-{e(prev_['slug'])}.html">← {e(prev_['title'])}</a><a href="projeto-{e(next_['slug'])}.html">{e(next_['title'])} →</a></div></section>"""
-    write('projeto-%s.html' % p['slug'], layout('portfolio', p['title'], b, (p['text'] or '')[:155]))
 
 def page_sobre():
     imgs = [r for r in S.get('aboutImages', []) if has(r)]
@@ -269,6 +178,156 @@ def page_sobre():
     b = '<section class="wrap about %s">%s</section>' % ('split' if stack else 'narrow', text + stack)
     write('sobre.html', layout('sobre', 'Sobre', b, S['bio'][0]))
 
+import unicodedata
+def slug(t): return re.sub(r'[^a-z0-9]+', '-', unicodedata.normalize('NFKD', str(t)).encode('ascii', 'ignore').decode().lower()).strip('-')
+def first_year(y):
+    m = re.search(r'\d{4}', str(y)); return int(m.group()) if m else 0
+
+def archive_for(p):
+    q = p.get('archive')
+    if not isinstance(q, dict): return []
+    L = [a for a in A if aexists(a)]
+    if q.get('ids'): L = [a for a in L if any(a['id'].endswith('-' + i) for i in q['ids'])]
+    else:
+        if q.get('cat'): L = [a for a in L if a['cat'] in q['cat']]
+        if q.get('year'): L = [a for a in L if a['year'] == q['year']]
+        if q.get('month'): L = [a for a in L if a['month'] == q['month']]
+    return L[:q['limit']] if q.get('limit') else L
+
+def real_imgs(p): return [r for r in p.get('images', []) if has(r)]
+def count_imgs(p): return len(real_imgs(p)) + len(archive_for(p))
+
+def pcard(p):
+    real = real_imgs(p); arch = archive_for(p); n = len(real) + len(arch); note = ''
+    if real: img = pic(real[0], p['title'], p['title'])
+    elif arch: img = aimg(arch[0], p['title'])
+    else:
+        c = cover_for(p); img = aimg(c, p['title']) if c else '<span class="ph">%s</span>' % e(p['title'])
+    return '<a class="pcard rv" data-k="%s" data-y="%d" href="projeto-%s.html"><div class="pimg">%s</div><div class="pmeta"><span>%s</span><span>%s%s</span></div><h3>%s</h3></a>' % (
+        slug(p['cat']), first_year(p['year']), e(p['slug']), img, e(p['cat']), e(p['year']), (' · %d imagens' % n) if n else '', e(p['title']))
+
+def prod_imgs(p):
+    real = [r for r in p['images'] if has(r)]
+    if real: return real, False
+    return [r for r in p.get('ref', []) if r.startswith('arq:') or has(r)], True
+def prod_pic(r, alt, label):
+    if r.startswith('arq:'):
+        a = next((x for x in A if x['id'] == r[4:]), None)
+        return aimg(a, alt) if a else ''
+    return pic(r, alt, label)
+def prod_zoom(r, alt, label):
+    if r.startswith('arq:'):
+        a = next((x for x in A if x['id'] == r[4:]), None)
+        return '<a class="zoom" href="%s" data-full="%s">%s</a>' % (aurl(a, 'web'), aurl(a, 'web'), aimg(a, alt)) if a else ''
+    return zoom(r, alt, label)
+
+def prodcard(p):
+    imgs, isref = prod_imgs(p)
+    price = '<span class="fprice">%s</span>' % e(p['price']) if p.get('price') else ''
+    img = prod_pic(imgs[0], p['title'], p['code']) if imgs else '<span class="ph">%s</span>' % e(p['code'])
+    tag = '<span class="refbadge">Referência</span>' if isref and imgs else ''
+    return '<a class="fcard rv" href="produto-%s.html"><div class="fimg">%s%s</div><div class="fmeta"><span class="code">%s</span>%s</div><div class="ftitle">%s</div>%s</a>' % (
+        e(p['slug']), img, tag, e(p['code']), badge(p['status']), e(p['title']), price)
+
+def page_product(i, p):
+    prev_ = D['products'][i - 1]; next_ = D['products'][(i + 1) % len(D['products'])]
+    imgs, isref = prod_imgs(p)
+    gal = ''.join('<div class="gallery-item">%s</div>' % prod_zoom(r, p['title'], p['code']) for r in imgs) or '<div class="ph tall">%s</div>' % e(p['code'])
+    refnote = '<p class="small dim">Imagem de referência: a foto final do produto será enviada ao combinar a encomenda.</p>' if isref and imgs else ''
+    specs = '<dt>Código</dt><dd>%s</dd><dt>Categoria</dt><dd>%s</dd><dt>Situação</dt><dd>%s</dd>' % (e(p['code']), e(p['cat']), e(STATUS.get(p['status'], p['status'])))
+    price = '<p class="price">%s</p>' % e(p['price']) if p.get('price') else ''
+    b = f"""<section class="wrap prod"><p class="eyebrow"><a href="catalogo.html">← Catálogo</a></p>
+<div class="detail"><div class="d-img"><div class="gallery">{gal}</div>{refnote}</div><div class="d-info"><h1 class="display sm">{e(p['title'])}</h1>{price}<div class="prose">{paras(p.get('desc'))}</div><dl class="specs">{specs}</dl>
+<h2 class="h-sm">Solicitar</h2>{order_form('produto', p['code'])}</div></div>
+<div class="prevnext"><a href="produto-{e(prev_['slug'])}.html">← {e(prev_['title'])}</a><a href="produto-{e(next_['slug'])}.html">{e(next_['title'])} →</a></div></section>"""
+    write('produto-%s.html' % p['slug'], layout('catalogo', p['title'], b, p.get('desc') or S['catalogIntro']))
+
+def page_portfolio():
+    areas = []
+    for p in D['projects']:
+        if p['cat'] not in areas: areas.append(p['cat'])
+    chips = '<button class="chip on" data-k="">Todos <small>%d</small></button>' % len(D['projects']) + ''.join(
+        '<button class="chip" data-k="%s">%s <small>%d</small></button>' % (slug(a), e(a), sum(1 for p in D['projects'] if p['cat'] == a)) for a in areas)
+    b = f"""<section class="wrap"><p class="eyebrow">Portfólio</p><h1 class="display">Portfólio</h1><p class="lead">{e(S['portfolioIntro'])}</p>
+<div class="archbar" data-archive-bar><div class="chips" role="group" aria-label="Área">{chips}</div><span class="count" data-acount></span></div>
+<div class="pgrid" data-archive>{''.join(pcard(p) for p in D['projects'])}</div><p data-empty hidden>Nenhum projeto nessa área.</p><div class="more-wrap"><button class="btn ghost" data-amore hidden>Mostrar mais</button></div></section>"""
+    write('portfolio.html', layout('portfolio', 'Portfólio', b, S['portfolioIntro']))
+
+def page_project(i, p):
+    same = [q for q in D['projects'] if q['cat'] == p['cat']]
+    j = same.index(p); prev_ = same[j - 1]; next_ = same[(j + 1) % len(same)]
+    real = real_imgs(p); arch = archive_for(p); gal = ''
+    if real: gal += '<div class="masonry mini">%s</div>' % ''.join('<figure class="mi rv">%s</figure>' % zoom(r, p['title'], p['title']) for r in real)
+    if arch: gal += '<h2 class="h-sm">%s <small>(%d)</small></h2><div class="masonry mini">%s</div>' % ('Do arquivo' if real else 'Imagens', len(arch), ''.join(acard(a) for a in arch))
+    if not gal:
+        rel = apick(POOL.get(p['cat'], ['cartaz']), None, 12)
+        gal = '<h2 class="h-sm">Referências do arquivo</h2><p class="small dim">As imagens finais deste projeto serão publicadas em breve; veja trabalhos relacionados.</p><div class="masonry mini">%s</div>' % ''.join(acard(a) for a in rel)
+    concept = p.get('concept', ''); link = ''
+    if p.get('link'):
+        href = p['link']; href = PAGES.get(href.strip('/'), href) if href.startswith('/') else href
+        link = '<p><a class="btn" href="%s">%s</a></p>' % (e(href), e(p.get('linkLabel') or 'Ver mais'))
+        concept = concept.replace('Ver flash tattoos disponíveis', '').strip()
+    conc = '<h3>Conceito</h3>%s' % paras(concept) if concept else ''
+    b = f"""<section class="wrap"><p class="eyebrow"><a href="portfolio.html#{slug(p['cat'])}">← {e(p['cat'])}</a></p><h1 class="display sm">{e(p['title'])}</h1>
+<div class="proj-text"><dl class="specs"><dt>Área</dt><dd>{e(p['cat'])}</dd><dt>Período</dt><dd>{e(p['year'])}</dd><dt>Imagens</dt><dd>{len(real) + len(arch)}</dd></dl>
+<div class="prose big">{paras(p['text'])}{conc}{link}</div></div>{gal}
+<div class="prevnext"><a href="projeto-{e(prev_['slug'])}.html">← {e(prev_['title'])}</a><a href="projeto-{e(next_['slug'])}.html">{e(next_['title'])} →</a></div></section>"""
+    write('projeto-%s.html' % p['slug'], layout('portfolio', p['title'], b, (p['text'] or '')[:155]))
+
+def page_flash():
+    L = flash_from_archive(); years = sorted({a['year'] for a in L}, reverse=True)
+    chips = '<button class="chip on" data-y="">Todos <small>%d</small></button>' % len(L) + ''.join('<button class="chip" data-y="%d">%d <small>%d</small></button>' % (y, y, sum(1 for a in L if a['year'] == y)) for y in years)
+    b = f"""<section class="wrap"><p class="eyebrow">Flash tattoo</p><h1 class="display">Flashes</h1><p class="lead">{e(S['flashIntro'])}</p>
+<p class="small dim">Cada desenho tem um código (ARQ-ano-número). Anote o que você gostou e use no pedido.</p>
+<div class="archbar" data-archive-bar><div class="chips" role="group" aria-label="Ano">{chips}</div>
+<label class="srch">Buscar código <input type="search" data-asearch placeholder="ex.: 045"></label><span class="count" data-acount></span></div>
+<div class="masonry flashm" data-archive>{''.join(acard(a) for a in L)}</div><p data-empty hidden>Nenhum desenho encontrado.</p>
+<div class="more-wrap"><button class="btn ghost" data-amore hidden>Mostrar mais</button></div></section>"""
+    write('flash.html', layout('flash', 'Flash tattoo', b, S['flashIntro']))
+
+def page_index():
+    heroes = [r for r in S.get('heroImages', []) if has(r)]
+    art = ''.join('<img class="h%d" src="%s" alt="">' % (i, img_path(r, 'web')) for i, r in enumerate(heroes[:4]))
+    words = ['Pintura', 'Desenho', 'Tatuagem', 'Escultura', 'Animação', 'Design', 'Flash tattoo', 'Cultura de rua']
+    mq = ''.join('<span>%s</span><i>✦</i>' % w for w in words) * 2
+    stats = [(len(A), 'imagens no arquivo'), (len(D['projects']), 'projetos'), (len([a for a in A if a['cat'] == 'flash']), 'flashes'), (len(D['products']), 'itens no catálogo')]
+    st = ''.join('<div class="stat rv"><b>%s</b><span>%s</span></div>' % (n, e(l)) for n, l in stats)
+    areas = []
+    for p in D['projects']:
+        if p['cat'] not in areas: areas.append(p['cat'])
+    ac = ''
+    for a in areas:
+        ps = [p for p in D['projects'] if p['cat'] == a]; cv = None
+        for p in ps:
+            r = real_imgs(p); ar_ = archive_for(p)
+            if r: cv = pic(r[0], a, a); break
+            if ar_: cv = aimg(ar_[0], a); break
+        if not cv:
+            c0 = cover_for(ps[0]); cv = aimg(c0, a) if c0 else ''
+        ac += '<a class="ycard ar rv" href="portfolio.html#%s"><div class="yimg">%s</div><div class="ytxt"><b>%s</b><span>%d projeto%s · %d imagens</span></div></a>' % (slug(a), cv or '', e(a), len(ps), 's' if len(ps) > 1 else '', sum(count_imgs(p) for p in ps))
+    yrs = ''
+    for y in YEARS[::-1]:
+        L = [a for a in A if a['year'] == y and aexists(a)]; cv = apick(['cartaz', 'quadro', 'mural'], y, 1) or L[:1]
+        yrs += '<a class="ycard rv" href="arquivo.html#%d"><div class="yimg">%s</div><div class="ytxt"><b>%d</b><span>%d imagens</span></div></a>' % (y, aimg(cv[0]) if cv else '', y, len(L))
+    fl = ''.join(mini_flash(a) for a in flash_from_archive()[:8]); total = len(flash_from_archive())
+    feat_p = [p for p in D['projects'] if p.get('featured')][:6]
+    mosaic = ''.join(acard(a) for a in apick(None, None, 12, offset=3))
+    steps = ''.join('<li class="rv"><b>0%d</b><h3>%s</h3><p>%s</p></li>' % (i + 1, e(s_['t']), e(s_['d'])) for i, s_ in enumerate(S['steps']))
+    b = f"""<section class="hero"><div class="hero-title"><p class="eyebrow">@{e(S['handle'])} · 2013 — 2026</p><h1 class="mega">{e(S['name'])}</h1><p class="lead">{e(S['tagline'])}</p>
+<div class="row"><a class="btn" href="portfolio.html">Ver portfólio</a><a class="btn ghost" href="flash.html">Flash tattoo</a></div></div>{'<div class="hero-art">%s</div>' % art if art else ''}</section>
+<div class="marquee" aria-hidden="true"><div>{mq}</div></div>
+<section class="wrap stats">{st}</section>
+<section class="wrap intro"><p class="eyebrow">01 — Sobre</p><p class="big">{e(S['bio'][0])}</p><a class="link" href="sobre.html">Ler mais</a></section>
+<section class="wrap"><div class="sec-head"><p class="eyebrow">02 — Áreas de trabalho</p><h2 class="display">Portfólio</h2><a class="link" href="portfolio.html">Todos os projetos</a></div><div class="years">{ac}</div></section>
+<section class="wrap"><div class="sec-head"><p class="eyebrow">03 — Projetos</p><h2 class="display">Em destaque</h2><a class="link" href="portfolio.html">Ver todos</a></div><div class="pgrid">{''.join(pcard(p) for p in feat_p)}</div></section>
+<section class="wrap"><div class="sec-head"><p class="eyebrow">04 — Flash tattoo</p><h2 class="display">Flashes</h2><a class="link" href="flash.html">Ver todos ({total})</a></div><div class="fgrid">{fl}</div></section>
+<section class="wrap"><div class="sec-head"><p class="eyebrow">05 — Linha do tempo</p><h2 class="display">Arquivo por ano</h2><a class="link" href="arquivo.html">Ver tudo ({len(A)})</a></div><div class="years">{yrs}</div></section>
+<section class="wrap"><div class="sec-head"><p class="eyebrow">06 — Do arquivo</p><h2 class="display">Seleção</h2><a class="link" href="arquivo.html">Abrir arquivo</a></div><div class="masonry mini">{mosaic}</div></section>
+<section class="wrap"><div class="sec-head"><p class="eyebrow">07 — Catálogo</p><h2 class="display">Obras e objetos</h2><a class="link" href="catalogo.html">Ver catálogo</a></div><div class="fgrid four">{''.join(prodcard(p) for p in D['products'][:4])}</div></section>
+<section class="wrap steps"><div class="sec-head"><p class="eyebrow">Como funciona</p><h2 class="display">Em 3 passos</h2></div><ol>{steps}</ol></section>
+<section class="wrap band"><p class="eyebrow">Contato</p><h2 class="display">{e(S['ctaTitle'])}</h2><p class="lead">{e(S['contactIntro'])}</p><div class="row"><a class="btn" href="contato.html">Enviar solicitação</a><a class="btn ghost" href="{e(ig_url())}" target="_blank" rel="noopener">Instagram</a></div></section>"""
+    write('index.html', layout('', S['title'], b))
+
 def page_catalogo():
     cats = []
     for p in D['products']:
@@ -276,18 +335,6 @@ def page_catalogo():
     sec = ''.join('<h2 class="h-sm">%s</h2><div class="fgrid four">%s</div>' % (e(c), ''.join(prodcard(p) for p in D['products'] if p['cat'] == c)) for c in cats)
     b = '<section class="wrap"><p class="eyebrow">Catálogo</p><h1 class="display">Catálogo</h1><p class="lead">%s</p>%s</section>' % (e(S['catalogIntro']), sec)
     write('catalogo.html', layout('catalogo', 'Catálogo', b, S['catalogIntro']))
-
-def page_product(i, p):
-    prev_ = D['products'][i - 1]; next_ = D['products'][(i + 1) % len(D['products'])]
-    gal = ''.join('<div class="gallery-item">%s</div>' % zoom(r, p['title'], p['code']) for r in p['images'])
-    specs = '<dt>Código</dt><dd>%s</dd><dt>Categoria</dt><dd>%s</dd><dt>Situação</dt><dd>%s</dd>' % (e(p['code']), e(p['cat']), e(STATUS.get(p['status'], p['status'])))
-    price = '<p class="price">%s</p>' % e(p['price']) if p.get('price') else ''
-    b = '''<section class="wrap prod"><p class="eyebrow"><a href="catalogo.html">← Catálogo</a></p>
-<div class="detail"><div class="d-img"><div class="gallery">%s</div></div><div class="d-info"><h1 class="display sm">%s</h1>%s<div class="prose">%s</div><dl class="specs">%s</dl>
-<h2 class="h-sm">Solicitar</h2>%s</div></div>
-<div class="prevnext"><a href="produto-%s.html">← %s</a><a href="produto-%s.html">%s →</a></div></section>''' % (
-        gal, e(p['title']), price, paras(p.get('desc')), specs, order_form('produto', p['code']), e(prev_['slug']), e(prev_['title']), e(next_['slug']), e(next_['title']))
-    write('produto-%s.html' % p['slug'], layout('catalogo', p['title'], b, p.get('desc') or S['catalogIntro']))
 
 def page_contato():
     b = '''<section class="wrap split"><div><p class="eyebrow">Contato</p><h1 class="display sm">%s</h1><p class="lead">%s</p><div class="links">%s</div>

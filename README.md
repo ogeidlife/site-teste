@@ -34,3 +34,12 @@ Elas ficam em `media/arquivo/` e estão registradas em `content.json → archive
 - **Flash tattoo**: enquanto a pasta `flash-tattoo` não existir, mostra os desenhos de flash do arquivo (códigos `ARQ-ANO-NNN`).
 - **Início, Portfólio e Sobre** usam imagens do arquivo como capas e linha do tempo quando faltam as originais.
 - O PDF `portfoliodiegoogeid2023.pdf` (157 MB) **não** foi incluído: o GitHub recusa arquivos acima de 100 MB. Comprima-o antes de enviar.
+
+## Organização por seção (v3)
+O PDF `portfoliodiegoogeid2023.pdf` foi aberto página a página (88 páginas → `media/portfolio/`, com margens cortadas) e distribuído seguindo o **sumário do próprio portfólio**:
+Série Boca-Aberta · Surrealismo abstrato (nanquim) · Rascunhos · Prints · Pinturas · Esculturas · Sedas · Animações · Editoriais · Flash tattoo.
+- **Portfólio** agora tem 20 projetos com filtro por área (Pintura, Desenho, Escultura, Animação, Design gráfico, Tattoo, Projetos especiais, Vestuário). Cada projeto junta páginas do PDF + imagens do arquivo (campo `archive` em `content.json`: `cat`, `year`, `month`, `ids`, `limit`).
+- **Flash tattoo**: 233 desenhos com filtro por ano e busca por código.
+- **Catálogo**: produtos sem foto usam uma imagem de referência (selo "Referência"), até você enviar as fotos reais (campo `ref`).
+- **E-mail** `lifeogeid@gmail.com` foi preenchido a partir do texto do próprio PDF — confira/ajuste em `content.json → settings.email`.
+- Projetos de 2025–2026 (série numerada, obras em papel A3, quadros, vestuário) ainda não têm imagens próprias; mostram trabalhos relacionados do arquivo.

@@ -4,15 +4,15 @@
   "handle": "ogeid_life",
   "instagram": "https://www.instagram.com/ogeid_life/",
   "whatsapp": "",
-  "email": "",
+  "email": "lifeogeid@gmail.com",
   "title": "OGEID — Artista visual independente",
   "tagline": "Artista visual independente — pintura, desenho, tatuagem, escultura, animação e design.",
   "description": "Artista visual independente — pintura, desenho, tatuagem, escultura, animação e design. Flash tattoo autoral, obras e objetos para encomenda.",
   "heroImages": [
-   "paintings/og-a-0001",
-   "paintings/og-a-0023",
-   "paintings/og-a-0040",
-   "projects/og-j-0006"
+   "projects/og-j-0006",
+   "portfolio/pf-56",
+   "portfolio/pf-65",
+   "portfolio/pf-40"
   ],
   "bio": [
    "OGEID é o nome artístico e plataforma criativa de um artista independente cuja produção transita entre artes visuais, tatuagem, desenho, pintura, escultura, animação e design.",
@@ -23,9 +23,9 @@
    "Sua produção busca aproximar expressão artística, identidade visual e cultura independente."
   ],
   "aboutImages": [
-   "paintings/og-a-0001",
-   "paintings/og-a-0023",
-   "paintings/og-a-0040"
+   "portfolio/pf-62",
+   "portfolio/pf-65",
+   "portfolio/pf-56"
   ],
   "steps": [
    {
@@ -44,7 +44,7 @@
   "orderNote": "Sua mensagem é uma solicitação, não uma reserva. O artista confirma disponibilidade, valor, prazo e data diretamente com você.",
   "flashIntro": "Desenhos autorais prontos para tatuar. Cada flash tem um código — escolha um e solicite o agendamento.",
   "catalogIntro": "Obras e objetos disponíveis para aquisição ou encomenda. Valores, prazos e forma de pagamento são combinados diretamente com o artista.",
-  "portfolioIntro": "Pinturas, desenhos, esculturas, design e projetos especiais produzidos desde 2023.",
+  "portfolioIntro": "Pinturas, desenhos, esculturas, animações, design e projetos especiais — de 2013 até hoje, organizados por área.",
   "contactIntro": "Agendamento de tatuagem, encomendas, propostas, exposições e parcerias.",
   "ctaTitle": "Vamos conversar.",
   "footerNote": "© 2026 OGEID. Todos os direitos das obras reservados.",
@@ -138,7 +138,28 @@
   },
   {
    "title": "Projetos relevantes",
-   "items": []
+   "items": [
+    {
+     "period": "2013–2014",
+     "title": "Boca-Aberta",
+     "desc": "Diário de desenhos: uma ideia por dia, em caneta hidrográfica e marcador permanente."
+    },
+    {
+     "period": "2020",
+     "title": "Ogeid Life e Art Collection 2020",
+     "desc": "Linha de prints e coleção de quadros vendida por direct."
+    },
+    {
+     "period": "2021",
+     "title": "Ogeid Tattoo",
+     "desc": "Primeiros flashes em preto e branco para tatuagem."
+    },
+    {
+     "period": "2023",
+     "title": "Portfólio DiegoOgeid",
+     "desc": "Livro de 84 páginas com 10 anos de trabalho, dividido em séries."
+    }
+   ]
   },
   {
    "title": "Exposições e participações",
@@ -2893,7 +2914,8 @@
    "images": [
     "projects/og-j-0011"
    ],
-   "featured": true
+   "featured": true,
+   "ref": []
   },
   {
    "slug": "print-ogeid-wine-02",
@@ -2906,7 +2928,10 @@
    "images": [
     "projects/og-j-0012"
    ],
-   "featured": true
+   "featured": true,
+   "ref": [
+    "projects/og-j-0007"
+   ]
   },
   {
    "slug": "print-ogeid-wine-03",
@@ -2919,7 +2944,8 @@
    "images": [
     "projects/og-j-0009"
    ],
-   "featured": true
+   "featured": true,
+   "ref": []
   },
   {
    "slug": "print-ogeid-wine-04",
@@ -2932,7 +2958,8 @@
    "images": [
     "projects/og-j-0010"
    ],
-   "featured": true
+   "featured": true,
+   "ref": []
   },
   {
    "slug": "quadro-01",
@@ -2945,7 +2972,10 @@
    "images": [
     "paintings/og-a-0037"
    ],
-   "featured": false
+   "featured": false,
+   "ref": [
+    "portfolio/pf-62"
+   ]
   },
   {
    "slug": "quadro-02",
@@ -2958,7 +2988,10 @@
    "images": [
     "paintings/og-a-0038"
    ],
-   "featured": false
+   "featured": false,
+   "ref": [
+    "portfolio/pf-65"
+   ]
   },
   {
    "slug": "quadro-03",
@@ -2971,7 +3004,10 @@
    "images": [
     "paintings/og-a-0039"
    ],
-   "featured": false
+   "featured": false,
+   "ref": [
+    "portfolio/pf-66"
+   ]
   },
   {
    "slug": "jaqueta-preta-ogeid",
@@ -2985,7 +3021,10 @@
     "clothing/og-v-0003",
     "clothing/og-v-0010"
    ],
-   "featured": false
+   "featured": false,
+   "ref": [
+    "arq:ar-202403-246"
+   ]
   },
   {
    "slug": "camiseta-ogeid",
@@ -2998,7 +3037,10 @@
    "images": [
     "clothing/og-v-0004"
    ],
-   "featured": false
+   "featured": false,
+   "ref": [
+    "arq:ar-202403-247"
+   ]
   },
   {
    "slug": "calca-ogeid",
@@ -3011,7 +3053,10 @@
    "images": [
     "clothing/og-v-0005"
    ],
-   "featured": false
+   "featured": false,
+   "ref": [
+    "arq:ar-202403-248"
+   ]
   },
   {
    "slug": "jaqueta-cinza-ogeid",
@@ -3025,7 +3070,10 @@
     "clothing/og-v-0006",
     "clothing/og-v-0009"
    ],
-   "featured": false
+   "featured": false,
+   "ref": [
+    "arq:ar-202402-236"
+   ]
   },
   {
    "slug": "polo-azul-marinho-ogeid",
@@ -3038,7 +3086,10 @@
    "images": [
     "clothing/og-v-0007"
    ],
-   "featured": false
+   "featured": false,
+   "ref": [
+    "arq:ar-202401-208"
+   ]
   },
   {
    "slug": "polo-vermelha-ogeid",
@@ -3051,7 +3102,10 @@
    "images": [
     "clothing/og-v-0008"
    ],
-   "featured": false
+   "featured": false,
+   "ref": [
+    "arq:ar-202401-209"
+   ]
   },
   {
    "slug": "caixa-ogeid-wine",
@@ -3066,78 +3120,63 @@
     "projects/og-j-0007",
     "projects/og-j-0013"
    ],
-   "featured": false
+   "featured": false,
+   "ref": []
   }
  ],
  "projects": [
   {
    "slug": "pinturas-2023",
-   "title": "Pinturas · 2023",
+   "title": "Pinturas",
    "cat": "Pintura",
-   "year": "2023",
-   "text": "Reunião de pinturas de 2023, período em que se inicia a investigação pictórica de orientação neoexpressionista. As composições combinam figuras humanas, cenários urbanos e objetos do cotidiano — grades, viaturas, placas de trânsito, esquinas e vitrines — em campos de cor saturada e contornos marcados.\n\nEntre os trabalhos há cenas de abordagem e vigilância, paisagens de cidade e imagens de caráter onírico, que alternam humor, tensão e ironia.",
+   "year": "2013–2023",
+   "text": "Pinturas da seleção “Pinturas” do portfólio DiegoOgeid (2023): paisagens, figuras e cenas urbanas em óleo, acrílica e técnicas mistas, em telas de vários formatos.",
    "concept": "Esta série estabelece o vocabulário que atravessa a produção posterior: personagens e símbolos da cultura urbana tratados como matéria pictórica para elaborar experiências pessoais, relações humanas e cotidiano. O gesto expressivo e a cor operam como linguagem, e não como ilustração de um enredo fechado.",
    "images": [
-    "paintings/og-a-0001",
-    "paintings/og-a-0002",
-    "paintings/og-a-0003",
-    "paintings/og-a-0004",
-    "paintings/og-a-0005",
-    "paintings/og-a-0006",
-    "paintings/og-a-0007",
-    "paintings/og-a-0008",
-    "paintings/og-a-0009",
-    "paintings/og-a-0010",
-    "paintings/og-a-0011",
-    "paintings/og-a-0012",
-    "paintings/og-a-0013",
-    "paintings/og-a-0014",
-    "paintings/og-a-0015",
-    "paintings/og-a-0016",
-    "paintings/og-a-0017",
-    "paintings/og-a-0018",
-    "paintings/og-a-0019",
-    "paintings/og-a-0020",
-    "paintings/og-a-0021"
+    "portfolio/pf-65",
+    "portfolio/pf-62",
+    "portfolio/pf-66",
+    "portfolio/pf-63",
+    "portfolio/pf-56",
+    "portfolio/pf-05",
+    "portfolio/pf-44",
+    "portfolio/pf-45",
+    "portfolio/pf-46",
+    "portfolio/pf-47",
+    "portfolio/pf-48",
+    "portfolio/pf-49",
+    "portfolio/pf-50",
+    "portfolio/pf-51",
+    "portfolio/pf-52",
+    "portfolio/pf-53",
+    "portfolio/pf-54",
+    "portfolio/pf-55",
+    "portfolio/pf-57",
+    "portfolio/pf-58",
+    "portfolio/pf-59",
+    "portfolio/pf-60",
+    "portfolio/pf-61",
+    "portfolio/pf-64",
+    "portfolio/pf-67",
+    "portfolio/pf-69",
+    "portfolio/pf-70",
+    "portfolio/pf-71",
+    "portfolio/pf-72",
+    "portfolio/pf-73",
+    "portfolio/pf-74",
+    "portfolio/pf-75",
+    "portfolio/pf-76",
+    "portfolio/pf-88"
    ],
    "featured": true,
    "link": "",
-   "linkLabel": ""
-  },
-  {
-   "slug": "surrealismo-naquim",
-   "title": "Surrealismo naquim",
-   "cat": "Desenho",
-   "year": "2023",
-   "text": "Cinco desenhos em preto e branco, de composição fragmentada. Planos geométricos, olhos, máquinas e arquiteturas se sobrepõem em espaços impossíveis, entre o croqui técnico e a cena surreal. O traço constrói volume e profundidade sem recorrer à cor.",
-   "concept": "A série investiga o desenho como forma de pensamento: formas que lembram peças de um mecanismo em constante rearranjo. Dialoga com o surrealismo na lógica de associação livre e com o universo gráfico urbano na economia e na firmeza do traço.",
-   "images": [
-    "drawings/og-d-0001",
-    "drawings/og-d-0002",
-    "drawings/og-d-0003",
-    "drawings/og-d-0004",
-    "drawings/og-d-0005"
-   ],
-   "featured": false,
-   "link": "",
-   "linkLabel": ""
-  },
-  {
-   "slug": "biscuit-e-objetos",
-   "title": "Biscuit e objetos",
-   "cat": "Escultura",
-   "year": "2023",
-   "text": "Conjunto de esculturas e objetos tridimensionais: figuras modeladas em cores vivas, algumas apresentadas em caixa de acrílico, um objeto pintado com rolo e uma peça de colagem em relevo, emoldurada.\n\nOs trabalhos transpõem para o espaço os personagens e a paleta do desenho e da pintura.",
-   "concept": "A passagem para o volume amplia a pesquisa sobre personagens: figuras que habitam a pintura ganham corpo, escala de mão e presença de objeto, aproximando arte, brinquedo e coleção.",
-   "images": [
-    "sculptures/og-e-0001",
-    "sculptures/og-e-0002",
-    "sculptures/og-e-0003",
-    "sculptures/og-e-0005"
-   ],
-   "featured": false,
-   "link": "",
-   "linkLabel": ""
+   "linkLabel": "",
+   "archive": {
+    "ids": [
+     "151",
+     "152"
+    ]
+   }
   },
   {
    "slug": "serie-numerada-2025",
@@ -3221,65 +3260,147 @@
    "linkLabel": "Ver no catálogo"
   },
   {
-   "slug": "ogeid-wine",
-   "title": "OGEID WINE",
-   "cat": "Projetos especiais",
-   "year": "2026",
-   "text": "OGEID WINE é um projeto especial que estende a linguagem gráfica do artista para rótulo, caixa, prints e peças de vestuário. Um personagem esverdeado, de moletom e boné, repete-se em cenas de lazer — deitado na grama, brindando, servindo vinho — sobre um logotipo manuscrito em vinho e verde.\n\nAs imagens registram garrafas, caixas ilustradas, prints e uma fotografia de brinde.",
-   "concept": "O projeto desloca a arte para um objeto de consumo e convivência, perguntando como uma identidade visual independente circula fora das galerias — na mesa, no presente, no corpo. Ironia, cultura de rua e ritual social convivem na mesma iconografia.",
-   "images": [
-    "projects/og-j-0006",
-    "projects/og-j-0007",
-    "projects/og-j-0008",
-    "projects/og-j-0009",
-    "projects/og-j-0010",
-    "projects/og-j-0011",
-    "projects/og-j-0012",
-    "projects/og-j-0013"
-   ],
-   "featured": true,
-   "link": "/catalogo?cat=Colecion%C3%A1veis",
-   "linkLabel": "Ver no catálogo"
+   "slug": "art-collection-2020",
+   "title": "Art Collection 2020",
+   "cat": "Pintura",
+   "year": "2020",
+   "images": [],
+   "archive": {
+    "cat": [
+     "quadro"
+    ]
+   },
+   "text": "Quadros apresentados em 2020, vendidos por direct: pinturas de composição fragmentada, com polícia, rua, colagem e arquitetura.",
+   "concept": ""
   },
   {
-   "slug": "vestuario-ogeid",
-   "title": "Vestuário OGEID",
-   "cat": "Vestuário",
-   "year": "2023–2026",
-   "text": "Peças e acessórios com intervenções gráficas autorais: jaquetas, camiseta, camisas polo, calça, bolsa transversal e ecobag. Os desenhos e as manchas vermelhas aplicados sobre as peças trazem personagens do universo OGEID e são registrados também em ensaios fotográficos.",
-   "concept": "O vestuário leva a pesquisa visual para o corpo em circulação: a roupa é suporte e meio de difusão, aproximando arte, streetwear e cultura independente.",
+   "slug": "surrealismo-naquim",
+   "title": "Surrealismo naquim",
+   "cat": "Desenho",
+   "year": "2022–2023",
+   "text": "Série em nanquim de composições densas, com cidades, máquinas, figuras e arquitetura que se desdobram em planos sobrepostos — o “surrealismo abstrato” do portfólio 2023.",
+   "concept": "A série investiga o desenho como forma de pensamento: formas que lembram peças de um mecanismo em constante rearranjo. Dialoga com o surrealismo na lógica de associação livre e com o universo gráfico urbano na economia e na firmeza do traço.",
    "images": [
-    "clothing/og-v-0001",
-    "clothing/og-v-0002",
-    "clothing/og-v-0003",
-    "clothing/og-v-0004",
-    "clothing/og-v-0005",
-    "clothing/og-v-0006",
-    "clothing/og-v-0007",
-    "clothing/og-v-0008",
-    "clothing/og-v-0009",
-    "clothing/og-v-0010"
-   ],
-   "featured": false,
-   "link": "/catalogo?cat=Vestu%C3%A1rio",
-   "linkLabel": "Ver no catálogo"
-  },
-  {
-   "slug": "ogeid-rolling-paper",
-   "title": "OGEID Rolling Paper",
-   "cat": "Projetos especiais",
-   "year": "2023",
-   "text": "Embalagens personalizadas de papel de seda (rolling paper) com a marca OGEID. Cada caixa traz lettering em estilo graffiti, em cores vibrantes, e personagens e cenas ilustradas sobre fundo claro.",
-   "concept": "Um objeto de uso cotidiano tratado como pequena obra: o lettering, a embalagem e o personagem condensam a estética urbana em um formato portátil e colecionável.",
-   "images": [
-    "projects/og-j-0002",
-    "projects/og-j-0003",
-    "projects/og-j-0004",
-    "projects/og-j-0005"
+    "portfolio/pf-12",
+    "portfolio/pf-13",
+    "portfolio/pf-14",
+    "portfolio/pf-15",
+    "portfolio/pf-18",
+    "portfolio/pf-19",
+    "portfolio/pf-20",
+    "portfolio/pf-21",
+    "portfolio/pf-22",
+    "portfolio/pf-23",
+    "portfolio/pf-24",
+    "portfolio/pf-25"
    ],
    "featured": false,
    "link": "",
    "linkLabel": ""
+  },
+  {
+   "slug": "boca-aberta",
+   "title": "Boca-Aberta",
+   "cat": "Desenho",
+   "year": "2013–2014",
+   "featured": true,
+   "images": [
+    "portfolio/pf-06",
+    "portfolio/pf-07",
+    "portfolio/pf-08",
+    "portfolio/pf-09",
+    "portfolio/pf-10",
+    "portfolio/pf-11"
+   ],
+   "archive": {
+    "cat": [
+     "flash"
+    ],
+    "year": 2024,
+    "month": 7
+   },
+   "text": "Série que funciona como um pequeno diário: uma ideia de desenho por dia, feita com caneta hidrográfica e preenchida com marcador permanente. Os personagens-caixa de boca aberta atravessam a série inteira.",
+   "concept": "O personagem — um quadrado de rosto fino, boca sempre aberta e braços soltos — vira uma forma de recordar o passado. Ele reaparece nos desenhos em preto e branco de 2024, reunidos abaixo."
+  },
+  {
+   "slug": "rascunhos",
+   "title": "Rascunhos e cadernos",
+   "cat": "Desenho",
+   "year": "2022–2023",
+   "images": [
+    "portfolio/pf-16",
+    "portfolio/pf-17",
+    "portfolio/pf-26",
+    "portfolio/pf-27",
+    "portfolio/pf-28",
+    "portfolio/pf-29",
+    "portfolio/pf-30",
+    "portfolio/pf-31",
+    "portfolio/pf-32",
+    "portfolio/pf-33"
+   ],
+   "text": "Páginas de cadernos, estudos e rascunhos em preto e branco e em cor: casas, figuras, lettering e composições em construção.",
+   "concept": ""
+  },
+  {
+   "slug": "biscuit-e-objetos",
+   "title": "Biscuit e objetos",
+   "cat": "Escultura",
+   "year": "2021–2023",
+   "text": "Conjunto de esculturas e objetos tridimensionais: figuras modeladas em cores vivas, algumas apresentadas em caixa de acrílico, um objeto pintado com rolo e uma peça de colagem em relevo, emoldurada.\n\nOs trabalhos transpõem para o espaço os personagens e a paleta do desenho e da pintura.",
+   "concept": "A passagem para o volume amplia a pesquisa sobre personagens: figuras que habitam a pintura ganham corpo, escala de mão e presença de objeto, aproximando arte, brinquedo e coleção.",
+   "images": [
+    "portfolio/pf-68",
+    "portfolio/pf-77"
+   ],
+   "featured": false,
+   "link": "",
+   "linkLabel": "",
+   "archive": {
+    "ids": [
+     "140",
+     "143",
+     "148"
+    ]
+   }
+  },
+  {
+   "slug": "sedas",
+   "title": "Sedas Ogeid",
+   "cat": "Escultura",
+   "year": "2021–2022",
+   "images": [
+    "portfolio/pf-78",
+    "portfolio/pf-79"
+   ],
+   "archive": {
+    "ids": [
+     "153",
+     "154",
+     "155",
+     "156"
+    ]
+   },
+   "text": "Sedas personalizadas em papel kraft e tinta acrílica, montadas como pequenas cenas em caixa.",
+   "concept": ""
+  },
+  {
+   "slug": "animacoes",
+   "title": "Animações",
+   "cat": "Animação",
+   "year": "2021–2024",
+   "featured": true,
+   "images": [
+    "portfolio/pf-80",
+    "portfolio/pf-81"
+   ],
+   "archive": {
+    "cat": [
+     "animacao"
+    ]
+   },
+   "text": "Animações, vinhetas e GIFs: de cenas pintadas em movimento a vinhetas para tatuagem e banners.",
+   "concept": ""
   },
   {
    "slug": "portfolio-artistico-impresso",
@@ -3289,7 +3410,10 @@
    "text": "Publicação impressa de portfólio artístico, com capa de composição pintada em cores vibrantes e miolo editorial que alterna desenhos em preto e branco e pinturas coloridas, fotografada em cenário de estúdio.",
    "concept": "O livro funciona ao mesmo tempo como arquivo e como obra: reúne a produção em sequência editorial e aproxima o artista das práticas de publicação independente — zines, revistas e portfólios impressos.",
    "images": [
-    "projects/og-j-0001"
+    "projects/og-j-0001",
+    "portfolio/pf-01",
+    "portfolio/pf-82",
+    "portfolio/pf-83"
    ],
    "featured": false,
    "link": "",
@@ -3355,6 +3479,33 @@
    "linkLabel": ""
   },
   {
+   "slug": "prints-ogeid-life",
+   "title": "Prints Ogeid Life",
+   "cat": "Design gráfico",
+   "year": "2020–2021",
+   "featured": true,
+   "images": [
+    "portfolio/pf-34",
+    "portfolio/pf-35",
+    "portfolio/pf-36",
+    "portfolio/pf-37",
+    "portfolio/pf-38",
+    "portfolio/pf-39",
+    "portfolio/pf-40",
+    "portfolio/pf-41",
+    "portfolio/pf-42",
+    "portfolio/pf-43"
+   ],
+   "archive": {
+    "cat": [
+     "cartaz"
+    ],
+    "year": 2020
+   },
+   "text": "Cartazes e prints da linha Ogeid Life: personagens, carros, trens e cenas de rua em cores chapadas — com a coleção de 2020 reunida abaixo.",
+   "concept": ""
+  },
+  {
    "slug": "flash-tattoo-autoral",
    "title": "Flash tattoo autoral",
    "cat": "Tattoo",
@@ -3362,26 +3513,98 @@
    "text": "Criação contínua de flash tattoos autorais, lançados em séries numeradas (“drops”), em traço preto sobre fundo branco. O repertório mistura personagens, cenas do cotidiano, carros, cidade, símbolos e frases, com humor, ironia e referências à cultura urbana.\n\nCada desenho é identificado por um código e pode ser tatuado mediante agendamento.",
    "concept": "Na prática do artista, a tatuagem ocupa lugar central: o desenho nasce no papel, é publicado como flash e passa a circular no corpo de quem o escolhe. O flash opera entre obra, catálogo e convite, e a cultura de rua fornece o repertório de símbolos que o público reconhece e reinterpreta.\n\nVer flash tattoos disponíveis",
    "images": [
-    "flash-tattoo/og-f-0001",
-    "flash-tattoo/og-f-0019",
-    "flash-tattoo/og-f-0037",
-    "flash-tattoo/og-f-0055",
-    "flash-tattoo/og-f-0073",
-    "flash-tattoo/og-f-0091",
-    "flash-tattoo/og-f-0109",
-    "flash-tattoo/og-f-0127",
-    "flash-tattoo/og-f-0145",
-    "flash-tattoo/og-f-0163",
-    "flash-tattoo/og-f-0181",
-    "flash-tattoo/og-f-0199",
-    "flash-tattoo/og-f-0217",
-    "flash-tattoo/og-f-0235",
-    "flash-tattoo/og-f-0253",
-    "flash-tattoo/og-f-0271"
+    "portfolio/pf-84",
+    "portfolio/pf-85"
    ],
    "featured": true,
    "link": "/flash",
-   "linkLabel": "Ver todos os flashes"
+   "linkLabel": "Ver todos os flashes",
+   "archive": {
+    "cat": [
+     "flash"
+    ],
+    "year": 2024,
+    "limit": 24
+   }
+  },
+  {
+   "slug": "ogeid-wine",
+   "title": "OGEID WINE",
+   "cat": "Projetos especiais",
+   "year": "2026",
+   "text": "OGEID WINE é um projeto especial que estende a linguagem gráfica do artista para rótulo, caixa, prints e peças de vestuário. Um personagem esverdeado, de moletom e boné, repete-se em cenas de lazer — deitado na grama, brindando, servindo vinho — sobre um logotipo manuscrito em vinho e verde.\n\nAs imagens registram garrafas, caixas ilustradas, prints e uma fotografia de brinde.",
+   "concept": "O projeto desloca a arte para um objeto de consumo e convivência, perguntando como uma identidade visual independente circula fora das galerias — na mesa, no presente, no corpo. Ironia, cultura de rua e ritual social convivem na mesma iconografia.",
+   "images": [
+    "projects/og-j-0006",
+    "projects/og-j-0007",
+    "projects/og-j-0008",
+    "projects/og-j-0009",
+    "projects/og-j-0010",
+    "projects/og-j-0011",
+    "projects/og-j-0012",
+    "projects/og-j-0013"
+   ],
+   "featured": true,
+   "link": "/catalogo?cat=Colecion%C3%A1veis",
+   "linkLabel": "Ver no catálogo"
+  },
+  {
+   "slug": "ogeid-rolling-paper",
+   "title": "OGEID Rolling Paper",
+   "cat": "Projetos especiais",
+   "year": "2023",
+   "text": "Embalagens personalizadas de papel de seda (rolling paper) com a marca OGEID. Cada caixa traz lettering em estilo graffiti, em cores vibrantes, e personagens e cenas ilustradas sobre fundo claro.",
+   "concept": "Um objeto de uso cotidiano tratado como pequena obra: o lettering, a embalagem e o personagem condensam a estética urbana em um formato portátil e colecionável.",
+   "images": [
+    "projects/og-j-0002",
+    "projects/og-j-0003",
+    "projects/og-j-0004",
+    "projects/og-j-0005"
+   ],
+   "featured": false,
+   "link": "",
+   "linkLabel": ""
+  },
+  {
+   "slug": "murais-lettering-rua",
+   "title": "Murais, lettering e rua",
+   "cat": "Projetos especiais",
+   "year": "2020",
+   "images": [
+    "portfolio/pf-03",
+    "portfolio/pf-13",
+    "portfolio/pf-86"
+   ],
+   "archive": {
+    "cat": [
+     "mural"
+    ]
+   },
+   "text": "Registros de murais e intervenções pelas linhas e pelos muros da cidade, junto de estudos de lettering e grafite.",
+   "concept": ""
+  },
+  {
+   "slug": "vestuario-ogeid",
+   "title": "Vestuário OGEID",
+   "cat": "Vestuário",
+   "year": "2023–2026",
+   "text": "Peças e acessórios com intervenções gráficas autorais: jaquetas, camiseta, camisas polo, calça, bolsa transversal e ecobag. Os desenhos e as manchas vermelhas aplicados sobre as peças trazem personagens do universo OGEID e são registrados também em ensaios fotográficos.",
+   "concept": "O vestuário leva a pesquisa visual para o corpo em circulação: a roupa é suporte e meio de difusão, aproximando arte, streetwear e cultura independente.",
+   "images": [
+    "clothing/og-v-0001",
+    "clothing/og-v-0002",
+    "clothing/og-v-0003",
+    "clothing/og-v-0004",
+    "clothing/og-v-0005",
+    "clothing/og-v-0006",
+    "clothing/og-v-0007",
+    "clothing/og-v-0008",
+    "clothing/og-v-0009",
+    "clothing/og-v-0010"
+   ],
+   "featured": false,
+   "link": "/catalogo?cat=Vestu%C3%A1rio",
+   "linkLabel": "Ver no catálogo"
   }
  ],
  "archive": [
