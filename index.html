@@ -45,7 +45,6 @@ nav .btn{padding:8px 14px;font-size:12px;box-shadow:3px 3px 0 var(--acid);border
 .hero .wrap{position:relative;display:grid;grid-template-columns:1.1fr .9fr;gap:36px;align-items:center}
 .hero h1{font-size:clamp(60px,12vw,156px)}
 .hero h1 span{display:block;color:transparent;-webkit-text-stroke:2px #f4efe3}
-.hero h1 mark{display:inline-block;background:var(--acid);color:var(--ink);padding:.04em .14em .02em;margin-top:.08em;transform:rotate(-2deg);font-size:.5em}
 .hero p{font-size:18px;max-width:46ch;margin:26px 0 30px;color:#d8d2c2}
 .cta{display:flex;gap:16px;flex-wrap:wrap}
 .wall{position:relative;height:440px}
@@ -88,7 +87,7 @@ nav .btn{padding:8px 14px;font-size:12px;box-shadow:3px 3px 0 var(--acid);border
 .price{position:absolute;right:-6px;top:-6px;background:var(--acid);border:3px solid var(--ink);padding:3px 10px;font:400 17px 'Archivo Black';transform:rotate(4deg);box-shadow:3px 3px 0 var(--ink);z-index:2;white-space:nowrap}
 .card .btn{margin-top:10px;padding:10px;font-size:12px;box-shadow:3px 3px 0 var(--ink)}
 .card.off img{filter:grayscale(1) contrast(.9) opacity(.5)}
-.card.off .im:after{content:"Já tatuado";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(-14deg);border:4px solid var(--red);color:var(--red);padding:4px 14px;font:400 22px 'Archivo Black';text-transform:uppercase;background:rgba(255,253,247,.85);white-space:nowrap}
+.card.off .im:after{content:"Indisponível";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(-14deg);border:4px solid var(--red);color:var(--red);padding:4px 14px;font:400 22px 'Archivo Black';text-transform:uppercase;background:rgba(255,253,247,.85);white-space:nowrap}
 .card.off .price{background:#fff;color:var(--mute)}
 .more{text-align:center;margin-top:48px}
 .note{font-size:13px;color:var(--mute);margin-top:12px}.dark .note{color:#a9a393}
@@ -151,8 +150,8 @@ dialog img{max-width:92vw;max-height:72vh;background:#fff;border:8px solid #fff;
 <header class="hero" id="top"><div class="wrap">
   <div>
     <span class="hand">tatuagem autoral &amp; flash tattoo</span>
-    <h1>OGEID<span>STUDIO</span><mark>na pele.</mark></h1>
-    <p>Flash exclusivo e projeto autoral. Cada desenho é tatuado uma vez só. Escolha o seu, veja o preço e garanta o horário.</p>
+    <h1>OGEID<span>STUDIO</span></h1>
+    <p>Flash tattoo com preço fechado e projetos autorais exclusivos. Escolha o seu, veja o preço e garanta o horário.</p>
     <div class="cta"><a class="btn" href="#flash">Ver flashes</a><a class="btn red" href="#orcamento">Pedir orçamento</a></div>
   </div>
   <div class="wall" id="wall"></div>
@@ -163,7 +162,7 @@ dialog img{max-width:92vw;max-height:72vh;background:#fff;border:8px solid #fff;
 
 <div class="pillars"><div class="wrap rv">
   <div class="pil"><b>Biossegurança</b><span>Material descartável e esterilizado em toda sessão.</span></div>
-  <div class="pil"><b>Peça única</b><span>Cada flash é tatuado apenas uma vez.</span></div>
+  <div class="pil"><b>Projeto exclusivo</b><span>Ideias autorais criadas do zero, só para você.</span></div>
   <div class="pil"><b>Preço na mão</b><span>O valor aparece no desenho, sem surpresa.</span></div>
   <div class="pil"><b>Papo direto</b><span>Você fala com o estúdio, sem intermediário.</span></div>
 </div></div>
@@ -286,7 +285,7 @@ let flt="all",sort="new",shown=PAGE,sel=null,slot=null,day=null;
 
 /* hero e faixa */
 $("#wall").innerHTML=[0,4,9,15].map((i,j)=>`<figure style="--i:${j}"><img src="${F[i].src}?w=500" alt="Flash tattoo"></figure>`).join("");
-$("#mq").innerHTML=Array(4).fill("<span>Flash tattoo</span><span>Desenho exclusivo</span><span>Tatuagem autoral</span><span>Sessão sob agenda</span><span>Agende já</span>").join("");
+$("#mq").innerHTML=Array(4).fill("<span>Flash tattoo</span><span>Projeto exclusivo</span><span>Tatuagem autoral</span><span>Sessão sob agenda</span><span>Agende já</span>").join("");
 
 /* catálogo */
 function view(){
@@ -298,7 +297,7 @@ function render(){
   const r=view(),v=r.slice(0,shown);
   $("#count").textContent=r.length+" flashes";
   $("#grid").innerHTML=v.length?v.map(f=>`<article class="card${f.off?" off":""}">
-    <span class="price">${f.label}</span>
+    ${f.off?"":`<span class="price">${f.label}</span>`}
     <button class="im" data-z="${f.n}" aria-label="Ampliar flash ${f.name}"><img loading="lazy" decoding="async" src="${f.src}?w=600" alt="Flash tattoo ${f.name}"></button>
     ${f.off?"":`<button class="btn" data-p="${f.n}">Quero esse</button>`}</article>`).join(""):'<p class="empty">Nenhum flash nessa faixa.</p>';
   $("#more").style.display=r.length>shown?"inline-block":"none";
