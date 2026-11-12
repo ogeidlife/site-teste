@@ -134,6 +134,18 @@ dialog[open]{display:flex;flex-direction:column;align-items:center;justify-conte
 dialog::backdrop{background:rgba(10,10,10,.92)}
 dialog img{max-width:92vw;max-height:72vh;background:#fff;border:8px solid #fff;transform:rotate(-1deg)}
 .lbx{position:absolute;right:18px;top:14px;background:var(--acid);border:3px solid var(--ink);width:44px;height:44px;font:400 22px 'Archivo Black';cursor:pointer}
+[hidden]{display:none!important}
+.promo{background:var(--acid);border-bottom:4px solid var(--ink);padding:60px 0 66px}
+.promo .wrap{display:grid;grid-template-columns:.85fr 1.15fr;gap:40px;align-items:center}
+.promo figure{position:relative;background:#fff;border:3px solid var(--ink);box-shadow:9px 9px 0 var(--ink);padding:8px;transform:rotate(-2deg)}
+.promo figure:before{content:"";position:absolute;width:90px;height:24px;background:rgba(16,16,16,.25);top:-12px;left:50%;margin-left:-45px;transform:rotate(4deg)}
+.promo img{width:100%;aspect-ratio:16/9;object-fit:contain}
+.promo h2{font-size:clamp(54px,10vw,128px);margin:0 0 10px}
+.promo h2 span{color:var(--red)}
+.promo p{max-width:46ch;margin-bottom:24px;font-weight:500}
+.chk{display:flex;gap:10px;align-items:center;margin-top:16px;font:600 14px Inter;text-transform:none;cursor:pointer}
+.chk input{width:20px;height:20px;flex:none;accent-color:var(--ink);padding:0}
+@media(max-width:880px){.promo .wrap{grid-template-columns:1fr}}
 .js .rv{opacity:0;transform:translateY(36px);transition:.7s cubic-bezier(.2,.7,.2,1)}
 .js .rv.in{opacity:1;transform:none}
 @media(max-width:560px){.grid{grid-template-columns:repeat(2,1fr);gap:26px 14px}.price{font-size:14px}.box{padding:20px}.row{grid-template-columns:1fr}.card.off .im:after{font-size:15px}}
@@ -159,6 +171,16 @@ dialog img{max-width:92vw;max-height:72vh;background:#fff;border:8px solid #fff;
 
 <div class="banner"><img src="https://ogeidstudio.wordpress.com/wp-content/uploads/2024/01/banner-1.gif" alt="OGEID Studio" onerror="this.parentNode.remove()"></div>
 <div class="mq" aria-hidden="true"><div id="mq"></div></div>
+
+<section class="promo" id="promo" hidden><div class="wrap">
+  <figure><img id="promoImg" alt="Animação: mão segurando um celular com a promoção OGEID Tattoo 20% off" width="500" height="281" loading="lazy"></figure>
+  <div>
+    <span class="hand" style="color:var(--ink)">promoção no ar</span>
+    <h2><span>20%</span> off</h2>
+    <p>As condições da promoção são confirmadas no atendimento. Marque a opção no formulário de agendamento ou de orçamento e o pedido já sai com o aviso para o estúdio.</p>
+    <button class="btn red" id="promoBtn" type="button">Quero aproveitar</button>
+  </div>
+</div></section>
 
 <div class="pillars"><div class="wrap rv">
   <div class="pil"><b>Biossegurança</b><span>Material descartável e esterilizado em toda sessão.</span></div>
@@ -205,6 +227,7 @@ dialog img{max-width:92vw;max-height:72vh;background:#fff;border:8px solid #fff;
       <div><label for="qs">Tamanho</label><select id="qs"><option>Até 5 cm</option><option>5 a 10 cm</option><option>10 a 20 cm</option><option>Acima de 20 cm</option></select></div>
     </div>
     <label for="qf">Primeira tattoo?</label><select id="qf"><option>Sim</option><option>Não</option></select>
+    <label class="chk" data-promo hidden><input type="checkbox" id="qpc"> Quero aproveitar a promoção de 20% off</label>
     <p class="err" id="qerr" role="alert"></p>
     <button class="btn red full" id="qsend">Enviar pelo WhatsApp</button>
   </div>
@@ -221,6 +244,7 @@ dialog img{max-width:92vw;max-height:72vh;background:#fff;border:8px solid #fff;
     <div class="lbl">Dia</div><div class="chips days" id="days"></div>
     <div class="lbl">Horário</div><div class="chips" id="slots"></div>
     <label for="bo">Observações (opcional)</label><textarea id="bo" placeholder="Alergias, cobertura de tattoo antiga, dúvidas"></textarea>
+    <label class="chk" data-promo hidden><input type="checkbox" id="bpc"> Quero aproveitar a promoção de 20% off</label>
     <p class="err" id="berr" role="alert"></p>
     <button class="btn full" id="bsend">Solicitar agendamento</button>
     <p class="note">Horário confirmado só após nossa resposta. Apenas maiores de 18 anos.</p>
@@ -252,6 +276,11 @@ const INSTAGRAM="https://instagram.com/";    // link do seu Instagram
 const SLOTS=["10:00","13:00","15:00","17:00"];
 const CLOSED=[0];                            // dias sem atendimento (0 = domingo)
 const DAYS=21;                               // quantos dias aparecem no agendamento
+const PROMO={
+  ativa:true,                                // false esconde a promoção do site
+  fim:"",                                    // ex.: "2026-11-30" → some sozinha depois dessa data
+  gif:"2024/01/propagandonovembro.gif?w=600" // animação (pasta de uploads do WordPress)
+};
 /* ========================== */
 
 /* Catálogo: [pasta, "numero:preco,..."] → prancheta-NUMERO.jpg
@@ -349,14 +378,23 @@ $("#bsend").onclick=()=>{
   window.open(wa(["Olá! Quero agendar uma sessão no OGEID Studio.","",
     "Nome: "+n,"WhatsApp: "+p,`Data: ${d}/${m}/${y} às ${slot}`,
     sel?`Flash ${sel.name} (${sel.label})\n${sel.src}`:"Projeto sob orçamento",
-    l&&"Local do corpo: "+l,o&&"Obs.: "+o].filter(x=>x!==""&&x!==false).join("\n")),"_blank","noopener");
+    l&&"Local do corpo: "+l,o&&"Obs.: "+o,promoLine("#bpc")].filter(x=>x!==""&&x!==false).join("\n")),"_blank","noopener");
 };
 $("#qsend").onclick=()=>{
   const n=$("#qn").value.trim(),t=$("#qd").value.trim();
   if(!n||!t)return $("#qerr").textContent="Preencha seu nome e a ideia da tatuagem.";
   $("#qerr").textContent="";
-  window.open(wa(`Olá! Quero um orçamento.\nNome: ${n}\nIdeia: ${t}\nLocal: ${$("#qa").value}\nTamanho: ${$("#qs").value}\nPrimeira tattoo: ${$("#qf").value}\nEntendo que o desenho será criado no estilo autoral do estúdio.`),"_blank","noopener");
+  window.open(wa(`Olá! Quero um orçamento.\nNome: ${n}\nIdeia: ${t}\nLocal: ${$("#qa").value}\nTamanho: ${$("#qs").value}\nPrimeira tattoo: ${$("#qf").value}\nEntendo que o desenho será criado no estilo autoral do estúdio.${promoLine("#qpc")?"\n"+promoLine("#qpc"):""}`),"_blank","noopener");
 };
+
+/* promoção: aparece só se estiver ativa e dentro do prazo */
+const promoOn=PROMO.ativa&&(!PROMO.fim||new Date()<=new Date(PROMO.fim+"T23:59:59"));
+if(promoOn){
+  $("#promoImg").src=B+PROMO.gif;
+  $("#promo").hidden=false;$$("[data-promo]").forEach(l=>l.hidden=false);
+  $("#promoBtn").onclick=()=>{$("#bpc").checked=true;$("#agendar").scrollIntoView({behavior:"smooth",block:"start"})};
+}
+const promoLine=id=>promoOn&&$(id).checked?"Promoção: 20% off (vi no site, podem confirmar as condições?)":"";
 
 /* links fixos e entrada */
 $("#wa").href=$("#wl").href=wa("Olá! Vim pelo site do OGEID Studio.");
