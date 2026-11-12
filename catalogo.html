@@ -150,7 +150,7 @@ const B="https://ogeidstudio.wordpress.com/wp-content/uploads/";
 /* ================================================================ */
 
 /* Coleções: [rótulo, descrição] */
-const G={pa:["Pinturas A5","Pinturas numeradas em formato A5, 2025."],u26:["Série 2026","Obras de 2026 do Universo Ogeid."],n26:["Novidades","Obras novas do Universo Ogeid, nov/2026."],ob:["Obras 2023–24","Obras de 2023 e 2024 do Universo Ogeid."],ac:["Acervo 2016–25","Prints, esculturas e quadros de 2016 a 2025."],lv:["Livro","Portfólio impresso em edição limitada."]};
+const G={pa:["Pinturas A5","Pinturas numeradas em formato A5, 2025."],u26:["Série 2026","Obras de 2026 do Universo Ogeid."],n26:["Novidades","Obra nova do Universo Ogeid."],ob:["Obras 2023–24","Obras de 2023 e 2024 do Universo Ogeid."],ac:["Acervo 2016–25","Prints, esculturas e quadros de 2016 a 2025."],lv:["Livro","Portfólio impresso em edição limitada."]};
 const T={pa:"Pintura A5",u26:"Sem título",n26:"Sem título",ob:"Sem título",ac:"Sem título",lv:"Livro"};
 /* Catálogo: coleção → [pasta padrão, linhas "arquivo|preço|título|id Mercado Livre|fotos extras (vírgula)|descrição"]
    preço 0 = indisponível; preço c = disponível, valor sob consulta. Para ter mais fotos numa obra, suba as imagens no WordPress e liste os caminhos no campo "fotos extras".
@@ -245,12 +245,34 @@ ac:["",`2025/07/prancheta-1-2.jpg|110|Print A2 Ogeid Collection 2025|5727380004-
 2024/01/solitude.jpg|300|Solitude
 2024/01/stitch-ganja.jpg|0|Stitch ganja`],
 lv:["",`2023/03/capainsta.jpg|160|OGEID — Portfólio impresso||2023/03/capaapoiada.jpg,2023/03/revistacomcenario.jpg|Portfólio artístico que reúne 10 anos de trabalho em 84 páginas. A4, papel 120 g, lombada quadrada, capa em couché fosco 300 g. Mais de 200 artes, numeradas para facilitar a identificação. Acompanha 1 print e uma cartela com 7 adesivos. Edição limitada a 25 unidades. Diagramado e publicado pela Último Vagão. Frete grátis.`],
-n26:["",`novas/nov26-01.jpg|300|Sem título||novas/nov26-01-d1.jpg,novas/nov26-01-d2.jpg,novas/nov26-01-d3.jpg,novas/nov26-01-d4.jpg,novas/nov26-01-d5.jpg|Técnica mista sobre tela, 60 × 30 cm, nov/2026.
-novas/nov26-02.jpg|200|Sem título||novas/nov26-02-d1.jpg,novas/nov26-02-d2.jpg|Formato A4, 2026.
-novas/nov26-03.jpg|150|Sem título||novas/nov26-03-d1.jpg
-novas/nov26-04.jpg|150|Sem título||novas/nov26-04-d1.jpg
-novas/nov26-05.jpg|100|Sem título||novas/nov26-05-d1.jpg
-novas/nov26-06.jpg|100|Sem título||novas/nov26-06-d1.jpg`]
+n26:["",`novas/nov26-01.jpg|c|Sem título||novas/nov26-01-d1.jpg,novas/nov26-01-d2.jpg,novas/nov26-01-d3.jpg,novas/nov26-01-d4.jpg,novas/nov26-01-d5.jpg|Técnica mista sobre tela, 60 × 30 cm, nov/2026.
+novas/nov26-02.jpg|c|Sem título||novas/nov26-02-d1.jpg,novas/nov26-02-d2.jpg|Formato A4, 2026.
+novas/nov26-03.jpg|c|Sem título||novas/nov26-03-d1.jpg
+novas/nov26-04.jpg|c|Sem título||novas/nov26-04-d1.jpg
+novas/nov26-05.jpg|c|Sem título||novas/nov26-05-d1.jpg
+novas/nov26-06.jpg|c|Sem título||novas/nov26-06-d1.jpg
+novas/nov26-07.jpg|c|Sem título
+novas/nov26-08.jpg|c|Sem título
+novas/nov26-09.jpg|c|Sem título
+novas/nov26-10.jpg|c|Sem título
+novas/nov26-11.jpg|c|Sem título
+novas/nov26-12.jpg|c|Sem título
+novas/nov26-13.jpg|c|Le Monde est à vous|||Print emoldurado, 2025.
+novas/nov26-14.jpg|c|Ajude seus amigos||novas/nov26-14-d1.jpg,novas/nov26-14-d2.jpg
+novas/nov26-15.jpg|c|Sem título||novas/nov26-15-d1.jpg
+novas/nov26-16.jpg|c|Make Money
+novas/nov26-17.jpg|c|O tempo é real
+novas/nov26-18.jpg|c|Jogue o jogo
+novas/nov26-19.jpg|c|Originals
+novas/nov26-20.jpg|c|WWU — World Writers Union|||Print, 2025.
+novas/nov26-21.jpg|c|Foda-se (fundo preto)||novas/nov26-21-d1.jpg
+novas/nov26-22.jpg|c|Foda-se (fundo amarelo)||novas/nov26-22-d1.jpg
+novas/nov26-23.jpg|c|Sem título||novas/nov26-23-d1.jpg
+novas/nov26-24.jpg|c|Quadro Ogeid||novas/nov26-24-d1.jpg,novas/nov26-24-d2.jpg
+novas/nov26-25.jpg|c|Abajur Ogeid||novas/nov26-25-d1.jpg|Abajur com escultura. 19 cm de altura, 10 cm de profundidade e 11,5 cm de largura. Soquete E27, interruptor liga/desliga.
+novas/nov26-26.jpg|c|Adesivos Ogeid
+novas/nov26-27.jpg|c|Cabeça (escultura)||novas/nov26-27-d1.jpg,novas/nov26-27-d2.jpg
+novas/nov26-28.jpg|c|Poltrona Nina||novas/nov26-28-d1.jpg|Poltrona customizada à mão. Medidas: 82 cm × 60 cm.`]
 };
 
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
