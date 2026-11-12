@@ -7,7 +7,7 @@
 <meta name="description" content="Flash tattoo e tatuagem autoral. Escolha seu flash, veja o preço e agende sua sessão pelo WhatsApp.">
 <meta property="og:title" content="OGEID Studio — Flash Tattoo">
 <meta property="og:image" content="https://ogeidstudio.wordpress.com/wp-content/uploads/2018/04/melhor-forma.jpg">
-<link rel="icon" href="https://ogeidstudio.wordpress.com/wp-content/uploads/2024/01/logoogeid.png">
+<link rel="icon" type="image/png" href="logo.png">
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Permanent+Marker&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{--paper:#ece6d6;--ink:#101010;--acid:#d4ff1a;--red:#ff3b2f;--mute:#6a6454;--white:#fffdf7}
@@ -34,7 +34,7 @@ h2{font-size:clamp(38px,6.5vw,78px);margin-bottom:14px}
 /* nav */
 nav{position:sticky;top:0;z-index:30;background:var(--ink);color:#f4efe3;border-bottom:4px solid var(--acid)}
 nav .wrap{display:flex;align-items:center;justify-content:space-between;height:64px;gap:16px}
-nav img{height:40px}
+nav img{height:46px;width:46px}
 nav ul{display:flex;gap:26px;list-style:none;font:400 13px 'Archivo Black';text-transform:uppercase}
 nav ul a:hover{color:var(--acid)}
 nav .btn{padding:8px 14px;font-size:12px;box-shadow:3px 3px 0 var(--acid);border-color:var(--acid)}
@@ -58,7 +58,8 @@ nav .btn{padding:8px 14px;font-size:12px;box-shadow:3px 3px 0 var(--acid);border
 @keyframes stick{from{opacity:0;transform:translateY(-60px) scale(1.15) rotate(calc(var(--r)*3))}to{opacity:1}}
 @media(max-width:880px){.hero .wrap{grid-template-columns:1fr}.wall{height:340px}}
 .banner{background:var(--ink);border-block:4px solid var(--acid);text-align:center}
-.banner img{margin:auto;width:100%;max-width:1180px;max-height:250px;object-fit:cover}
+.banner{--foco:50% 6%}
+.banner img{margin:auto;width:100%;max-width:1180px;height:clamp(200px,26vw,300px);object-fit:cover;object-position:var(--foco)}
 .mq{background:var(--acid);border-block:4px solid var(--ink);overflow:hidden;white-space:nowrap;transform:rotate(-1.2deg);margin:-8px -12px;position:relative;z-index:3}
 .mq div{display:inline-block;padding:11px 0;font:400 21px 'Archivo Black';text-transform:uppercase;animation:mq 26s linear infinite}
 .mq span{margin:0 20px}.mq span:nth-child(even){color:var(--red)}
@@ -154,7 +155,7 @@ dialog img{max-width:92vw;max-height:72vh;background:#fff;border:8px solid #fff;
 </head>
 <body>
 <nav><div class="wrap">
-  <a href="#top"><img src="https://ogeidstudio.wordpress.com/wp-content/uploads/2024/01/logoogeid.png" alt="OGEID Studio"></a>
+  <a href="#top"><img src="logo.png" alt="OGEID Studio" width="46" height="46"></a>
   <ul><li><a href="#flash">Flash</a></li><li><a href="#processo">Processo</a></li><li><a href="#orcamento">Orçamento</a></li><li><a href="#agendar">Agendar</a></li><li><a href="#faq">Dúvidas</a></li></ul>
   <a class="btn" href="#agendar">Agendar</a>
 </div></nav>
@@ -259,7 +260,7 @@ dialog img{max-width:92vw;max-height:72vh;background:#fff;border:8px solid #fff;
 </div></section>
 
 <footer><div class="wrap">
-  <div><img src="https://ogeidstudio.wordpress.com/wp-content/uploads/2024/01/logoogeid.png" alt="OGEID Studio" style="height:50px;margin-bottom:8px">© <span id="yr"></span> OGEID Studio</div>
+  <div><img src="logo.png" alt="OGEID Studio" width="56" height="56" style="height:56px;width:56px;margin-bottom:10px">© <span id="yr"></span> OGEID Studio</div>
   <div><a href="https://ogeidstudio.wordpress.com" target="_blank" rel="noopener">Site anterior</a> · <a id="ig" target="_blank" rel="noopener" href="#">Instagram</a> · <a id="wl" target="_blank" rel="noopener" href="#">WhatsApp</a></div>
 </div></footer>
 
